@@ -19,7 +19,7 @@ jobs:
         image: mcr.microsoft.com/mssql/server:2019-latest
         env:
           ACCEPT_EULA: Y
-          SA_PASSWORD: ShikanokoNokonokoKoshitantan
+          SA_PASSWORD: ShikanokoNokonokoKo$h1tantan
         ports:
           - 1433:1433
         options: >-
@@ -45,7 +45,7 @@ jobs:
       - name: Wait for SQL Server to be ready
         run: |
           for i in {1..30}; do
-            if sqlcmd -S localhost -U SA -P 'ShikanokoNokonokoKoshitantan' -Q "SELECT 1" &>/dev/null; then
+            if sqlcmd -S localhost -U SA -P 'ShikanokoNokonokoKo$h1tantan' -Q "SELECT 1" &>/dev/null; then
               echo "SQL Server is up and running"
               break
             fi
@@ -55,3 +55,7 @@ jobs:
 
       - name: Test
         run: dotnet test --no-build --verbosity normal
+
+      - name: Test Reporter
+        uses: dorny/test-reporter@v1.9.1
+            
