@@ -55,8 +55,14 @@ public class DataBuilder<TDbContext> where TDbContext : DbContext
             .AddUserSecrets<DataBuilder<TDbContext>>()
             .Build();
         
+        var secretsConnectionString = configuration.GetConnectionString("DefaultConnection");
+        if (string.IsNullOrWhiteSpace(secretsConnectionString))
+        {
+            secretsConnectionString = "Server=sqlserver; Database=LRSchoolV2-unittests-database;TrustServerCertificate=True;User Id=SA;Password=ShikanokoNokonokoKo$h1tantan";
+        }
+        
         var options = new DbContextOptionsBuilder<TDbContext>()
-            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+            .UseSqlServer(secretsConnectionString)
             .EnableSensitiveDataLogging()
             .Options;
         var context = (TDbContext) Activator.CreateInstance(typeof(TDbContext), options)!;
