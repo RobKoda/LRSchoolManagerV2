@@ -8,6 +8,8 @@ namespace LRSchoolV2.Infrastructure.Tests.Core;
 
 public class DataBuilder<TDbContext> where TDbContext : DbContext
 {
+    private const string SettingsFile = "appsettings.Infrastructure.Tests.json";
+    
     private readonly Mock<IDbContextFactory<TDbContext>> _mockFactory;
     
     private DataBuilder(TDbContext inContext)
@@ -52,17 +54,12 @@ public class DataBuilder<TDbContext> where TDbContext : DbContext
     private static TDbContext CreateContext()
     {
         var configuration = new ConfigurationBuilder()
+            .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), SettingsFile))
             .AddUserSecrets<DataBuilder<TDbContext>>()
             .Build();
         
-        var secretsConnectionString = configuration.GetConnectionString("DefaultConnection");
-        if (string.IsNullOrWhiteSpace(secretsConnectionString))
-        {
-            secretsConnectionString = "Server=sqlserver; Database=LRSchoolV2-unittests-database;TrustServerCertificate=True;User Id=SA;Password=ShikanokoNokonokoKo$h1tantan";
-        }
-        
         var options = new DbContextOptionsBuilder<TDbContext>()
-            .UseSqlServer(secretsConnectionString)
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
             .EnableSensitiveDataLogging()
             .Options;
         var context = (TDbContext) Activator.CreateInstance(typeof(TDbContext), options)!;
