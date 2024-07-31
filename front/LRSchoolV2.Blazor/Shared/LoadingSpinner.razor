@@ -1,0 +1,16 @@
+﻿<MudOverlay Visible="true" DarkBackground="true" Style="GetStyle()">
+    <div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+</MudOverlay>
+
+@code {
+    [Parameter]
+    public bool IsDialog { get; set; }
+
+    private string GetStyle() =>
+    // ReSharper disable once UseRawString - Nope
+        !IsDialog ? @"width: calc(100% - var(--mud-drawer-width-left));
+                    left: calc(var(--mud-drawer-width-left));
+                    height: calc(100% - var(--mud-appbar-height));
+                    top: calc(var(--mud-appbar-height));" : string.Empty;
+
+}

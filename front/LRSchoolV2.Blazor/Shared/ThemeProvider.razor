@@ -1,0 +1,13 @@
+﻿<MudThemeProvider Theme="_lrSchoolTheme" />
+
+@code {
+    private readonly MudTheme _lrSchoolTheme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = Colors.Red.Darken3,
+            Secondary = Colors.Gray.Darken1,
+            AppbarBackground = Colors.Gray.Darken4
+        }
+    };
+}

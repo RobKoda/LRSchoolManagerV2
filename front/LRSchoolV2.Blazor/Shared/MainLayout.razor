@@ -1,0 +1,27 @@
+﻿@inherits LayoutComponentBase
+
+<ThemeProvider/>
+<MudDialogProvider/>
+<MudPopoverProvider/>
+<MudSnackbarProvider/>
+
+<PageTitle> LR School V2</PageTitle>
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudText Typo="Typo.h5" Class="ml-3">LR School V2</MudText>
+        <MudSpacer/>
+        <LoginControl/>
+    </MudAppBar>
+
+    <AuthorizeView>
+        <Authorized>
+            <MudDrawer Open="true" ClipMode="DrawerClipMode.Always" Elevation="2">
+                <NavMenu/>
+            </MudDrawer>
+            <MudMainContent>
+                @Body
+            </MudMainContent>
+        </Authorized>
+    </AuthorizeView>
+</MudLayout>

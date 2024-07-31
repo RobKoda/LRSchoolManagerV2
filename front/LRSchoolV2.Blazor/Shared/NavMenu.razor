@@ -1,0 +1,17 @@
+﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<MudNavMenu>
+    <MudNavLink Href="/CustomerInvoices" Icon="@Icons.Material.Filled.ReceiptLong">Factures clients</MudNavLink>
+    <MudNavLink Href="/CustomerPayments" Icon="@Icons.Material.Filled.Payments">Paiements clients</MudNavLink>
+    <MudNavLink Href="/CheckDeposits" Icon="@Icons.Material.Filled.ChecklistRtl">Remises de chèques</MudNavLink>
+    <MudNavLink Href="/Members" Icon="@Icons.Material.Filled.PersonAdd">Adhérents</MudNavLink>
+    <MudNavLink Href="/NonMembers" Icon="@Icons.Material.Filled.PersonRemove">Non adhérents</MudNavLink>
+    <MudNavLink Href="/AnnualServices" Icon="@Icons.Material.Filled.Piano">Services annuels</MudNavLink>
+    <MudNavGroup Icon="@Icons.Material.Filled.Engineering" Title="Intervenants">
+        <MudNavLink Href="/Consultants" Icon="@Icons.Material.Filled.Person">Définitions</MudNavLink>
+        <MudNavLink Href="/ConsultantInvoices" Icon="@Icons.Material.Filled.ReceiptLong">Factures</MudNavLink>
+        <MudNavLink Href="/ConsultantQuotes" Icon="@Icons.Material.Filled.Receipt">Devis</MudNavLink>
+    </MudNavGroup>
+    <MudNavLink Href="/SchoolYears" Icon="@Icons.Material.Filled.CalendarMonth">Années scolaires</MudNavLink>
+</MudNavMenu>

@@ -1,0 +1,109 @@
+﻿@page "/SchoolYears"
+@using LRSchoolV2.Domain.Common
+@using LRSchoolV2.Blazor.Pages.SchoolYears.SaveSchoolYear
+@using Unit = LanguageExt.Unit
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject SchoolYearsService SchoolYearsService
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddSchoolYearClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
+
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="SchoolYear" Items="DisplayedSchoolYears" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" RowStyleFunc="GrayOutOldRecords">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Années Scolaires</MudText>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn T="SchoolYear" TProperty="DateTime" Property="inSchoolYear => inSchoolYear.StartDate" Title="Date de début" Format="dd/MM/yyyy"/>
+                <PropertyColumn T="SchoolYear" TProperty="DateTime" Property="inSchoolYear => inSchoolYear.EndDate" Title="Date de fin" Format="dd/MM/yyyy"/>
+                <PropertyColumn T="SchoolYear" TProperty="decimal" Property="inSchoolYear => inSchoolYear.MembershipFee" Title="Cotisation"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudTooltip Text="Édition">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnSchoolYearEditClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Suppression">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => OnSchoolYearDeleteClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private ObservableCollection<SchoolYear> DisplayedSchoolYears { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync() =>
+        DisplayedSchoolYears = new ObservableCollection<SchoolYear>((await SchoolYearsService.GetSchoolYearsAsync())
+            .OrderByDescending(inSchoolYear => inSchoolYear.StartDate));
+
+    private async Task OnAddSchoolYearClick()
+    {
+        var dialog = await DialogService.ShowAsync<SaveSchoolYearDialog>("Ajout d'une année scolaire", new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false
+        });
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnSchoolYearEditClick(SchoolYear inSchoolYear)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(SaveSchoolYearDialog.Model), inSchoolYear.Adapt<SaveSchoolYearFormModel>() }
+        };
+        var dialog = await DialogService.ShowAsync<SaveSchoolYearDialog>("Edition d'une année scolaire", parameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true
+        });
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnSchoolYearDeleteClick(SchoolYear inSchoolYear)
+    {
+        var dialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer l'année scolaire {inSchoolYear.GetPeriodDisplay()} ?", "Supprimer une année scolaire", "Annuler", "Supprimer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            var result = await SchoolYearsService.DeleteSchoolYearAsync(inSchoolYear);
+            await result.MatchAsync(
+                async inSuccess =>
+                {
+                    await ReloadDataAsync();
+                    return inSuccess;
+                },
+                inFailure =>
+                {
+                    Snackbar.Add(inFailure.First(), Severity.Error);
+                    return Unit.Default;
+                }
+                );
+        }
+    }
+
+    private static string GrayOutOldRecords(SchoolYear inSchoolYear, int inIndex) =>
+        inSchoolYear.IsCurrentPeriod() ? string.Empty : $"background-color: {Colors.Gray.Lighten3}";
+}

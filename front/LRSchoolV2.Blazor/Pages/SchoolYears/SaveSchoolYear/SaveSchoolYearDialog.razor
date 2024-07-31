@@ -1,0 +1,47 @@
+﻿@using System.Globalization
+@using LRSchoolV2.Domain.Common
+@inject SchoolYearsService SchoolYearsService
+@inject ISnackbar Snackbar
+
+@if (Model != null)
+{
+    <EditForm Model="Model" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+        <MudDialog>
+            <DialogContent>
+                <MudDatePicker Label="Date de début" @bind-Date="Model.StartDate" For="@(() => Model.StartDate)" Editable="true"/>
+                <MudDatePicker Label="Date de fin" @bind-Date="Model.EndDate" For="@(() => Model.EndDate)" Editable="true"/>
+                <MudNumericField HideSpinButtons="true" Label="Cotisation" @bind-Value="Model.MembershipFee" For="@(() => Model.MembershipFee)" Culture="CultureInfo.InvariantCulture"/>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@Cancel">Annuler</MudButton>
+                <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Ok</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+    </EditForm>
+}
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public SaveSchoolYearFormModel? Model { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Model ??= new SaveSchoolYearFormModel();
+    }
+
+    private async Task Submit() => 
+        (await SchoolYearsService.SaveSchoolYearAsync(Model.Adapt<SchoolYear>()))
+        .Match(
+            _ => MudDialog.Close(DialogResult.Ok(true)),
+            inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+
+    private void Cancel() => MudDialog.Cancel();
+}
+
