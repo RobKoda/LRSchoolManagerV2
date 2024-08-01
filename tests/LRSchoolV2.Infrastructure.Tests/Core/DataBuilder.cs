@@ -8,6 +8,8 @@ namespace LRSchoolV2.Infrastructure.Tests.Core;
 
 public class DataBuilder<TDbContext> where TDbContext : DbContext
 {
+    private const string SettingsFile = "appsettings.Infrastructure.Tests.json";
+    
     private readonly Mock<IDbContextFactory<TDbContext>> _mockFactory;
     
     private DataBuilder(TDbContext inContext)
@@ -52,6 +54,7 @@ public class DataBuilder<TDbContext> where TDbContext : DbContext
     private static TDbContext CreateContext()
     {
         var configuration = new ConfigurationBuilder()
+            .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), SettingsFile))
             .AddUserSecrets<DataBuilder<TDbContext>>()
             .Build();
         

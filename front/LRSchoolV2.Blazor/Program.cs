@@ -34,7 +34,11 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpContextAccessor();
 
-AddAuthenticationServices();
+// This allows acceptance test to run
+if (args.All(inArgument => string.Compare(inArgument, "--BypassAuth=", StringComparison.InvariantCulture) != 0))
+{
+    AddAuthenticationServices();   
+}
 
 var app = builder.Build();
 
