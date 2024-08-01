@@ -16,6 +16,7 @@ public class AcceptanceWebApplicationFactory<TStartup> : WebApplicationFactory<T
         var configurationBuilder = new ConfigurationBuilder()
             .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), SettingsFile))
             .AddUserSecrets(typeof(AcceptanceWebApplicationFactory<TStartup>).Assembly)
+            .AddCommandLine(["--BypassAuth", string.Empty])
             .Build();
         inBuilder.UseConfiguration(configurationBuilder);
     }
