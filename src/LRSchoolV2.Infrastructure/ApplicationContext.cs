@@ -1,10 +1,11 @@
-﻿using LRSchoolV2.Infrastructure.Common.SchoolYears;
+﻿using System.Diagnostics.CodeAnalysis;
+using LRSchoolV2.Infrastructure.Common.SchoolYears;
 using Microsoft.EntityFrameworkCore;
 
 // ReSharper disable ReturnTypeCanBeEnumerable.Global - EF Core requirement
-
 namespace LRSchoolV2.Infrastructure;
 
+[ExcludeFromCodeCoverage]
 public class ApplicationContext(DbContextOptions inOptions) : DbContext(inOptions)
 {
     public DbSet<SchoolYearDataModel> SchoolYears => Set<SchoolYearDataModel>();

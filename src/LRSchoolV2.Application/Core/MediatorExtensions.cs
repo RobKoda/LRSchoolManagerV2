@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using System.Diagnostics.CodeAnalysis;
+using FluentValidation;
 using LanguageExt;
 using Mapster;
 using MediatR;
@@ -7,6 +8,7 @@ using Unit = LanguageExt.Unit;
 
 namespace LRSchoolV2.Application.Core;
 
+[ExcludeFromCodeCoverage]
 public static class MediatorExtensions
 {
     public static async Task<Validation<string, Unit>> SendRequestWithValidation<TRequest, TCommand>(this ISender inMediator, TRequest inRequest, IValidator<TRequest> inValidator)

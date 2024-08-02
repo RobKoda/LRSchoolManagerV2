@@ -15,8 +15,8 @@ public class DeleteSchoolYearRequestValidation(
     public override async Task<ValidationResult> ValidateAsync(ValidationContext<DeleteSchoolYearRequest> inContext,
         CancellationToken inCancellation = new())
     {
-        var previousSchoolYear = await inRepository.GetPreviousSchoolYearAsync(inContext.InstanceToValidate.SchoolYear);
-        var nextSchoolYear = await inRepository.GetNextSchoolYearAsync(inContext.InstanceToValidate.SchoolYear);
+        var previousSchoolYear = await inRepository.GetPreviousSchoolYearAsync(inContext.InstanceToValidate.Id);
+        var nextSchoolYear = await inRepository.GetNextSchoolYearAsync(inContext.InstanceToValidate.Id);
         
         ValidateId();
         ValidateNotBetweenSchoolYears(previousSchoolYear, nextSchoolYear);
@@ -26,17 +26,17 @@ public class DeleteSchoolYearRequestValidation(
     }
     
     private void ValidateId() =>
-        RuleFor(inRequest => inRequest.SchoolYear.Id)
+        RuleFor(inRequest => inRequest.Id)
             .MustAsync((inSchoolYearId, _) => inRepository.AnySchoolYearAsync(inSchoolYearId))
             .WithMessage(DeleteSchoolYearRequestValidationErrors.SchoolYearNotFound);
     
     private void ValidateNotBetweenSchoolYears(Option<SchoolYear> inPreviousSchoolYear, Option<SchoolYear> inNextSchoolYear) =>
-        RuleFor(inRequest => inRequest.SchoolYear)
+        RuleFor(inRequest => inRequest.Id)
             .Must(_ => inPreviousSchoolYear.IsNone || inNextSchoolYear.IsNone)
             .WithMessage(DeleteSchoolYearRequestValidationErrors.SchoolYearBetweenTwoSchoolYears);
     
     private void ValidateCanBeDeleted() =>
-        RuleFor(inRequest => inRequest.SchoolYear)
-            .MustAsync((inSchoolYear, _) => inRepository.CanSchoolYearBeDeleted(inSchoolYear.Id))
+        RuleFor(inRequest => inRequest.Id)
+            .MustAsync((inSchoolYearId, _) => inRepository.CanSchoolYearBeDeletedAsync(inSchoolYearId))
             .WithMessage(DeleteSchoolYearRequestValidationErrors.SchoolYearCannotBeDeleted);
 }

@@ -1,0 +1,110 @@
+﻿using FluentAssertions;
+using FluentValidation;
+using LRSchoolV2.Application.Common.SchoolYears.SaveSchoolYear;
+using LRSchoolV2.Application.Common.SchoolYears.Persistence;
+using LRSchoolV2.Application.Tests.Core;
+using LRSchoolV2.Domain.Common;
+using Moq;
+
+namespace LRSchoolV2.Application.Tests.Common.SchoolYears.SaveSchoolYear;
+
+public class SaveSchoolYearRequestValidationTests
+{
+    private readonly SaveSchoolYearRequestValidation _validation;
+    
+    public SaveSchoolYearRequestValidationTests()
+    {
+        ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
+        ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Stop;
+        
+        var mockRepository = new Mock<ISchoolYearsRepository>();
+        mockRepository.Setup(inRepository => inRepository.GetPreviousSchoolYearAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(GetValidPreviousYear());
+        mockRepository.Setup(inRepository => inRepository.GetNextSchoolYearAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(GetValidNextYear());
+        _validation = new SaveSchoolYearRequestValidation(mockRepository.Object);
+    }
+    
+    private static SaveSchoolYearRequest GetValidSaveSchoolYearRequest() =>
+        new(GetValidSchoolYear());
+    
+    private static SchoolYear GetValidSchoolYear() =>
+        new(Guid.NewGuid(),
+            new DateTime(2000, 1, 1),
+            new DateTime(2000, 12, 31),
+            10);
+    
+    private static SchoolYear GetValidPreviousYear() => 
+        new(Guid.NewGuid(), 
+            new DateTime(1999, 1, 1), 
+            new DateTime(1999, 12, 31), 
+            5);
+    
+    private static SchoolYear GetValidNextYear() => 
+        new(Guid.NewGuid(), 
+            new DateTime(2001, 1, 1), 
+            new DateTime(2001, 12, 31), 
+            15);
+    
+    [Fact]
+    public async Task ValidateAsync_ShouldSucceed()
+    {
+        // Arrange
+        var request = GetValidSaveSchoolYearRequest();
+
+        // Act
+        var result = await _validation.ValidateAsync(request);
+
+        // Assert
+        result.IsValid.Should().BeTrue();
+    }
+    
+    [Fact]
+    public async Task ValidateAsync_ShouldFailWithErrorMessage_GivenStartDateNotRightAfterPreviousEndDate()
+    {
+        // Arrange
+        var schoolYear = GetValidSchoolYear();
+        schoolYear = schoolYear with
+        {
+            StartDate = schoolYear.StartDate.AddDays(-1)
+        };
+        var request = new SaveSchoolYearRequest(schoolYear);
+        
+        // Act
+        var result = await _validation.ValidateAsync(request);
+        
+        // Assert
+        result.ShouldError($"{nameof(SaveSchoolYearRequest.SchoolYear)}.{nameof(SaveSchoolYearRequest.SchoolYear.StartDate)}",
+            SaveSchoolYearRequestValidationErrors.SchoolYearStartDateNotRightAfterPreviousEndDate);
+    }
+    
+    [Fact]
+    public async Task ValidateAsync_ShouldFailWithErrorMessage_GivenEndDateNotRightBeforeNextStartDate()
+    {
+        // Arrange
+        var schoolYear = GetValidSchoolYear();
+        schoolYear = schoolYear with
+        {
+            EndDate = schoolYear.EndDate.AddDays(1)
+        };
+        var request = new SaveSchoolYearRequest(schoolYear);
+        
+        // Act
+        var result = await _validation.ValidateAsync(request);
+        
+        // Assert
+        result.ShouldError($"{nameof(SaveSchoolYearRequest.SchoolYear)}.{nameof(SaveSchoolYearRequest.SchoolYear.EndDate)}",
+            SaveSchoolYearRequestValidationErrors.SchoolYearEndDateNotRightBeforeNextStartDate);
+    }
+    
+    [Fact]
+    public async Task ValidateAsync_ShouldFailWithErrorMessage_GivenMembershipIsNegativeOrZero() =>
+        await _validation.ValidateDecimalIsGreater(
+            GetValidSaveSchoolYearRequest,
+            (inRequest, _, inNewValue) => new SaveSchoolYearRequest(inRequest.SchoolYear with
+            {
+                MembershipFee = inNewValue
+            }),
+            $"{nameof(SaveSchoolYearRequest.SchoolYear)}.{nameof(SaveSchoolYearRequest.SchoolYear.MembershipFee)}",
+            SaveSchoolYearRequestValidationErrors.SchoolYearMembershipFeeNotPositive);
+}

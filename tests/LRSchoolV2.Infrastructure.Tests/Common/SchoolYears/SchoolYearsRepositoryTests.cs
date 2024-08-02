@@ -42,4 +42,34 @@ public class SchoolYearsRepositoryTests : IDisposable
         // Assert
         result.Should().BeEquivalentTo(schoolYears.Adapt<IEnumerable<SchoolYear>>());
     }
+    
+    [Fact]
+    public async Task GetCurrentSchoolYearAsync_ShouldReturnNone_GivenNoMatch()
+    {
+        // Arrange
+        var schoolYear = _fixture.Create<SchoolYearDataModel>();
+        await _dataBuilder.WithEntity(schoolYear).CommitAsync();
+        var dateTime = schoolYear.EndDate.AddDays(1);
+        
+        // Act
+        var result = await _repository.GetCurrentSchoolYearAsync(dateTime);
+        
+        // Assert
+        result.IsNone.Should().BeTrue();
+    }
+    
+    [Fact]
+    public async Task GetCurrentSchoolYearAsync_ShouldReturnCurrentSchoolYear()
+    {
+        // Arrange
+        var schoolYear = _fixture.Create<SchoolYearDataModel>();
+        await _dataBuilder.WithEntity(schoolYear).CommitAsync();
+        var dateTime = schoolYear.EndDate.AddDays(-1);
+        
+        // Act
+        var result = await _repository.GetCurrentSchoolYearAsync(dateTime);
+        
+        // Assert
+        result.Case.Should().BeEquivalentTo(schoolYear);
+    }
 }

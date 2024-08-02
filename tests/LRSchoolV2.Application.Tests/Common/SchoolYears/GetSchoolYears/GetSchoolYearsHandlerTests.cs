@@ -6,7 +6,7 @@ using LRSchoolV2.Domain.Common;
 using LRSchoolV2.Tests.Core;
 using Moq;
 
-namespace LRSchoolV2.Application.Tests.Common.SchoolYears;
+namespace LRSchoolV2.Application.Tests.Common.SchoolYears.GetSchoolYears;
 
 public class GetSchoolYearsHandlerTests
 {

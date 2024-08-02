@@ -5,17 +5,10 @@ using MediatR;
 
 namespace LRSchoolV2.Application.Common.SchoolYears.SaveSchoolYear;
 
-public class SaveSchoolYearHandler : IRequestHandler<SaveSchoolYearCommand>
+public class SaveSchoolYearHandler(
+    ISchoolYearsRepository inSchoolYearsRepository
+) : IRequestHandler<SaveSchoolYearCommand>
 {
-    private readonly ISchoolYearsRepository _schoolYearsRepository;
-
-    public SaveSchoolYearHandler(ISchoolYearsRepository inSchoolYearsRepository)
-    {
-        _schoolYearsRepository = inSchoolYearsRepository;
-    }
-
-    public Task Handle(SaveSchoolYearCommand inRequest, CancellationToken inCancellationToken)
-    {
-        return _schoolYearsRepository.SaveSchoolYearAsync(inRequest.SchoolYear);
-    }
+    public Task Handle(SaveSchoolYearCommand inRequest, CancellationToken inCancellationToken) => 
+        inSchoolYearsRepository.SaveSchoolYearAsync(inRequest.SchoolYear);
 }

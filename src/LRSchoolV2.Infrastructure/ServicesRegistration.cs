@@ -1,10 +1,12 @@
-﻿using LRSchoolV2.Application.Core;
+﻿using System.Diagnostics.CodeAnalysis;
+using LRSchoolV2.Application.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LRSchoolV2.Infrastructure;
 
+[ExcludeFromCodeCoverage]
 public static class ServicesRegistration
 {
     public static void RegisterInfrastructure(this IServiceCollection inServices, IConfiguration inConfiguration)

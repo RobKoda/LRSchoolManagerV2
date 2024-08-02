@@ -1,4 +1,7 @@
-﻿using Mapster;
+﻿using System.Diagnostics.CodeAnalysis;
+using LanguageExt;
+using static LanguageExt.Prelude;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 // ReSharper disable UnusedMember.Global - Extension methods
@@ -6,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LRSchoolV2.Infrastructure.Core;
 
+[ExcludeFromCodeCoverage]
 public static class ApplicationContextFactoryExtensions
 {
     public static Task<ApplicationContext> GetContextAsync(this IDbContextFactory<ApplicationContext> inFactory) => 
@@ -45,17 +49,19 @@ public static class ApplicationContextFactoryExtensions
     public static Task<IEnumerable<TDomainType>> GetAllAsync<TDbType, TDomainType>(this IDbContextFactory<ApplicationContext> inFactory) where TDbType : class, IGuidEntity => 
         GetAllAsync<TDbType, TDomainType>(inFactory, inQueryable => inQueryable);
 
-    public static async Task<TDbType?> GetSingleAsync<TDbType>(this IDbContextFactory<ApplicationContext> inFactory, Guid inId, Func<IQueryable<TDbType>, IQueryable<TDbType>> inGetQueryable) where TDbType : class, IGuidEntity => 
-        await (await GetQueryableAsNoTrackingAsync(inFactory, inGetQueryable)).SingleOrDefaultAsync(inDbType => inDbType.Id == inId);
-
-    public static Task<TDbType?> GetSingleAsync<TDbType>(this IDbContextFactory<ApplicationContext> inFactory, Guid inId) where TDbType : class, IGuidEntity => 
-        GetSingleAsync<TDbType>(inFactory, inId, inQueryable => inQueryable);
-
-    public static async Task<TDomainType?> GetSingleAsync<TDbType, TDomainType>(this IDbContextFactory<ApplicationContext> inFactory, Guid inId, Func<IQueryable<TDbType>, IQueryable<TDbType>> inGetQueryable) where TDbType : class, IGuidEntity =>
+    public static async Task<Option<TDbType>> GetSingleAsync<TDbType>(this IDbContextFactory<ApplicationContext> inFactory, Guid inId, Func<IQueryable<TDbType>, IQueryable<TDbType>> inGetQueryable) where TDbType : class, IGuidEntity => 
+        Optional(
+            await (await GetQueryableAsNoTrackingAsync(inFactory, inGetQueryable))
+                .SingleOrDefaultAsync(inDbType => inDbType.Id == inId));
+    
+    public static async Task<Option<TDbType>> GetSingleAsync<TDbType>(this IDbContextFactory<ApplicationContext> inFactory, Guid inId) where TDbType : class, IGuidEntity => 
+        await GetSingleAsync<TDbType>(inFactory, inId, inQueryable => inQueryable);
+    
+    public static async Task<Option<TDomainType>> GetSingleAsync<TDbType, TDomainType>(this IDbContextFactory<ApplicationContext> inFactory, Guid inId, Func<IQueryable<TDbType>, IQueryable<TDbType>> inGetQueryable) where TDbType : class, IGuidEntity =>
         (await GetSingleAsync(inFactory, inId, inGetQueryable))
-        .Adapt<TDomainType?>();
+        .Map<TDomainType>(inSome => inSome.Adapt<TDomainType>());
 
-    public static Task<TDomainType?> GetSingleAsync<TDbType, TDomainType>(this IDbContextFactory<ApplicationContext> inFactory, Guid inId) where TDbType : class, IGuidEntity => 
+    public static Task<Option<TDomainType>> GetSingleAsync<TDbType, TDomainType>(this IDbContextFactory<ApplicationContext> inFactory, Guid inId) where TDbType : class, IGuidEntity => 
         GetSingleAsync<TDbType, TDomainType>(inFactory, inId, inQueryable => inQueryable);
 
     public static async Task<bool> AnyAsync<TDbType>(this IDbContextFactory<ApplicationContext> inFactory, Guid inId) where TDbType : class, IGuidEntity =>
@@ -93,7 +99,7 @@ public static class ApplicationContextFactoryExtensions
         
         var context = await GetContextAsync(inFactory);
         await context.Database.BeginTransactionAsync();
-        context.Remove(toValidate!);
+        context.Remove(toValidate);
         try
         {
             await context.SaveChangesAsync();

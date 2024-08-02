@@ -10,8 +10,8 @@ public interface ISchoolYearsRepository : IRepository
     Task SaveSchoolYearAsync(SchoolYear inSchoolYear);
     Task DeleteSchoolYearAsync(Guid inSchoolYearId);
     Task<bool> AnySchoolYearAsync(Guid inSchoolYearId);
-    Task<Option<SchoolYear>> GetCurrentSchoolYearAsync();
-    Task<Option<SchoolYear>> GetPreviousSchoolYearAsync(SchoolYear inReferenceSchoolYear);
-    Task<Option<SchoolYear>> GetNextSchoolYearAsync(SchoolYear inReferenceSchoolYear);
-    Task<bool> CanSchoolYearBeDeleted(Guid inSchoolYearId);
+    Task<Option<SchoolYear>> GetCurrentSchoolYearAsync(DateTime inToday);
+    Task<Option<SchoolYear>> GetPreviousSchoolYearAsync(Guid inReferenceSchoolYearId);
+    Task<Option<SchoolYear>> GetNextSchoolYearAsync(Guid inReferenceSchoolYearId);
+    Task<bool> CanSchoolYearBeDeletedAsync(Guid inSchoolYearId);
 }

@@ -8,22 +8,17 @@ using LRSchoolV2.Domain.Common;
 
 namespace LRSchoolV2.Application.Common.SchoolYears.SaveSchoolYear;
 
-public class SaveSchoolYearRequestValidation : AbstractValidator<SaveSchoolYearRequest>
+public class SaveSchoolYearRequestValidation(ISchoolYearsRepository inRepository) : AbstractValidator<SaveSchoolYearRequest>
 {
-    private readonly ISchoolYearsRepository _repository;
-
-    public SaveSchoolYearRequestValidation(ISchoolYearsRepository inRepository)
-    {
-        _repository = inRepository;
-    }
-
     public override async Task<ValidationResult> ValidateAsync(ValidationContext<SaveSchoolYearRequest> inContext,
         CancellationToken inCancellation = new())
     {
-        var previousSchoolYear = await _repository.GetPreviousSchoolYearAsync(inContext.InstanceToValidate.SchoolYear);
-        var nextSchoolYear = await _repository.GetNextSchoolYearAsync(inContext.InstanceToValidate.SchoolYear);
+        var previousSchoolYear = await inRepository.GetPreviousSchoolYearAsync(inContext.InstanceToValidate.SchoolYear.Id);
+        var nextSchoolYear = await inRepository.GetNextSchoolYearAsync(inContext.InstanceToValidate.SchoolYear.Id);
+        
         ValidateSchoolYear(previousSchoolYear, nextSchoolYear);
-
+        ValidateMembershipFee();
+        
         return await base.ValidateAsync(inContext, inCancellation);
     }
     
@@ -46,4 +41,12 @@ public class SaveSchoolYearRequestValidation : AbstractValidator<SaveSchoolYearR
                 inSome => inSome.StartDate.AddDays(-1) == inEndDate,
                 () => true))
             .WithMessage(SaveSchoolYearRequestValidationErrors.SchoolYearEndDateNotRightBeforeNextStartDate);
+    
+    private void ValidateMembershipFee() =>
+        ValidateMembershipFeeIsPositive();
+    
+    private void ValidateMembershipFeeIsPositive() =>
+        RuleFor(inRequest => inRequest.SchoolYear.MembershipFee)
+            .Must(inMembershipFee => inMembershipFee > 0)
+            .WithMessage(SaveSchoolYearRequestValidationErrors.SchoolYearMembershipFeeNotPositive);
 }

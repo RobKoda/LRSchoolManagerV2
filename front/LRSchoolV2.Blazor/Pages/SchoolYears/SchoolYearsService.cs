@@ -25,7 +25,7 @@ public class SchoolYearsService(
         (await inMediator.Send(new GetCurrentSchoolYearQuery())).SchoolYear;
 
     public Task<Validation<string, Unit>> DeleteSchoolYearAsync(SchoolYear inSchoolYear) => 
-        inMediator.SendRequestWithValidation<DeleteSchoolYearRequest, DeleteSchoolYearCommand>(new DeleteSchoolYearRequest(inSchoolYear), inDeleteSchoolYearRequestValidator);
+        inMediator.SendRequestWithValidation<DeleteSchoolYearRequest, DeleteSchoolYearCommand>(new DeleteSchoolYearRequest(inSchoolYear.Id), inDeleteSchoolYearRequestValidator);
 
     public Task<Validation<string, Unit>> SaveSchoolYearAsync(SchoolYear inSchoolYear) => 
         inMediator.SendRequestWithValidation<SaveSchoolYearRequest, SaveSchoolYearCommand>(new SaveSchoolYearRequest(inSchoolYear), inSaveSchoolYearRequestValidator);

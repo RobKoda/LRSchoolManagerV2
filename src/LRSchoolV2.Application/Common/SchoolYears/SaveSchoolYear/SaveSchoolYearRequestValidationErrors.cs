@@ -4,4 +4,5 @@ public static class SaveSchoolYearRequestValidationErrors
 {
     public const string SchoolYearStartDateNotRightAfterPreviousEndDate = "L'année scolaire doit suivre la précédente";
     public const string SchoolYearEndDateNotRightBeforeNextStartDate = "L'année scolaire doit précéder la suivante";
+    public const string SchoolYearMembershipFeeNotPositive = "La cotisation doit être positive";
 }
