@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using FluentValidation;
+using LanguageExt;
 using LRSchoolV2.Application.Common.SchoolYears.SaveSchoolYear;
 using LRSchoolV2.Application.Common.SchoolYears.Persistence;
 using LRSchoolV2.Application.Tests.Core;
@@ -11,18 +12,19 @@ namespace LRSchoolV2.Application.Tests.Common.SchoolYears.SaveSchoolYear;
 public class SaveSchoolYearRequestValidationTests
 {
     private readonly SaveSchoolYearRequestValidation _validation;
+    private readonly Mock<ISchoolYearsRepository> _mockRepository;
     
     public SaveSchoolYearRequestValidationTests()
     {
         ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
         ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Stop;
         
-        var mockRepository = new Mock<ISchoolYearsRepository>();
-        mockRepository.Setup(inRepository => inRepository.GetPreviousSchoolYearAsync(It.IsAny<Guid>()))
+        _mockRepository = new Mock<ISchoolYearsRepository>();
+        _mockRepository.Setup(inRepository => inRepository.GetPreviousSchoolYearAsync(It.IsAny<Guid>()))
             .ReturnsAsync(GetValidPreviousYear());
-        mockRepository.Setup(inRepository => inRepository.GetNextSchoolYearAsync(It.IsAny<Guid>()))
+        _mockRepository.Setup(inRepository => inRepository.GetNextSchoolYearAsync(It.IsAny<Guid>()))
             .ReturnsAsync(GetValidNextYear());
-        _validation = new SaveSchoolYearRequestValidation(mockRepository.Object);
+        _validation = new SaveSchoolYearRequestValidation(_mockRepository.Object);
     }
     
     private static SaveSchoolYearRequest GetValidSaveSchoolYearRequest() =>
@@ -79,6 +81,21 @@ public class SaveSchoolYearRequestValidationTests
     }
     
     [Fact]
+    public async Task ValidateAsync_ShouldSucceed_GivenNoPreviousSchoolYear()
+    {
+        // Arrange
+        _mockRepository.Setup(inRepository => inRepository.GetPreviousSchoolYearAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(Option<SchoolYear>.None);
+        var request = GetValidSaveSchoolYearRequest();
+        
+        // Act
+        var result = await _validation.ValidateAsync(request);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
+    }
+    
+    [Fact]
     public async Task ValidateAsync_ShouldFailWithErrorMessage_GivenEndDateNotRightBeforeNextStartDate()
     {
         // Arrange
@@ -95,6 +112,21 @@ public class SaveSchoolYearRequestValidationTests
         // Assert
         result.ShouldError($"{nameof(SaveSchoolYearRequest.SchoolYear)}.{nameof(SaveSchoolYearRequest.SchoolYear.EndDate)}",
             SaveSchoolYearRequestValidationErrors.SchoolYearEndDateNotRightBeforeNextStartDate);
+    }
+    
+    [Fact]
+    public async Task ValidateAsync_ShouldSucceed_GivenNoNextSchoolYear()
+    {
+        // Arrange
+        _mockRepository.Setup(inRepository => inRepository.GetNextSchoolYearAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(Option<SchoolYear>.None);
+        var request = GetValidSaveSchoolYearRequest();
+        
+        // Act
+        var result = await _validation.ValidateAsync(request);
+        
+        // Assert
+        result.IsValid.Should().BeTrue();
     }
     
     [Fact]

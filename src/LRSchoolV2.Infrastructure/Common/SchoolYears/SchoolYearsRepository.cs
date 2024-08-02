@@ -18,7 +18,7 @@ public class SchoolYearsRepository(
     public async Task<Option<SchoolYear>> GetCurrentSchoolYearAsync(DateTime inToday) =>
         Optional(
             (await inFactory.GetAllAsync<SchoolYearDataModel, SchoolYear>(inQueryable => inQueryable
-                .Where(inSchoolYear => inSchoolYear.StartDate < inToday && inSchoolYear.EndDate > inToday)))
+                .Where(inSchoolYear => inSchoolYear.StartDate <= inToday && inSchoolYear.EndDate >= inToday)))
             .SingleOrDefault());
     
     public async Task<Option<SchoolYear>> GetPreviousSchoolYearAsync(Guid inReferenceSchoolYearId) =>
@@ -37,23 +37,23 @@ public class SchoolYearsRepository(
             .MatchAsync(async inSome =>
                     Optional(
                         (await inFactory.GetAllAsync<SchoolYearDataModel, SchoolYear>(inQueryable => inQueryable
-                            .OrderByDescending(inSchoolYear => inSchoolYear.StartDate)
+                            .OrderBy(inSchoolYear => inSchoolYear.StartDate)
                             .Where(inSchoolYear => inSchoolYear.StartDate > inSome.StartDate)
                         ))
                         .FirstOrDefault()),
                 () => Option<SchoolYear>.None);
     
-    public Task<bool> CanSchoolYearBeDeletedAsync(Guid inSchoolYearId) =>
-        inFactory.CanBeDeleted<SchoolYearDataModel>(inSchoolYearId);
-    
-    public Task SaveSchoolYearAsync(SchoolYear inSchoolYear) =>
-        inFactory.SaveAsync<SchoolYearDataModel, SchoolYear>(inSchoolYear);
+    public Task<bool> AnySchoolYearAsync(Guid inSchoolYearId) =>
+        inFactory.AnyAsync<SchoolYearDataModel>(inSchoolYearId);
     
     public Task DeleteSchoolYearAsync(Guid inSchoolYearId) =>
         inFactory.DeleteAsync<SchoolYearDataModel>(inSchoolYearId);
     
-    public Task<bool> AnySchoolYearAsync(Guid inSchoolYearId) =>
-        inFactory.AnyAsync<SchoolYearDataModel>(inSchoolYearId);
+    public Task SaveSchoolYearAsync(SchoolYear inSchoolYear) =>
+        inFactory.SaveAsync<SchoolYearDataModel, SchoolYear>(inSchoolYear);
+    
+    public Task<bool> CanSchoolYearBeDeletedAsync(Guid inSchoolYearId) =>
+        inFactory.CanBeDeleted<SchoolYearDataModel>(inSchoolYearId);
     
     private async Task<Option<SchoolYear>> GetSchoolYearById(Guid inSchoolYearId) =>
         await inFactory.GetSingleAsync<SchoolYearDataModel, SchoolYear>(inSchoolYearId);
