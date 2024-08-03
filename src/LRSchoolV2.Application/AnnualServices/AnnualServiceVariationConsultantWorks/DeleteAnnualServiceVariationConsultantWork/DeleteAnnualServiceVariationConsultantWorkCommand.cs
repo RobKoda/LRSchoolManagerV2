@@ -1,0 +1,8 @@
+﻿using LRSchoolV2.Domain.AnnualServices;
+using MediatR;
+
+// ReSharper disable ClassNeverInstantiated.Global - Implicit use
+
+namespace LRSchoolV2.Application.AnnualServices.AnnualServiceVariationConsultantWorks.DeleteAnnualServiceVariationConsultantWork;
+
+public record DeleteAnnualServiceVariationConsultantWorkCommand(AnnualServiceVariationConsultantWork AnnualServiceVariationConsultantWork) : IRequest;

@@ -1,0 +1,149 @@
+﻿@page "/AnnualServices"
+@using Unit = LanguageExt.Unit
+@* ReSharper disable once RedundantUsingDirective Needed for ServiceVariations component*@
+@using LRSchoolV2.Blazor.Pages.AnnualServices.AnnualServiceVariations
+@using LRSchoolV2.Blazor.Pages.AnnualServices.SaveAnnualService
+@using LRSchoolV2.Blazor.Pages.AnnualServices.AnnualServiceConsultantWorks
+@using LRSchoolV2.Blazor.Pages.AnnualServices.AnnualServiceMembers
+@using LRSchoolV2.Domain.AnnualServices
+
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject AnnualServicesService AnnualServicesService
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddServiceClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
+
+    <MudPaper Class="mt-4">
+            <MudDataGrid T="AnnualService" Items="DisplayedServices" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Services annuels</MudText>
+            </ToolBarContent>
+            <Columns>
+                <HierarchyColumn T="AnnualService"/>
+                <PropertyColumn T="AnnualService" TProperty="string" Property="inAnnualService => inAnnualService.Name" Title="Nom"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Person" OnClick="@(() => OnMembersRegisteredClick(context.Item!))" Size="Size.Small"/>
+                            <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Engineering" OnClick="@(() => OnConsultantWorksClick(context.Item!))" Size="Size.Small"/>
+                            <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnServiceEditClick(context.Item!))" Size="Size.Small"/>
+                            <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => OnServiceDeleteClick(context.Item!))" Size="Size.Small"/>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <ChildRowContent>
+                <AnnualServiceVariations AnnualService="@context.Item"/>
+            </ChildRowContent>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private ObservableCollection<AnnualService> DisplayedServices { get; set; } = null!;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync() => 
+        DisplayedServices = new ObservableCollection<AnnualService>((await AnnualServicesService.GetAnnualServicesAsync())
+        .OrderBy(inService => inService.Name));
+
+    private async Task OnAddServiceClick()
+    {
+        var dialog = await DialogService.ShowAsync<SaveAnnualServiceDialog>("Ajout d'un service annuel", new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium,
+            BackdropClick = false
+        });
+        var dialogResult = await dialog.Result;
+        if (!dialogResult.Canceled)
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnServiceEditClick(AnnualService inAnnualService)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(SaveAnnualServiceDialog.Model), inAnnualService.Adapt<SaveAnnualServiceFormModel>() }
+        };
+        var theDialog = await DialogService.ShowAsync<SaveAnnualServiceDialog>("Edition d'un service annuel", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true, 
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true
+        });
+        var theDialogResult = await theDialog.Result;
+        if (!theDialogResult.Canceled)
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnServiceDeleteClick(AnnualService inAnnualService)
+    {
+        var theDialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer le service annuel {inAnnualService.Name}?", "Supprimer un service annuel", "Annuler", "Supprimer");
+        var theResult = await theDialog.Result;
+        if (!theResult.Canceled)
+        {
+            var result = await AnnualServicesService.DeleteAnnualServiceAsync(inAnnualService);
+            await result.MatchAsync(async inSuccess =>
+            {
+                await ReloadDataAsync();
+                return inSuccess;
+            },
+                inFailure =>
+                {
+                    Snackbar.Add(inFailure.First(), Severity.Error);
+                    return Unit.Default;
+                }
+            );
+        }
+    }
+
+    private async Task OnConsultantWorksClick(AnnualService inAnnualService)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(AnnualServiceConsultantWorksDialog.AnnualService), inAnnualService }
+        };
+        var theDialog = await DialogService.ShowAsync<AnnualServiceConsultantWorksDialog>($"{inAnnualService.Name} - Horaires communs des intervenants", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true, 
+            BackdropClick = false,
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        });
+        await theDialog.Result;
+        await ReloadDataAsync();
+    }
+
+    private async Task OnMembersRegisteredClick(AnnualService inAnnualService)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(AnnualServiceMembersDialog.AnnualService), inAnnualService }
+        };
+        var theDialog = await DialogService.ShowAsync<AnnualServiceMembersDialog>($"{inAnnualService.Name} - Membres inscrits", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true, 
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium
+                
+        });
+        await theDialog.Result;
+        await ReloadDataAsync();
+    }
+}

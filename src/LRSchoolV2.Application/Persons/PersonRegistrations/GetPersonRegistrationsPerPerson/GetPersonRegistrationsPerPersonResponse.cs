@@ -1,0 +1,5 @@
+﻿using LRSchoolV2.Domain.Persons;
+
+namespace LRSchoolV2.Application.Persons.PersonRegistrations.GetPersonRegistrationsPerPerson;
+
+public record GetPersonRegistrationsPerPersonResponse(IEnumerable<PersonRegistration> PersonRegistrations);

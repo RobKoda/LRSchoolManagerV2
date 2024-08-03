@@ -1,0 +1,3 @@
+﻿namespace LRSchoolV2.Application.AnnualServices.AnnualServiceConsultantWorks.GetAnnualServiceConsultantWorksPerAnnualService;
+
+public record GetAnnualServiceConsultantWorksPerAnnualServiceRequest(Guid AnnualServiceId);

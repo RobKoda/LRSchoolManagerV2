@@ -1,0 +1,6 @@
+﻿namespace LRSchoolV2.Application.AnnualServices.AnnualServiceVariationConsultantWorks.GetAnnualServiceVariationConsultantWorksPerAnnualServiceVariation;
+
+public static class GetAnnualServiceVariationConsultantWorksPerAnnualServiceVariationRequestValidationErrors
+{
+    public const string AnnualServiceVariationNotFound = "La variation n'a pas été trouvé";
+}

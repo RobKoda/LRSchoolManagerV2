@@ -1,0 +1,5 @@
+﻿using LRSchoolV2.Domain.AnnualServices;
+
+namespace LRSchoolV2.Application.AnnualServices.AnnualServiceVariationConsultantWorks.DeleteAnnualServiceVariationConsultantWork;
+
+public record DeleteAnnualServiceVariationConsultantWorkRequest(AnnualServiceVariationConsultantWork AnnualServiceVariationConsultantWork);

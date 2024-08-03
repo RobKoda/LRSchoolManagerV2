@@ -1,0 +1,77 @@
+﻿@using LRSchoolV2.Domain.Consultants
+@inject ConsultantsService ConsultantsService
+
+@if (Model != null)
+{
+    <EditForm Model="Model" OnValidSubmit="Submit">
+        <DataAnnotationsValidator/>
+        <MudDialog>
+            <DialogContent>
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudTextField Margin="Margin.Dense" Label="Nom" @bind-Value="Model.LastName" For="@(() => Model.LastName)"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField Margin="Margin.Dense" Label="Prénom" @bind-Value="Model.FirstName" For="@(() => Model.FirstName)"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField Margin="Margin.Dense" Label="Nom d'entreprise" @bind-Value="Model.CompanyName" For="@(() => Model.CompanyName)"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField Margin="Margin.Dense" Label="Téléphone" @bind-Value="Model.PhoneNumber" For="@(() => Model.PhoneNumber)"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Margin="Margin.Dense" Label="Email" @bind-Value="Model.Email" For="@(() => Model.Email)"/>
+                    </MudItem>
+                    
+                    <MudItem xs="12" Class="mt-4">
+                        <MudTextField Label="Iban" @bind-Value="Model.Iban" For="@(() => Model.Iban)"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Label="BIC" @bind-Value="Model.BicCode" For="@(() => Model.BicCode)"/>
+                    </MudItem>
+                    
+                    <MudItem xs="12" Class="mt-4">
+                        <MudTextField Margin="Margin.Dense" Label="Adresse" @bind-Value="Model.AddressStreet" For="@(() => Model.AddressStreet)"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Margin="Margin.Dense" Label="Complément d'adresse" @bind-Value="Model.AddressStreetComplement" For="@(() => Model.AddressStreetComplement)"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField Margin="Margin.Dense" Label="Code postal" @bind-Value="Model.AddressZipCode" For="@(() => Model.AddressZipCode)"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField Margin="Margin.Dense" Label="Ville" @bind-Value="Model.AddressCity" For="@(() => Model.AddressCity)"/>
+                    </MudItem>
+                </MudGrid>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@Cancel">Annuler</MudButton>
+                <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Ok</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </EditForm>
+}
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public SaveConsultantFormModel? Model { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Model ??= new SaveConsultantFormModel();
+    }
+
+    private async Task Submit()
+    {
+        await ConsultantsService.SaveConsultantAsync(Model.Adapt<Consultant>());
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -1,0 +1,6 @@
+﻿using LanguageExt;
+using LRSchoolV2.Domain.AnnualServices;
+
+namespace LRSchoolV2.Application.AnnualServices.AnnualServiceVariations.GetCurrentAnnualServiceVariations;
+
+public record GetCurrentAnnualServiceVariationsResponse(OptionAsync<IEnumerable<AnnualServiceVariation>> AnnualServiceVariations);

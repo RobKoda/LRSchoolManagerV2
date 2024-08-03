@@ -1,0 +1,112 @@
+﻿@using LRSchoolV2.Blazor.Pages.SchoolYears
+@using LRSchoolV2.Domain.Common
+@using LRSchoolV2.Domain.Persons
+@inject SchoolYearsService SchoolYearsService
+@inject PersonRegistrationsService PersonRegistrationsService
+@inject ISnackbar Snackbar
+@inject PersonsService PersonsService
+
+@if (Model != null)
+{
+    <EditForm Model="Model" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+        <MudDialog>
+            <DialogContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudSelect Label="Année scolaire" @bind-Value="Model.SchoolYear" For="@(() => Model.SchoolYear)">
+                            @foreach (var schoolYear in SchoolYears)
+                            {
+                                <MudSelectItem Value="schoolYear">@schoolYear.StartDate.ToShortDateString() - @schoolYear.EndDate.ToShortDateString()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudSwitch Label="Autorisation droit à l'image" @bind-Value="Model.ImageRightsGranted" Color="Color.Primary" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudSwitch Label="Facturer à : (à cocher uniquement si l'adhérent ou sa personne de contact 1 ne doit pas être le destinataire de la facture)" @bind-Value="BilledPersonShow" Color="Color.Primary"/>
+                        @if (_billedPersonShow)
+                        {
+                            <MudAutocomplete T="Person?" Label="" @bind-Value="Model.BilledPerson" For="@(() => Model.BilledPerson)" ResetValueOnEmptyText="true" Clearable="true"
+                                             ToStringFunc="@(inPerson => inPerson?.GetDropdownText() ?? string.Empty)" SearchFunc="SearchContactPerson"/>
+                        }
+                    </MudItem>
+                </MudGrid>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@Cancel">Annuler</MudButton>
+                <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Ok</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </EditForm>
+}
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public SavePersonRegistrationFormModel? Model { get; set; }
+
+    public IOrderedEnumerable<SchoolYear> SchoolYears { get; set; } = Enumerable.Empty<SchoolYear>().OrderByDescending(inSchoolYear => inSchoolYear.StartDate);
+
+    private IOrderedEnumerable<Person> Persons { get; set; } = null!;
+
+    private bool _billedPersonShow;
+    private bool BilledPersonShow
+    {
+        get => _billedPersonShow;
+        set
+        {
+            _billedPersonShow = value;
+            if (!value)
+            {
+                Model!.BilledPerson = null;
+            }
+        }
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadPersons();
+        
+        SchoolYears = (await SchoolYearsService.GetSchoolYearsAsync()).OrderByDescending(inSchoolYear => inSchoolYear.StartDate);
+        Model ??= new SavePersonRegistrationFormModel();
+
+        _billedPersonShow = Model.BilledPerson != null;
+        StateHasChanged();
+    }
+
+    private async Task Submit()
+    {
+        var result = await PersonRegistrationsService.SavePersonRegistrationAsync(Model.Adapt<PersonRegistration>());
+        result.Match(
+            _ => MudDialog.Close(DialogResult.Ok(true)),
+            inFailure => Snackbar.Add(inFailure.First(), Severity.Error)
+            );
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task ReloadPersons()
+    {
+        Persons = (await PersonsService.GetPersonsAsync())
+            .OrderBy(inPerson => inPerson.LastName).ThenBy(inPerson => inPerson.FirstName);
+    }
+
+    private Task<IEnumerable<Person>> SearchContactPerson(string inValue, CancellationToken inCancellationToken)
+    {
+        var persons = Persons.Where(inPerson => inPerson.Id != Model!.Id);
+        return Task.FromResult(
+            string.IsNullOrWhiteSpace(inValue) ?
+                persons :
+                persons.Where(inPerson => inPerson.GetFullName().Contains(inValue, StringComparison.InvariantCultureIgnoreCase))
+            );
+    }
+
+    
+}
+

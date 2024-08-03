@@ -1,0 +1,148 @@
+﻿@using Unit = LanguageExt.Unit
+@using LRSchoolV2.Blazor.Pages.Persons.PersonRegistrations.SavePersonRegistration
+@using LRSchoolV2.Domain.Persons
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject PersonRegistrationsService PersonRegistrationsService
+
+@if (Person != null)
+{
+    <MudDialog>
+        <DialogContent>
+            <MudGrid Class="mb-4">
+                <MudItem xs="4">
+                    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddPersonRegistrationPriceClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
+                </MudItem>
+                <MudItem xs="8">
+                    <MudSwitch @bind-Value="ShowOldRecords" Color="Color.Primary">Afficher les anciennes années</MudSwitch>
+                </MudItem>
+            </MudGrid>
+            <MudDataGrid T="PersonRegistration" Items="DisplayedPersonRegistrations" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" RowStyleFunc="GreyOutOldRecords">
+                <Columns>
+                    <PropertyColumn T="PersonRegistration" TProperty="string" Property="inPersonRegistration => inPersonRegistration.SchoolYear.GetPeriodDisplay()" Title="Période"/>
+                    <TemplateColumn T="PersonRegistration" Title="Autorisation droit à l'image">
+                        <CellTemplate>
+                            <MudCheckBox Value="context.Item.ImageRightsGranted" ReadOnly="true" Color="Color.Primary"/>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <TemplateColumn>
+                        <CellTemplate>
+                            <MudStack Row>
+                                <MudTooltip Text="Édition">
+                                    <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnPersonRegistrationEditClick(context.Item!))" Size="Size.Small"/>
+                                </MudTooltip>
+                                <MudTooltip Text="Suppression">
+                                    <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => OnPersonRegistrationDeleteClick(context.Item!))" Size="Size.Small"/>
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+            </MudDataGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Cancel">Retour</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public Person? Person { get; set; }
+
+    private ObservableCollection<PersonRegistration> PersonRegistrations { get; set; } = [];
+
+    private bool ShowOldRecords { get; set; }
+
+    private IEnumerable<PersonRegistration> DisplayedPersonRegistrations => PersonRegistrations
+        .Where(inPersonRegistration => ShowOldRecords || inPersonRegistration.SchoolYear.IsCurrentPeriod());
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        var result = await PersonRegistrationsService.GetPersonRegistrationsPerPersonAsync(Person!.Id);
+        result.Match(inSuccess =>
+            PersonRegistrations = new ObservableCollection<PersonRegistration>(inSuccess
+                .OrderByDescending(inServiceConsultantWork => inServiceConsultantWork.SchoolYear.StartDate)),
+            inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task OnAddPersonRegistrationPriceClick()
+    {
+        var theParameters = new DialogParameters
+        {
+            {
+                nameof(SavePersonRegistrationDialog.Model), new SavePersonRegistrationFormModel
+                {
+                    Person = Person
+                }
+            }
+        };
+        var dialog = await DialogService.ShowAsync<SavePersonRegistrationDialog>("Ajout d'une adhésion", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false
+        });
+        var dialogResult = await dialog.Result;
+        if (!dialogResult.Canceled)
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnPersonRegistrationEditClick(PersonRegistration inPersonRegistration)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(SavePersonRegistrationDialog.Model), inPersonRegistration.Adapt<SavePersonRegistrationFormModel>() }
+        };
+        var theDialog = await DialogService.ShowAsync<SavePersonRegistrationDialog>("Edition d'une adhésion", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true
+        });
+        var theDialogResult = await theDialog.Result;
+        if (!theDialogResult.Canceled)
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnPersonRegistrationDeleteClick(PersonRegistration inPersonRegistration)
+    {
+        var theDialog = await DialogService.Confirm("Êtes-vous sur de vouloir supprimer l'adhésion ?", "Supprimer une adhésion", "Annuler", "Supprimer");
+        var theResult = await theDialog.Result;
+        if (!theResult.Canceled)
+        {
+            var result = await PersonRegistrationsService.DeletePersonRegistrationAsync(inPersonRegistration);
+            await result.MatchAsync(async inSuccess =>
+            {
+                await ReloadDataAsync();
+                return inSuccess;
+            },
+                inFailure =>
+                {
+                    Snackbar.Add(inFailure.First(), Severity.Error);
+                    return Unit.Default;
+                }
+                );
+        }
+    }
+
+    private static string GreyOutOldRecords(PersonRegistration inYearlyPrice, int inIndex) =>
+        inYearlyPrice.SchoolYear.IsCurrentPeriod() ? string.Empty : $"background-color: {Colors.Gray.Lighten3}";
+
+}

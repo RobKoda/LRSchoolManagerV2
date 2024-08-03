@@ -1,0 +1,141 @@
+﻿@using Unit = LanguageExt.Unit
+@using LRSchoolV2.Blazor.Pages.Persons.Members.PersonServiceVariations.SavePersonServiceVariation
+@using LRSchoolV2.Domain.Persons
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject PersonAnnualServiceVariationsService PersonAnnualServiceVariationsService
+
+@if (Person != null)
+{
+    <MudDialog>
+        <DialogContent>
+            <MudGrid Class="mb-4">
+                <MudItem xs="4">
+                    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddPersonServiceVariationPriceClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
+                </MudItem>
+                <MudItem xs="8">
+                    <MudSwitch @bind-Value="ShowOldRecords" Color="Color.Primary">Afficher les anciennes années</MudSwitch>
+                </MudItem>
+            </MudGrid>
+            <MudDataGrid T="PersonAnnualServiceVariation" Items="DisplayedPersonServiceVariations" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" RowStyleFunc="GreyOutOldRecords">
+                <Columns>
+                    <PropertyColumn T="PersonAnnualServiceVariation" TProperty="string" Property="inPersonServiceVariation => inPersonServiceVariation.AnnualServiceVariation.InvoiceName" Title="Service"/>
+                    <PropertyColumn T="PersonAnnualServiceVariation" TProperty="int" Property="inPersonServiceVariation => inPersonServiceVariation.PaymentsCount" Title="Nombre de paiements"/>
+                    <TemplateColumn>
+                        <CellTemplate>
+                            <MudStack Row>
+                                <MudTooltip Text="Édition">
+                                    <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnPersonServiceVariationEditClick(context.Item!))" Size="Size.Small"/>
+                                </MudTooltip>
+                                <MudTooltip Text="Suppression">
+                                    <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => OnPersonServiceVariationDeleteClick(context.Item!))" Size="Size.Small"/>
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+            </MudDataGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Cancel">Retour</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public Person? Person { get; set; }
+
+    private ObservableCollection<PersonAnnualServiceVariation> PersonServiceVariations { get; set; } = [];
+    
+    private bool ShowOldRecords { get; set; }
+    private IEnumerable<PersonAnnualServiceVariation> DisplayedPersonServiceVariations => PersonServiceVariations
+        .Where(inPersonServiceVariation => ShowOldRecords || inPersonServiceVariation.SchoolYear.IsCurrentPeriod());
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        var result = await PersonAnnualServiceVariationsService.GetPersonServiceVariationsPerPersonAsync(Person!.Id);
+        result.Match(inSuccess => 
+            PersonServiceVariations = new ObservableCollection<PersonAnnualServiceVariation>(inSuccess
+                .OrderByDescending(inServiceConsultantWork => inServiceConsultantWork.SchoolYear.StartDate)),
+            inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+    }
+    
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task OnAddPersonServiceVariationPriceClick()
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(SavePersonServiceVariationDialog.Model), new SavePersonServiceVariationFormModel
+            {
+                Person = Person
+            } }
+        };
+        var dialog = await DialogService.ShowAsync<SavePersonServiceVariationDialog>("Ajout d'une inscription", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false
+        });
+        var dialogResult = await dialog.Result;
+        if (!dialogResult.Canceled)
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnPersonServiceVariationEditClick(PersonAnnualServiceVariation inPersonAnnualServiceVariation)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(SavePersonServiceVariationDialog.Model), inPersonAnnualServiceVariation.Adapt<SavePersonServiceVariationFormModel>() }
+        };
+        var theDialog = await DialogService.ShowAsync<SavePersonServiceVariationDialog>("Edition d'une inscription", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true, 
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true
+        });
+        var theDialogResult = await theDialog.Result;
+        if (!theDialogResult.Canceled)
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnPersonServiceVariationDeleteClick(PersonAnnualServiceVariation inPersonAnnualServiceVariation)
+    {
+        var theDialog = await DialogService.Confirm("Êtes-vous sur de vouloir supprimer l'inscription ?", "Supprimer une inscription", "Annuler", "Supprimer");
+        var theResult = await theDialog.Result;
+        if (!theResult.Canceled)
+        {
+            var result = await PersonAnnualServiceVariationsService.DeletePersonServiceVariationAsync(inPersonAnnualServiceVariation);
+            await result.MatchAsync(async inSuccess =>
+            {
+                await ReloadDataAsync();
+                return inSuccess;
+            },
+                inFailure =>
+                {
+                    Snackbar.Add(inFailure.First(), Severity.Error);
+                    return Unit.Default;
+                }
+                );
+        }
+    }
+
+    private static string GreyOutOldRecords(PersonAnnualServiceVariation inYearlyPrice, int inIndex) => 
+        inYearlyPrice.SchoolYear.IsCurrentPeriod() ? string.Empty : $"background-color: {Colors.Gray.Lighten3}";
+}
+

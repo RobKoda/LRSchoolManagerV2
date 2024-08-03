@@ -1,0 +1,179 @@
+﻿@using Unit = LanguageExt.Unit
+@using LRSchoolV2.Blazor.Pages.AnnualServices.AnnualServiceVariations.SaveAnnualServiceVariation
+@using LRSchoolV2.Blazor.Pages.AnnualServices.AnnualServiceVariations.AnnualServiceVariationConsultantWorks
+@using LRSchoolV2.Blazor.Pages.AnnualServices.AnnualServiceVariations.AnnualServiceVariationYearlyPrices
+@using LRSchoolV2.Domain.AnnualServices
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject AnnualServiceVariationsService AnnualServiceVariationsService
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddServiceVariationClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
+
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="AnnualServiceVariation" Items="DisplayedAnnualServiceVariations" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Variations</MudText>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn T="AnnualServiceVariation" TProperty="string" Property="inServiceVariation => inServiceVariation.Name" Title="Nom"/>
+                <PropertyColumn T="AnnualServiceVariation" TProperty="string" Property="inServiceVariation => inServiceVariation.InvoiceName" Title="Nom sur la facture"/>
+                <PropertyColumn T="AnnualServiceVariation" TProperty="decimal" Property="inServiceVariation => inServiceVariation.GetPrice()" Title="Prix"/>
+                <PropertyColumn T="AnnualServiceVariation" TProperty="decimal" Property="inServiceVariation => inServiceVariation.GetMargin()" Title="Marge"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudTooltip Text="Tarifs">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Euro" OnClick="@(() => OnServiceVariationYearlyPricesClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Horaires consultants">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Engineering" OnClick="@(() => OnServiceVariationConsultantWorksClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Édition">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnServiceVariationEditClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Suppression">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => OnServiceVariationDeleteClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public AnnualService AnnualService { get; set; } = null!;
+
+    private ObservableCollection<AnnualServiceVariation> DisplayedAnnualServiceVariations { get; set; } = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        var result = await AnnualServiceVariationsService.GetAnnualServiceVariationsPerServiceAsync(AnnualService.Id);
+        await result.MatchAsync(
+            async inSuccess =>
+            {
+                await inSuccess.Match(inSome => DisplayedAnnualServiceVariations = new ObservableCollection<AnnualServiceVariation>(inSome.OrderBy(inServiceVariation => inServiceVariation.Name)),
+                    () => Snackbar.Add("Aucune année scolaire courante. Une année scolaire en cours doit être enregistrée", Severity.Error));
+                return Unit.Default;
+            },
+            inFailure =>
+            {
+                Snackbar.Add(inFailure.First(), Severity.Error);
+                return Unit.Default;
+            });
+    }
+
+    private async Task OnAddServiceVariationClick()
+    {
+        var theParameters = new DialogParameters
+        {
+            {
+                nameof(SaveAnnualServiceVariationDialog.Model), new SaveAnnualServiceVariationFormModel
+                {
+                    AnnualService = AnnualService
+                }
+            }
+        };
+        var dialog = await DialogService.ShowAsync<SaveAnnualServiceVariationDialog>("Ajout d'une variation", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium,
+            BackdropClick = false
+        });
+        var dialogResult = await dialog.Result;
+        if (!dialogResult.Canceled)
+        {
+            await ReloadDataAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnServiceVariationEditClick(AnnualServiceVariation inAnnualServiceVariation)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(SaveAnnualServiceVariationDialog.Model), inAnnualServiceVariation.Adapt<SaveAnnualServiceVariationFormModel>() }
+        };
+        var theDialog = await DialogService.ShowAsync<SaveAnnualServiceVariationDialog>("Edition d'une variation", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true
+        });
+        var theDialogResult = await theDialog.Result;
+        if (!theDialogResult.Canceled)
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnServiceVariationDeleteClick(AnnualServiceVariation inAnnualServiceVariation)
+    {
+        var theDialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer la variation {inAnnualServiceVariation.Name} ?", "Supprimer une variation", "Annuler", "Supprimer");
+        var theResult = await theDialog.Result;
+        if (!theResult.Canceled)
+        {
+            var result = await AnnualServiceVariationsService.DeleteAnnualServiceVariationAsync(inAnnualServiceVariation);
+            await result.MatchAsync(async inSuccess =>
+            {
+                await ReloadDataAsync();
+                return inSuccess;
+            },
+                inFailure =>
+                {
+                    Snackbar.Add(inFailure.First(), Severity.Error);
+                    return Unit.Default;
+                }
+                );
+        }
+    }
+
+    private async Task OnServiceVariationConsultantWorksClick(AnnualServiceVariation inAnnualServiceVariation)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(AnnualServiceVariationConsultantWorksDialog.ServiceVariation), inAnnualServiceVariation }
+        };
+        var theDialog = await DialogService.ShowAsync<AnnualServiceVariationConsultantWorksDialog>($"{inAnnualServiceVariation.Name} - Horaires des intervenants", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        });
+        await theDialog.Result;
+        await ReloadDataAsync();
+    }
+
+    private async Task OnServiceVariationYearlyPricesClick(AnnualServiceVariation inAnnualServiceVariation)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(AnnualServiceVariationYearlyPricesDialog.ServiceVariation), inAnnualServiceVariation }
+        };
+        var theDialog = await DialogService.ShowAsync<AnnualServiceVariationYearlyPricesDialog>($"{inAnnualServiceVariation.Name} - Tarifs", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        });
+        await theDialog.Result;
+        await ReloadDataAsync();
+    }
+
+}

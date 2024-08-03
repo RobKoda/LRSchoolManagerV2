@@ -1,0 +1,5 @@
+﻿using MediatR;
+
+namespace LRSchoolV2.Application.AnnualServices.AnnualServiceVariations.GetCurrentAnnualServiceVariations;
+
+public record GetCurrentAnnualServiceVariationsQuery : IRequest<GetCurrentAnnualServiceVariationsResponse>;

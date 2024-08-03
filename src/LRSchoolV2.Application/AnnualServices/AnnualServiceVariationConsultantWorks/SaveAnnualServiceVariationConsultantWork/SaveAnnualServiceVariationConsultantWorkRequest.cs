@@ -1,0 +1,9 @@
+﻿
+
+// ReSharper disable ClassNeverInstantiated.Global - Implicit use
+
+using LRSchoolV2.Domain.AnnualServices;
+
+namespace LRSchoolV2.Application.AnnualServices.AnnualServiceVariationConsultantWorks.SaveAnnualServiceVariationConsultantWork;
+
+public record SaveAnnualServiceVariationConsultantWorkRequest(AnnualServiceVariationConsultantWork AnnualServiceVariationConsultantWork);

@@ -1,0 +1,50 @@
+﻿@using LRSchoolV2.Domain.AnnualServices
+@inject AnnualServicesService AnnualServicesService
+@inject ISnackbar Snackbar
+
+@if (Model != null)
+{
+    <EditForm Model="Model" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+        <MudDialog>
+            <DialogContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudTextField Label="Nom" @bind-Value="Model.Name" For="@(() => Model.Name)"/>
+                    </MudItem>
+                </MudGrid>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@Cancel">Annuler</MudButton>
+                <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Ok</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </EditForm>
+}
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public SaveAnnualServiceFormModel? Model { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Model ??= new SaveAnnualServiceFormModel();
+    }
+
+    private async Task Submit()
+    {
+        var result = await AnnualServicesService.SaveAnnualServiceAsync(Model.Adapt<AnnualService>());
+        
+        result.Match(
+            _ => MudDialog.Close(DialogResult.Ok(true)),
+            inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
+

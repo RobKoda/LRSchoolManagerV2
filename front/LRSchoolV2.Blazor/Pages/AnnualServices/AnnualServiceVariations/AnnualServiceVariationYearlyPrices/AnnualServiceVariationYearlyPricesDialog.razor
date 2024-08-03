@@ -1,0 +1,142 @@
+﻿@using Unit = LanguageExt.Unit
+@using LRSchoolV2.Blazor.Pages.AnnualServices.AnnualServiceVariations.AnnualServiceVariationYearlyPrices.SaveAnnualServiceVariationYearlyPrice
+@using LRSchoolV2.Domain.AnnualServices
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject AnnualServiceVariationYearlyPricesService AnnualServiceVariationYearlyPricesService
+
+@if (ServiceVariation != null)
+{
+    <MudDialog>
+        <DialogContent>
+            <MudGrid Class="mb-4">
+                <MudItem xs="4">
+                    <MudButton Class="mb-2" StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddServiceVariationYearlyPriceClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
+                </MudItem>
+                <MudItem xs="8">
+                    <MudSwitch @bind-Value="ShowOldRecords" Color="Color.Primary">Afficher les anciennes années</MudSwitch>
+                </MudItem>
+            </MudGrid>
+
+            <MudDataGrid T="AnnualServiceVariationYearlyPrice" Items="DisplayedYearlyPrices" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" RowStyleFunc="GreyOutOldRecords">
+                <Columns>
+                    <PropertyColumn T="AnnualServiceVariationYearlyPrice" TProperty="string" Property="inServiceVariationYearlyPrice => inServiceVariationYearlyPrice.SchoolYear.GetPeriodDisplay()" Title="Période"/>
+                    <PropertyColumn T="AnnualServiceVariationYearlyPrice" TProperty="decimal" Property="inServiceVariationYearlyPrice => inServiceVariationYearlyPrice.Price" Title="Prix"/>
+                    <PropertyColumn T="AnnualServiceVariationYearlyPrice" TProperty="decimal" Property="inServiceVariationYearlyPrice => inServiceVariationYearlyPrice.Margin" Title="Marge"/>
+                    <TemplateColumn>
+                        <CellTemplate>
+                            <MudStack Row>
+                                <MudTooltip Text="Édition">
+                                    <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnServiceVariationYearlyPriceEditClick(context.Item!))" Size="Size.Small"/>
+                                </MudTooltip>
+                                <MudTooltip Text="Suppression">
+                                    <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => OnServiceVariationYearlyPriceDeleteClick(context.Item!))" Size="Size.Small"/>
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+            </MudDataGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Cancel">Retour</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public AnnualServiceVariation? ServiceVariation { get; set; }
+
+    private ObservableCollection<AnnualServiceVariationYearlyPrice> YearlyPrices { get; set; } = [];
+
+    private bool ShowOldRecords { get; set; }
+    private IEnumerable<AnnualServiceVariationYearlyPrice> DisplayedYearlyPrices => YearlyPrices.Where(inYearlyPrice => ShowOldRecords || inYearlyPrice.SchoolYear.IsCurrentPeriod());
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        var result = await AnnualServiceVariationYearlyPricesService.GetAnnualServiceVariationYearlyPricesPerAnnualServiceAsync(ServiceVariation!.Id);
+        result.Match(inSuccess => YearlyPrices = new ObservableCollection<AnnualServiceVariationYearlyPrice>(inSuccess
+            .OrderByDescending(inServiceVariationYearlyPrice => inServiceVariationYearlyPrice.SchoolYear.StartDate)),
+            inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task OnAddServiceVariationYearlyPriceClick()
+    {
+        var theParameters = new DialogParameters
+        {
+            {
+                nameof(SaveAnnualServiceVariationYearlyPriceDialog.Model), new SaveServiceVariationYearlyPriceFormModel
+                {
+                    ServiceVariationId = ServiceVariation!.Id
+                }
+            }
+        };
+        var dialog = await DialogService.ShowAsync<SaveAnnualServiceVariationYearlyPriceDialog>("Ajout d'un prix annuel", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false
+        });
+        var dialogResult = await dialog.Result;
+        if (!dialogResult.Canceled)
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnServiceVariationYearlyPriceEditClick(AnnualServiceVariationYearlyPrice inAnnualServiceVariationYearlyPrice)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(SaveAnnualServiceVariationYearlyPriceDialog.Model), inAnnualServiceVariationYearlyPrice.Adapt<SaveServiceVariationYearlyPriceFormModel>() }
+        };
+        var theDialog = await DialogService.ShowAsync<SaveAnnualServiceVariationYearlyPriceDialog>("Edition d'un prix annuel", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true, 
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true
+        });
+        var theDialogResult = await theDialog.Result;
+        if (!theDialogResult.Canceled)
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnServiceVariationYearlyPriceDeleteClick(AnnualServiceVariationYearlyPrice inAnnualServiceVariationYearlyPrice)
+    {
+        var theDialog = await DialogService.Confirm("Êtes-vous sur de vouloir supprimer le prix annuel ?", "Supprimer un prix annuel", "Annuler", "Supprimer");
+        var theResult = await theDialog.Result;
+        if (!theResult.Canceled)
+        {
+            var result = await AnnualServiceVariationYearlyPricesService.DeleteAnnualServiceVariationYearlyPriceAsync(inAnnualServiceVariationYearlyPrice);
+            await result.MatchAsync(async inSuccess =>
+            {
+                await ReloadDataAsync();
+                return inSuccess;
+            },
+                inFailure =>
+                {
+                    Snackbar.Add(inFailure.First(), Severity.Error);
+                    return Unit.Default;
+                }
+                );
+        }
+    }
+
+    private static string GreyOutOldRecords(AnnualServiceVariationYearlyPrice inYearlyPrice, int inIndex) =>
+        inYearlyPrice.SchoolYear.IsCurrentPeriod() ? string.Empty : $"background-color: {Colors.Gray.Lighten3}";
+
+}

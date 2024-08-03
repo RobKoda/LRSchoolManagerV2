@@ -1,0 +1,83 @@
+﻿@using LRSchoolV2.Blazor.Pages.Consultants
+@using LRSchoolV2.Blazor.Pages.SchoolYears
+@using System.Globalization
+@using LRSchoolV2.Domain.AnnualServices
+@using LRSchoolV2.Domain.Common
+@using LRSchoolV2.Domain.Consultants
+
+@inject AnnualServiceConsultantWorksService AnnualServiceConsultantWorksService
+@inject ConsultantsService ConsultantsService
+@inject SchoolYearsService SchoolYearsService
+@inject ISnackbar Snackbar
+
+@if (Model != null)
+{
+    <EditForm Model="Model" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+        <MudDialog>
+            <DialogContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudSelect Label="Année scolaire" @bind-Value="Model.SchoolYear" For="@(() => Model.SchoolYear)">
+                            @foreach (var schoolYear in SchoolYears)
+                            {
+                                <MudSelectItem Value="schoolYear">@schoolYear.StartDate.ToShortDateString() - @schoolYear.EndDate.ToShortDateString()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudSelect Label="Intervenant" @bind-Value="Model.Consultant" For="@(() => Model.Consultant)">
+                            @foreach (var consultant in Consultants)
+                            {
+                                <MudSelectItem Value="consultant">@consultant.GetFullName()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudNumericField HideSpinButtons="true" Label="Nombre d'heures communes" @bind-Value="Model.CommonWorkHours" For="@(() => Model.CommonWorkHours)" Culture="CultureInfo.InvariantCulture"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Lines="5" Label="Commentaire" @bind-Value="Model.CommonWorkHoursComment" For="@(() => Model.CommonWorkHoursComment)"/>
+                    </MudItem>
+                </MudGrid>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@Cancel">Annuler</MudButton>
+                <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Ok</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </EditForm>
+}
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public SaveAnnualServiceConsultantWorkFormModel? Model { get; set; }
+
+    public IOrderedEnumerable<SchoolYear> SchoolYears { get; set; } = Enumerable.Empty<SchoolYear>().OrderByDescending(inSchoolYear => inSchoolYear.StartDate);
+    public IOrderedEnumerable<Consultant> Consultants { get; set; } = Enumerable.Empty<Consultant>().OrderBy(inSchoolYear => inSchoolYear.LastName);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Model ??= new SaveAnnualServiceConsultantWorkFormModel();
+        SchoolYears = (await SchoolYearsService.GetSchoolYearsAsync()).OrderByDescending(inSchoolYear => inSchoolYear.StartDate);
+        Consultants = (await ConsultantsService.GetConsultantsAsync()).OrderBy(inSchoolYear => inSchoolYear.LastName);
+        StateHasChanged();
+    }
+
+    private async Task Submit()
+    {
+        var result = await AnnualServiceConsultantWorksService.SaveAnnualServiceConsultantWorkAsync(Model.Adapt<AnnualServiceConsultantWork>());
+        result.Match(
+            _ => MudDialog.Close(DialogResult.Ok(true)),
+            inFailure => Snackbar.Add(inFailure.First(), Severity.Error)
+            );
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
+

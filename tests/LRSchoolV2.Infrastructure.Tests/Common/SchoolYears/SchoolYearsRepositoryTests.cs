@@ -227,7 +227,7 @@ public class SchoolYearsRepositoryTests : IDisposable
     }
     
     [Fact]
-    public async Task DeleteSchoolYearsAsync_ShouldReturnSchoolYears()
+    public async Task DeleteSchoolYearsAsync_ShouldDeleteSchoolYears()
     {
         // Arrange
         var schoolYear = _fixture.Create<SchoolYearDataModel>();

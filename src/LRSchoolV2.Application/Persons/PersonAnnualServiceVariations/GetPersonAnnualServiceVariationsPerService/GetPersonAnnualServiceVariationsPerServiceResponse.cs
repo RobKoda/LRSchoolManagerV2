@@ -1,0 +1,5 @@
+﻿using LRSchoolV2.Domain.Persons;
+
+namespace LRSchoolV2.Application.Persons.PersonAnnualServiceVariations.GetPersonAnnualServiceVariationsPerService;
+
+public record GetPersonAnnualServiceVariationsPerServiceResponse(IEnumerable<PersonAnnualServiceVariation> PersonAnnualServiceVariations);

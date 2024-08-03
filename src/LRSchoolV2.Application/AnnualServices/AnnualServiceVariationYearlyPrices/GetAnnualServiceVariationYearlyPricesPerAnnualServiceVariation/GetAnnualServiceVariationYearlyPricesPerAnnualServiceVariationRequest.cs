@@ -1,0 +1,3 @@
+﻿namespace LRSchoolV2.Application.AnnualServices.AnnualServiceVariationYearlyPrices.GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariation;
+
+public record GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationRequest(Guid AnnualServiceVariationId);

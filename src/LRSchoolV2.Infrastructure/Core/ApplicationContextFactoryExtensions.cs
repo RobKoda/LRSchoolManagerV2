@@ -93,25 +93,27 @@ public static class ApplicationContextFactoryExtensions
         await context.SaveChangesAsync();
     }
 
-    public static async Task<bool> CanBeDeleted<TDbType>(this IDbContextFactory<ApplicationContext> inFactory, Guid inId) where TDbType : class, IGuidEntity
-    {
-        var toValidate = await GetSingleAsync<TDbType>(inFactory, inId);
-        
-        var context = await GetContextAsync(inFactory);
-        await context.Database.BeginTransactionAsync();
-        context.Remove(toValidate);
-        try
-        {
-            await context.SaveChangesAsync();
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-        finally
-        {
-            await context.Database.RollbackTransactionAsync();
-        }
-    }
+    public static async Task<bool> CanBeDeleted<TDbType>(this IDbContextFactory<ApplicationContext> inFactory, Guid inId) where TDbType : class, IGuidEntity =>
+        await (await GetSingleAsync<TDbType>(inFactory, inId))
+            .MatchAsync(
+                async inToValidate =>
+                {
+                    var context = await GetContextAsync(inFactory);
+                    await context.Database.BeginTransactionAsync();
+                    context.Remove(inToValidate);
+                    try
+                    {
+                        await context.SaveChangesAsync();
+                        return true;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                    finally
+                    {
+                        await context.Database.RollbackTransactionAsync();
+                    }
+                },
+                () => false);
 }

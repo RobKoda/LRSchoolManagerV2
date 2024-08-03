@@ -1,0 +1,19 @@
+﻿using LRSchoolV2.Application.AnnualServices.AnnualServiceVariationYearlyPrices.Persistence;
+using MediatR;
+
+// ReSharper disable UnusedType.Global - Implicit use
+
+namespace LRSchoolV2.Application.AnnualServices.AnnualServiceVariationYearlyPrices.GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariation;
+
+public class GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationHandler : IRequestHandler<GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationQuery, GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationResponse>
+{
+    private readonly IAnnualServiceVariationYearlyPricesRepository _annualServiceVariationYearlyPricesRepository;
+
+    public GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationHandler(IAnnualServiceVariationYearlyPricesRepository inAnnualServiceVariationYearlyPricesRepository)
+    {
+        _annualServiceVariationYearlyPricesRepository = inAnnualServiceVariationYearlyPricesRepository;
+    }
+
+    public async Task<GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationResponse> Handle(GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationQuery inRequest, CancellationToken inCancellationToken) =>
+        new(await _annualServiceVariationYearlyPricesRepository.GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationAsync(inRequest.AnnualServiceVariationId));
+}

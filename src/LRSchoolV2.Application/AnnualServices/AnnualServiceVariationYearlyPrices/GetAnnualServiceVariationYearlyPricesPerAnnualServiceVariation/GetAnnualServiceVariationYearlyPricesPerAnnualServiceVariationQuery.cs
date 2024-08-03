@@ -1,0 +1,7 @@
+﻿using MediatR;
+
+// ReSharper disable ClassNeverInstantiated.Global - Implicit use
+
+namespace LRSchoolV2.Application.AnnualServices.AnnualServiceVariationYearlyPrices.GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariation;
+
+public record GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationQuery(Guid AnnualServiceVariationId) : IRequest<GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationResponse>;

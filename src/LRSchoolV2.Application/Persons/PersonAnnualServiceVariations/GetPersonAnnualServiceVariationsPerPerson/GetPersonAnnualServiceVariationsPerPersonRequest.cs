@@ -1,0 +1,3 @@
+﻿namespace LRSchoolV2.Application.Persons.PersonAnnualServiceVariations.GetPersonAnnualServiceVariationsPerPerson;
+
+public record GetPersonAnnualServiceVariationsPerPersonRequest(Guid PersonId);

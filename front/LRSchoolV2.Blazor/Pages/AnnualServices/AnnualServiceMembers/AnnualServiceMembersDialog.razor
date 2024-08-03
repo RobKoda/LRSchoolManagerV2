@@ -1,0 +1,68 @@
+﻿@using LRSchoolV2.Blazor.Pages.Persons.Members.PersonServiceVariations
+@using LRSchoolV2.Domain.AnnualServices
+@using LRSchoolV2.Domain.Persons
+
+@inject ISnackbar Snackbar
+@inject PersonAnnualServiceVariationsService PersonAnnualServiceVariationsService
+
+@if (AnnualService != null)
+{
+    <MudDialog>
+        <DialogContent>
+            <MudGrid Class="mb-4">
+                <MudItem xs="8">
+                    <MudSwitch @bind-Value="ShowOldRecords" Color="Color.Primary">Afficher les anciennes années</MudSwitch>
+                </MudItem>
+            </MudGrid>
+
+            <MudDataGrid T="PersonAnnualServiceVariation" Items="DisplayedPersonServiceVariations" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" RowStyleFunc="GreyOutOldRecords" Dense="true">
+                <Columns>
+                    <PropertyColumn T="PersonAnnualServiceVariation" TProperty="string" Property="inPersonServiceVariation => inPersonServiceVariation.SchoolYear.GetPeriodDisplay()" Title="Période"/>
+                    <PropertyColumn T="PersonAnnualServiceVariation" TProperty="string" Property="inPersonServiceVariation => inPersonServiceVariation.Person.GetFullName()" Title="Membre"/>
+                    <PropertyColumn T="PersonAnnualServiceVariation" TProperty="string" Property="inPersonServiceVariation => inPersonServiceVariation.AnnualServiceVariation.Name" Title="Variation"/>
+                </Columns>
+            </MudDataGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@Cancel">Retour</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public AnnualService? AnnualService { get; set; }
+
+    private ObservableCollection<PersonAnnualServiceVariation> PersonServiceVariations { get; set; } = [];
+
+    private bool ShowOldRecords { get; set; }
+    private IEnumerable<PersonAnnualServiceVariation> DisplayedPersonServiceVariations => PersonServiceVariations
+        .Where(inConsultantWork => ShowOldRecords || inConsultantWork.SchoolYear.IsCurrentPeriod());
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        var result = await PersonAnnualServiceVariationsService.GetPersonServiceVariationsPerServiceAsync(AnnualService!.Id);
+        result.Match(inSuccess =>
+        {
+            PersonServiceVariations = new ObservableCollection<PersonAnnualServiceVariation>(inSuccess
+                .OrderByDescending(inPersonServiceVariation => inPersonServiceVariation.SchoolYear.StartDate)
+                .ThenBy(inPersonServiceVariation => inPersonServiceVariation.Person.LastName)
+                .ThenBy(inPersonServiceVariation => inPersonServiceVariation.Person.FirstName));
+        },
+            inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+    private static string GreyOutOldRecords(PersonAnnualServiceVariation inConsultantWork, int inIndex) =>
+        inConsultantWork.SchoolYear.IsCurrentPeriod() ? string.Empty : $"background-color: {Colors.Gray.Lighten3}";
+
+}

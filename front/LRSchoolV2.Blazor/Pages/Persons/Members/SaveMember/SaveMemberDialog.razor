@@ -1,0 +1,163 @@
+﻿@using LRSchoolV2.Blazor.Pages.SchoolYears
+@using LRSchoolV2.Blazor.Pages.Persons.NonMembers.SaveNonMember
+@using LRSchoolV2.Blazor.Pages.Persons.PersonRegistrations
+@using LRSchoolV2.Domain.Common
+@using LRSchoolV2.Domain.Persons
+@inject SchoolYearsService SchoolYearsService
+@inject PersonsService PersonsService
+@inject PersonRegistrationsService PersonRegistrationsService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+@if (Model != null)
+{
+    <EditForm Model="Model" OnValidSubmit="Submit">
+        <DataAnnotationsValidator/>
+        <MudDialog>
+            <DialogContent>
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudTextField Label="Nom" @bind-Value="Model.LastName" For="@(() => Model.LastName)"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField Label="Prénom" @bind-Value="Model.FirstName" For="@(() => Model.FirstName)"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudDatePicker Label="Date de naissance" @bind-Date="Model.BirthDate" For="@(() => Model.BirthDate)" Editable="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField Label="Téléphone" @bind-Value="Model.PhoneNumber" For="@(() => Model.PhoneNumber)"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Label="Email" @bind-Value="Model.Email" For="@(() => Model.Email)"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Label="Adresse" @bind-Value="Model.AddressStreet" For="@(() => Model.AddressStreet)"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Label="Complément d'adresse" @bind-Value="Model.AddressStreetComplement" For="@(() => Model.AddressStreetComplement)"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField Label="Code postal" @bind-Value="Model.AddressZipCode" For="@(() => Model.AddressZipCode)"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField Label="Ville" @bind-Value="Model.AddressCity" For="@(() => Model.AddressCity)"/>
+                    </MudItem>
+                    @if (IsNew){
+                        <MudItem xs="12">
+                            <MudSwitch Label="Autorisation droit à l'image" @bind-Value="Model.ImageRightsGranted" Color="Color.Primary" />
+                        </MudItem>
+                    }
+                    <MudItem xs="12" Class="d-flex align-center">
+                        <MudSwitch Label="Facturation personne de contact 1" Color="Color.Primary" @bind-Value="Model.BillingToContactPerson1" For="@(() => Model.BillingToContactPerson1)"/>
+                    </MudItem>
+                    <MudItem xs="1" Class="d-flex align-center">
+                        <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" OnClick="@(OnContactPerson1Add)" Size="Size.Small"/>
+                    </MudItem>
+                    <MudItem xs="11">
+                        <MudAutocomplete T="Person?" Label="Personne de contact 1" @bind-Value="Model.ContactPerson1" For="@(() => Model.ContactPerson1)" ResetValueOnEmptyText="true" Clearable="true"
+                                         ToStringFunc="@(inPerson => inPerson?.GetDropdownText() ?? string.Empty)" SearchFunc="SearchContactPerson"/>
+                    </MudItem>
+                    <MudItem xs="1" Class="d-flex align-center">
+                        <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" OnClick="@(OnContactPerson2Add)" Size="Size.Small" />
+                    </MudItem>
+                    <MudItem xs="11">
+                        <MudAutocomplete T="Person?" Label="Personne de contact 2" @bind-Value="Model.ContactPerson2" For="@(() => Model.ContactPerson2)" ResetValueOnEmptyText="true" Clearable="true"
+                                         ToStringFunc="@(inPerson => inPerson?.GetDropdownText() ?? string.Empty)" SearchFunc="SearchContactPerson"/>
+                    </MudItem>
+                </MudGrid>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@Cancel">Annuler</MudButton>
+                <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Ok</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </EditForm>
+}
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public SaveMemberFormModel? Model { get; set; }
+
+    [Parameter]
+    public bool IsNew { get; set; }
+
+    private SchoolYear? CurrentSchoolYear { get; set; }
+
+    private IOrderedEnumerable<Person> Persons { get; set; } = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        await ReloadPersons();
+        var currentSchoolYear = await SchoolYearsService.GetCurrentSchoolYear();
+        currentSchoolYear.Match(inSome =>
+        {
+            CurrentSchoolYear = inSome;
+            Model ??= new SaveMemberFormModel(CurrentSchoolYear);
+        },
+            () => Snackbar.Add("Aucune année scolaire courante. Une année scolaire en cours doit être enregistrée", Severity.Error));
+    }
+
+    private async Task ReloadPersons() => Persons = (await PersonsService.GetPersonsAsync())
+        .OrderBy(inPerson => inPerson.LastName).ThenBy(inPerson => inPerson.FirstName);
+
+    private async Task Submit()
+    {
+        await PersonsService.SaveMemberAsync(Model.Adapt<Person>());
+        if (IsNew)
+        {
+            await PersonRegistrationsService.SavePersonRegistrationAsync(Model!.GetInitialRegistration());
+        }
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private Task<IEnumerable<Person>> SearchContactPerson(string inValue, CancellationToken inCancellationToken)
+    {
+        var persons = Persons.Where(inPerson => inPerson.Id != Model!.Id &&
+                                               inPerson.Id != Model.ContactPerson1?.Id &&
+                                               inPerson.Id != Model.ContactPerson2?.Id);
+        return Task.FromResult(
+            string.IsNullOrWhiteSpace(inValue) ?
+            persons :
+            persons.Where(inPerson => inPerson.GetFullName().Contains(inValue, StringComparison.InvariantCultureIgnoreCase))
+            );
+    }
+
+    private async Task OnContactPerson1Add()
+    {
+        var dialog = await DialogService.ShowAsync<SaveNonMemberDialog>("Ajout d'un non adhérent", new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false
+        });
+        var dialogResult = await dialog.Result;
+        if (!dialogResult.Canceled)
+        {
+            await ReloadPersons();
+            Model!.ContactPerson1 = Persons.SingleOrDefault(inPerson => inPerson.Id == (Guid) dialogResult.Data);
+        }
+    }
+
+    private async Task OnContactPerson2Add()
+    {
+        var dialog = await DialogService.ShowAsync<SaveNonMemberDialog>("Ajout d'un non adhérent", new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false
+        });
+        var dialogResult = await dialog.Result;
+        if (!dialogResult.Canceled)
+        {
+            await ReloadPersons();
+            Model!.ContactPerson2 = Persons.SingleOrDefault(inPerson => inPerson.Id == (Guid) dialogResult.Data);
+        }
+    }
+}
