@@ -1,6 +1,7 @@
 ﻿using LRSchoolV2.Application.Core;
 using LRSchoolV2.Domain.AnnualServices;
 
+// ReSharper disable UnusedType.Global - Auto scan
 namespace LRSchoolV2.Application.AnnualServices.AnnualServiceVariationConsultantWorks.Persistence;
 
 public interface IAnnualServiceVariationConsultantWorksRepository : IRepository

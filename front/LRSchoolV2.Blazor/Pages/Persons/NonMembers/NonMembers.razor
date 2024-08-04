@@ -93,7 +93,7 @@
             FullWidth = true
         });
         var theDialogResult = await theDialog.Result;
-        if (!theDialogResult.Canceled)
+        if (theDialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -102,8 +102,8 @@
     private async Task OnPersonDeleteClick(Person inPerson)
     {
         var theDialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer le non adhérent {inPerson.GetFullName()} ?", "Supprimer un non adhérent", "Annuler", "Supprimer");
-        var theResult = await theDialog.Result;
-        if (!theResult.Canceled)
+        var theDialogResult = await theDialog.Result;
+        if (theDialogResult is { Canceled: false })
         {
             var result = await PersonsService.DeletePersonAsync(inPerson);
             await result.MatchAsync(async inSuccess =>

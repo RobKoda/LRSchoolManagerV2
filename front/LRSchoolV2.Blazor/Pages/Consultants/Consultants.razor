@@ -97,7 +97,7 @@
             FullWidth = true
         });
         var theDialogResult = await theDialog.Result;
-        if (!theDialogResult.Canceled)
+        if (theDialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -106,8 +106,8 @@
     private async Task OnConsultantDeleteClick(Consultant inConsultant)
     {
         var theDialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer l'intervenant {inConsultant.GetFullName()} ?", "Supprimer un intervenant", "Annuler", "Supprimer");
-        var theResult = await theDialog.Result;
-        if (!theResult.Canceled)
+        var theDialogResult = await theDialog.Result;
+        if (theDialogResult is { Canceled: false })
         {
             var result = await ConsultantsService.DeleteConsultantAsync(inConsultant);
             await result.MatchAsync(async inSuccess =>

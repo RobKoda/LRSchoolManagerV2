@@ -97,7 +97,7 @@
             FullWidth = true
         });
         var theDialogResult = await theDialog.Result;
-        if (!theDialogResult.Canceled)
+        if (theDialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }

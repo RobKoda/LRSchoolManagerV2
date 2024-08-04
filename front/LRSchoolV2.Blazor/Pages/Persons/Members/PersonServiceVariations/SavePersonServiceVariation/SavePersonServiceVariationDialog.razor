@@ -26,10 +26,10 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12">
-                        <MudSelect T="AnnualServiceVariation?" Label="Service" @bind-Value="Model.ServiceVariation" For="@(() => Model.ServiceVariation)">
-                            @foreach (var serviceVariation in ServiceVariations)
+                        <MudSelect T="AnnualServiceVariation?" Label="Service" @bind-Value="Model.AnnualServiceVariation" For="@(() => Model.AnnualServiceVariation)">
+                            @foreach (var annualServiceVariation in AnnualServiceVariations)
                             {
-                                <MudSelectItem Value="serviceVariation">@serviceVariation.GetFullName()</MudSelectItem>
+                                <MudSelectItem Value="annualServiceVariation">@annualServiceVariation.GetFullName()</MudSelectItem>
                             }
                         </MudSelect>
                     </MudItem>
@@ -63,7 +63,7 @@
     public SavePersonServiceVariationFormModel? Model { get; set; }
 
     public IOrderedEnumerable<SchoolYear> SchoolYears { get; set; } = Enumerable.Empty<SchoolYear>().OrderByDescending(inSchoolYear => inSchoolYear.StartDate);
-    public IOrderedEnumerable<AnnualServiceVariation> ServiceVariations { get; set; } = Enumerable.Empty<AnnualServiceVariation>()
+    public IOrderedEnumerable<AnnualServiceVariation> AnnualServiceVariations { get; set; } = Enumerable.Empty<AnnualServiceVariation>()
         .OrderBy(inServiceVariation => inServiceVariation.Name);
 
     private IOrderedEnumerable<Person> Persons { get; set; } = null!;
@@ -88,10 +88,10 @@
         await ReloadPersons();
 
         SchoolYears = (await SchoolYearsService.GetSchoolYearsAsync()).OrderByDescending(inSchoolYear => inSchoolYear.StartDate);
-        var serviceVariations = await AnnualServiceVariationsService.GetCurrentAnnualServiceVariationsAsync();
-        await serviceVariations.Match(inSome =>
+        var annualServiceVariations = await AnnualServiceVariationsService.GetCurrentAnnualServiceVariationsAsync();
+        await annualServiceVariations.Match(inSome =>
         {
-            ServiceVariations = inSome.OrderBy(inServiceVariation => inServiceVariation.GetFullName());
+            AnnualServiceVariations = inSome.OrderBy(inServiceVariation => inServiceVariation.GetFullName());
         },
             () => Snackbar.Add("Aucune année scolaire courante. Une année scolaire en cours doit être enregistrée", Severity.Error));
 

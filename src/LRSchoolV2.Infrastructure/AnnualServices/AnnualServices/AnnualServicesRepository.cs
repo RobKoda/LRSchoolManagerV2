@@ -2,6 +2,7 @@
 using LRSchoolV2.Domain.AnnualServices;
 using Microsoft.EntityFrameworkCore;
 
+// ReSharper disable UnusedType.Global - Auto scan
 namespace LRSchoolV2.Infrastructure.AnnualServices.AnnualServices;
 
 public class AnnualServicesRepository(IDbContextFactory<ApplicationContext> inContext) : IAnnualServicesRepository

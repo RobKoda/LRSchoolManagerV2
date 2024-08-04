@@ -4,6 +4,7 @@ using LRSchoolV2.Application.AnnualServices.AnnualServiceVariationYearlyPrices.D
 using LRSchoolV2.Application.AnnualServices.AnnualServiceVariationYearlyPrices.GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariation;
 using LRSchoolV2.Application.AnnualServices.AnnualServiceVariationYearlyPrices.SaveAnnualServiceVariationYearlyPrice;
 using LRSchoolV2.Application.Core;
+using LRSchoolV2.Blazor.Shared;
 using LRSchoolV2.Domain.AnnualServices;
 using MediatR;
 using Unit = LanguageExt.Unit;
@@ -14,13 +15,13 @@ public class AnnualServiceVariationYearlyPricesService(
     ISender inMediator,
     IValidator<DeleteAnnualServiceVariationYearlyPriceRequest> inDeleteAnnualServiceVariationYearlyPriceRequestValidator,
     IValidator<GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationRequest> inGetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationRequestValidator,
-    IValidator<SaveAnnualServiceVariationYearlyPriceRequest> inSaveAnnualServiceVariationYearlyPriceRequestValidator)
+    IValidator<SaveAnnualServiceVariationYearlyPriceRequest> inSaveAnnualServiceVariationYearlyPriceRequestValidator) : IFrontDataService 
 {
     public async Task<Validation<string, IEnumerable<AnnualServiceVariationYearlyPrice>>> GetAnnualServiceVariationYearlyPricesPerAnnualServiceAsync(Guid inServiceId)
     {
         var request = new GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationRequest(inServiceId);
         var result = await inMediator.SendRequestWithValidation<GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationRequest, GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationQuery, GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationResponse>(request, inGetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationRequestValidator);
-        return result.Map<IEnumerable<AnnualServiceVariationYearlyPrice>>(inSuccess => inSuccess.ServiceVariationYearlyPrices);
+        return result.Map<IEnumerable<AnnualServiceVariationYearlyPrice>>(inSuccess => inSuccess.AnnualServiceVariationYearlyPrices);
     }
 
     public Task<Validation<string, Unit>> DeleteAnnualServiceVariationYearlyPriceAsync(AnnualServiceVariationYearlyPrice inAnnualServiceVariationYearlyPrice)

@@ -21,7 +21,7 @@ public class SavePersonServiceVariationFormModel
     public SchoolYear? SchoolYear { get; set; }
     
     [Required(ErrorMessage = "Le service est requis")]
-    public AnnualServiceVariation? ServiceVariation { get; set; }
+    public AnnualServiceVariation? AnnualServiceVariation { get; set; }
     
     public int PaymentsCount { get; set; }
     

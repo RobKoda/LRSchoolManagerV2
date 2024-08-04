@@ -2,6 +2,7 @@
 using LRSchoolV2.Application.Core;
 using LRSchoolV2.Domain.Common;
 
+// ReSharper disable UnusedType.Global - Auto scan
 namespace LRSchoolV2.Application.Common.Documents.Persistence;
 
 public interface IDocumentsRepository : IRepository

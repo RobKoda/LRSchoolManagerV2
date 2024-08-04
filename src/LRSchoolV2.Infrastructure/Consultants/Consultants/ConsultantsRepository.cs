@@ -3,6 +3,7 @@ using LRSchoolV2.Application.Consultants.Consultants.Persistence;
 using LRSchoolV2.Domain.Consultants;
 using Microsoft.EntityFrameworkCore;
 
+// ReSharper disable UnusedType.Global - Auto scan
 namespace LRSchoolV2.Infrastructure.Consultants.Consultants;
 
 public class ConsultantsRepository(IDbContextFactory<ApplicationContext> inContext) : IConsultantsRepository

@@ -2,6 +2,7 @@
 using LRSchoolV2.Domain.Persons;
 using Microsoft.EntityFrameworkCore;
 
+// ReSharper disable UnusedType.Global - Auto scan 
 namespace LRSchoolV2.Infrastructure.Persons.PersonRegistrations;
 
 public class PersonRegistrationsRepository(IDbContextFactory<ApplicationContext> inContext) : IPersonRegistrationsRepository

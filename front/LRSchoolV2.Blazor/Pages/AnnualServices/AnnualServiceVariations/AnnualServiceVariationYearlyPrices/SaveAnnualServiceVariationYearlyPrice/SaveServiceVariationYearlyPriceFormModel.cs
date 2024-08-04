@@ -10,7 +10,7 @@ namespace LRSchoolV2.Blazor.Pages.AnnualServices.AnnualServiceVariations.AnnualS
 public class SaveServiceVariationYearlyPriceFormModel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid ServiceVariationId { get; set; } = Guid.NewGuid();
+    public Guid AnnualServiceVariationId { get; set; } = Guid.NewGuid();
     
     [Required(ErrorMessage = "L'année scolaire est requise")]
     public SchoolYear? SchoolYear { get; set; }

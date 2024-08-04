@@ -3,6 +3,7 @@ using LRSchoolV2.Domain.Persons;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
+// ReSharper disable UnusedType.Global - Auto scan
 namespace LRSchoolV2.Infrastructure.Persons.PersonAnnualServiceVariations;
 
 public class PersonAnnualServiceVariationsRepository(IDbContextFactory<ApplicationContext> inContext) : IPersonAnnualServiceVariationsRepository
@@ -45,12 +46,12 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
     public async Task<IEnumerable<PersonAnnualServiceVariation>> GetPersonAnnualServiceVariationsPerAnnualServiceAsync(Guid inServiceId)
     {
         var context = await inContext.GetContextAsync();
-        var serviceVariationIds = context.AnnualServiceVariations.AsNoTracking()
+        var annualServiceVariationIds = context.AnnualServiceVariations.AsNoTracking()
             .Where(inAnnualServiceVariation => inAnnualServiceVariation.AnnualServiceId == inServiceId)
             .Select(inAnnualServiceVariation => inAnnualServiceVariation.Id);
 
         return await context.PersonAnnualServiceVariations.AsNoTracking()
-            .Where(inPersonAnnualServiceVariation => serviceVariationIds.Contains(inPersonAnnualServiceVariation.AnnualServiceVariationId))
+            .Where(inPersonAnnualServiceVariation => annualServiceVariationIds.Contains(inPersonAnnualServiceVariation.AnnualServiceVariationId))
             .ProjectToType<PersonAnnualServiceVariation>()
             .ToListAsync();
     }

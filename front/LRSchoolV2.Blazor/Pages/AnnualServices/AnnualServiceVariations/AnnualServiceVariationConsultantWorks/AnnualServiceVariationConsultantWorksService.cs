@@ -4,6 +4,7 @@ using LRSchoolV2.Application.AnnualServices.AnnualServiceVariationConsultantWork
 using LRSchoolV2.Application.AnnualServices.AnnualServiceVariationConsultantWorks.GetAnnualServiceVariationConsultantWorksPerAnnualServiceVariation;
 using LRSchoolV2.Application.AnnualServices.AnnualServiceVariationConsultantWorks.SaveAnnualServiceVariationConsultantWork;
 using LRSchoolV2.Application.Core;
+using LRSchoolV2.Blazor.Shared;
 using LRSchoolV2.Domain.AnnualServices;
 using MediatR;
 using Unit = LanguageExt.Unit;
@@ -14,7 +15,7 @@ public class AnnualServiceVariationConsultantWorksService(
     ISender inMediator,
     IValidator<DeleteAnnualServiceVariationConsultantWorkRequest> inDeleteAnnualServiceVariationConsultantWorkRequestValidator,
     IValidator<GetAnnualServiceVariationConsultantWorksPerAnnualServiceVariationRequest> inGetAnnualServiceVariationConsultantWorksPerAnnualServiceVariationRequestValidator,
-    IValidator<SaveAnnualServiceVariationConsultantWorkRequest> inSaveAnnualServiceVariationConsultantWorkRequestValidator)
+    IValidator<SaveAnnualServiceVariationConsultantWorkRequest> inSaveAnnualServiceVariationConsultantWorkRequestValidator) : IFrontDataService 
 {
     public async Task<Validation<string, IEnumerable<AnnualServiceVariationConsultantWork>>> GetAnnualServiceVariationConsultantWorksPerAnnualServiceAsync(Guid inServiceId)
     {

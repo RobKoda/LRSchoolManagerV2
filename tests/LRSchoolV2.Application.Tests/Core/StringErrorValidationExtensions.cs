@@ -1,9 +1,9 @@
 ﻿using FluentAssertions;
 using FluentValidation;
 
-// ReSharper disable MemberCanBePrivate.Global - Extension method
-// ReSharper disable UnusedMember.Global - Extension method
-
+// ReSharper disable MemberCanBePrivate.Global - Extension methods
+// ReSharper disable UnusedMember.Global - Extension methods
+// ReSharper disable UnusedType.Global - Extension methods
 namespace LRSchoolV2.Application.Tests.Core;
 
 public static class StringErrorValidationExtensions

@@ -5,7 +5,7 @@
 @inject ISnackbar Snackbar
 @inject AnnualServiceVariationYearlyPricesService AnnualServiceVariationYearlyPricesService
 
-@if (ServiceVariation != null)
+@if (AnnualServiceVariation != null)
 {
     <MudDialog>
         <DialogContent>
@@ -14,7 +14,7 @@
                     <MudButton Class="mb-2" StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddServiceVariationYearlyPriceClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
                 </MudItem>
                 <MudItem xs="8">
-                    <MudSwitch @bind-Value="ShowOldRecords" Color="Color.Primary">Afficher les anciennes années</MudSwitch>
+                    <MudSwitch @bind-Value="ShowOldRecords" Color="Color.Primary">Afficher les autres années</MudSwitch>
                 </MudItem>
             </MudGrid>
 
@@ -49,7 +49,7 @@
     private MudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
-    public AnnualServiceVariation? ServiceVariation { get; set; }
+    public AnnualServiceVariation? AnnualServiceVariation { get; set; }
 
     private ObservableCollection<AnnualServiceVariationYearlyPrice> YearlyPrices { get; set; } = [];
 
@@ -64,7 +64,7 @@
 
     private async Task ReloadDataAsync()
     {
-        var result = await AnnualServiceVariationYearlyPricesService.GetAnnualServiceVariationYearlyPricesPerAnnualServiceAsync(ServiceVariation!.Id);
+        var result = await AnnualServiceVariationYearlyPricesService.GetAnnualServiceVariationYearlyPricesPerAnnualServiceAsync(AnnualServiceVariation!.Id);
         result.Match(inSuccess => YearlyPrices = new ObservableCollection<AnnualServiceVariationYearlyPrice>(inSuccess
             .OrderByDescending(inServiceVariationYearlyPrice => inServiceVariationYearlyPrice.SchoolYear.StartDate)),
             inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
@@ -79,7 +79,7 @@
             {
                 nameof(SaveAnnualServiceVariationYearlyPriceDialog.Model), new SaveServiceVariationYearlyPriceFormModel
                 {
-                    ServiceVariationId = ServiceVariation!.Id
+                    AnnualServiceVariationId = AnnualServiceVariation!.Id
                 }
             }
         };
@@ -109,7 +109,7 @@
             FullWidth = true
         });
         var theDialogResult = await theDialog.Result;
-        if (!theDialogResult.Canceled)
+        if (theDialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -118,8 +118,8 @@
     private async Task OnServiceVariationYearlyPriceDeleteClick(AnnualServiceVariationYearlyPrice inAnnualServiceVariationYearlyPrice)
     {
         var theDialog = await DialogService.Confirm("Êtes-vous sur de vouloir supprimer le prix annuel ?", "Supprimer un prix annuel", "Annuler", "Supprimer");
-        var theResult = await theDialog.Result;
-        if (!theResult.Canceled)
+        var theDialogResult = await theDialog.Result;
+        if (theDialogResult is { Canceled: false })
         {
             var result = await AnnualServiceVariationYearlyPricesService.DeleteAnnualServiceVariationYearlyPriceAsync(inAnnualServiceVariationYearlyPrice);
             await result.MatchAsync(async inSuccess =>

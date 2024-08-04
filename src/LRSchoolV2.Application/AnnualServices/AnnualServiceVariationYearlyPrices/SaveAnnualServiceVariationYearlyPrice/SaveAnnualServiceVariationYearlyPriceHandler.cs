@@ -5,15 +5,8 @@ using MediatR;
 
 namespace LRSchoolV2.Application.AnnualServices.AnnualServiceVariationYearlyPrices.SaveAnnualServiceVariationYearlyPrice;
 
-public class SaveAnnualServiceVariationYearlyPriceHandler : IRequestHandler<SaveAnnualServiceVariationYearlyPriceCommand>
+public class SaveAnnualServiceVariationYearlyPriceHandler(IAnnualServiceVariationYearlyPricesRepository inAnnualServiceVariationYearlyPricesRepository) : IRequestHandler<SaveAnnualServiceVariationYearlyPriceCommand>
 {
-    private readonly IAnnualServiceVariationYearlyPricesRepository _annualServiceVariationYearlyPricesRepository;
-
-    public SaveAnnualServiceVariationYearlyPriceHandler(IAnnualServiceVariationYearlyPricesRepository inAnnualServiceVariationYearlyPricesRepository)
-    {
-        _annualServiceVariationYearlyPricesRepository = inAnnualServiceVariationYearlyPricesRepository;
-    }
-
     public Task Handle(SaveAnnualServiceVariationYearlyPriceCommand inRequest, CancellationToken inCancellationToken) => 
-        _annualServiceVariationYearlyPricesRepository.SaveAnnualServiceVariationYearlyPriceAsync(inRequest.AnnualServiceVariationYearlyPrice);
+        inAnnualServiceVariationYearlyPricesRepository.SaveAnnualServiceVariationYearlyPriceAsync(inRequest.AnnualServiceVariationYearlyPrice);
 }

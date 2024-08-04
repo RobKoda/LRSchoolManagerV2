@@ -3,6 +3,7 @@ using LRSchoolV2.Application.Persons.Persons.Persistence;
 using LRSchoolV2.Domain.Persons;
 using Microsoft.EntityFrameworkCore;
 
+// ReSharper disable UnusedType.Global - Auto scan
 namespace LRSchoolV2.Infrastructure.Persons.Persons;
 
 public class PersonsRepository(

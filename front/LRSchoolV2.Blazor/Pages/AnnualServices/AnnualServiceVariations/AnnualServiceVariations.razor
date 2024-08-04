@@ -113,7 +113,7 @@
             FullWidth = true
         });
         var theDialogResult = await theDialog.Result;
-        if (!theDialogResult.Canceled)
+        if (theDialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -122,8 +122,8 @@
     private async Task OnServiceVariationDeleteClick(AnnualServiceVariation inAnnualServiceVariation)
     {
         var theDialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer la variation {inAnnualServiceVariation.Name} ?", "Supprimer une variation", "Annuler", "Supprimer");
-        var theResult = await theDialog.Result;
-        if (!theResult.Canceled)
+        var theDialogResult = await theDialog.Result;
+        if (theDialogResult is { Canceled: false })
         {
             var result = await AnnualServiceVariationsService.DeleteAnnualServiceVariationAsync(inAnnualServiceVariation);
             await result.MatchAsync(async inSuccess =>
@@ -144,7 +144,7 @@
     {
         var theParameters = new DialogParameters
         {
-            { nameof(AnnualServiceVariationConsultantWorksDialog.ServiceVariation), inAnnualServiceVariation }
+            { nameof(AnnualServiceVariationConsultantWorksDialog.AnnualServiceVariation), inAnnualServiceVariation }
         };
         var theDialog = await DialogService.ShowAsync<AnnualServiceVariationConsultantWorksDialog>($"{inAnnualServiceVariation.Name} - Horaires des intervenants", theParameters, new DialogOptions
         {
@@ -162,7 +162,7 @@
     {
         var theParameters = new DialogParameters
         {
-            { nameof(AnnualServiceVariationYearlyPricesDialog.ServiceVariation), inAnnualServiceVariation }
+            { nameof(AnnualServiceVariationYearlyPricesDialog.AnnualServiceVariation), inAnnualServiceVariation }
         };
         var theDialog = await DialogService.ShowAsync<AnnualServiceVariationYearlyPricesDialog>($"{inAnnualServiceVariation.Name} - Tarifs", theParameters, new DialogOptions
         {

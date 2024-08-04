@@ -4,6 +4,7 @@ using LRSchoolV2.Domain.Common;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
+// ReSharper disable UnusedType.Global - Auto scan
 namespace LRSchoolV2.Infrastructure.Common.Documents;
 
 public class DocumentsRepository(IDbContextFactory<ApplicationContext> inContext) : IDocumentsRepository

@@ -83,7 +83,7 @@
             FullWidth = true
         });
         var theDialogResult = await theDialog.Result;
-        if (!theDialogResult.Canceled)
+        if (theDialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -92,8 +92,8 @@
     private async Task OnServiceDeleteClick(AnnualService inAnnualService)
     {
         var theDialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer le service annuel {inAnnualService.Name}?", "Supprimer un service annuel", "Annuler", "Supprimer");
-        var theResult = await theDialog.Result;
-        if (!theResult.Canceled)
+        var theDialogResult = await theDialog.Result;
+        if (theDialogResult is { Canceled: false })
         {
             var result = await AnnualServicesService.DeleteAnnualServiceAsync(inAnnualService);
             await result.MatchAsync(async inSuccess =>

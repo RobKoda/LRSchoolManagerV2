@@ -14,7 +14,7 @@
                     <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddPersonServiceVariationPriceClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
                 </MudItem>
                 <MudItem xs="8">
-                    <MudSwitch @bind-Value="ShowOldRecords" Color="Color.Primary">Afficher les anciennes années</MudSwitch>
+                    <MudSwitch @bind-Value="ShowOldRecords" Color="Color.Primary">Afficher les autres années</MudSwitch>
                 </MudItem>
             </MudGrid>
             <MudDataGrid T="PersonAnnualServiceVariation" Items="DisplayedPersonServiceVariations" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" RowStyleFunc="GreyOutOldRecords">
@@ -108,7 +108,7 @@
             FullWidth = true
         });
         var theDialogResult = await theDialog.Result;
-        if (!theDialogResult.Canceled)
+        if (theDialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -117,8 +117,8 @@
     private async Task OnPersonServiceVariationDeleteClick(PersonAnnualServiceVariation inPersonAnnualServiceVariation)
     {
         var theDialog = await DialogService.Confirm("Êtes-vous sur de vouloir supprimer l'inscription ?", "Supprimer une inscription", "Annuler", "Supprimer");
-        var theResult = await theDialog.Result;
-        if (!theResult.Canceled)
+        var theDialogResult = await theDialog.Result;
+        if (theDialogResult is { Canceled: false })
         {
             var result = await PersonAnnualServiceVariationsService.DeletePersonServiceVariationAsync(inPersonAnnualServiceVariation);
             await result.MatchAsync(async inSuccess =>
