@@ -10,4 +10,5 @@ public record SchoolYear(
 {
     public string GetPeriodDisplay() => $"{StartDate.Year}/{EndDate.Year}";
     public bool IsCurrentPeriod() => DateTime.Today > StartDate && DateTime.Today < EndDate;
+    public bool IsOldPeriod() => DateTime.Today > EndDate;
 }

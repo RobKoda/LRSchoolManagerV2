@@ -23,6 +23,7 @@ public class SavePersonServiceVariationFormModel
     [Required(ErrorMessage = "Le service est requis")]
     public AnnualServiceVariation? AnnualServiceVariation { get; set; }
     
+    [Range(0, int.MaxValue, ErrorMessage = "Le nombre de paiement doit être positif")]
     public int PaymentsCount { get; set; }
     
     public Person? BilledPerson { get; set; }

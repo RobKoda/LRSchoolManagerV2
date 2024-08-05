@@ -76,7 +76,7 @@ public class SaveSchoolYearRequestValidationTests
         var result = await _validation.ValidateAsync(request);
         
         // Assert
-        result.ShouldError($"{nameof(SaveSchoolYearRequest.SchoolYear)}.{nameof(SaveSchoolYearRequest.SchoolYear.StartDate)}",
+        result.ShouldError($"{nameof(SaveSchoolYearRequest.SchoolYear)}",
             SaveSchoolYearRequestValidationErrors.SchoolYearStartDateNotRightAfterPreviousEndDate);
     }
     
@@ -110,7 +110,7 @@ public class SaveSchoolYearRequestValidationTests
         var result = await _validation.ValidateAsync(request);
         
         // Assert
-        result.ShouldError($"{nameof(SaveSchoolYearRequest.SchoolYear)}.{nameof(SaveSchoolYearRequest.SchoolYear.EndDate)}",
+        result.ShouldError($"{nameof(SaveSchoolYearRequest.SchoolYear)}",
             SaveSchoolYearRequestValidationErrors.SchoolYearEndDateNotRightBeforeNextStartDate);
     }
     

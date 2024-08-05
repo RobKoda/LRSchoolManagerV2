@@ -13,5 +13,6 @@ public interface IPersonAnnualServiceVariationsRepository : IRepository
     Task<bool> CanPersonAnnualServiceVariationBeDeletedAsync(Guid inPersonAnnualServiceVariationId);
     Task<bool> IsPersonAnnualServiceVariationUniqueAsync(PersonAnnualServiceVariation inReferencePersonAnnualServiceVariation);
     Task<IEnumerable<PersonAnnualServiceVariation>> GetPersonAnnualServiceVariationsPerAnnualServiceAsync(Guid inAnnualServiceId);
+    Task<bool> AnyPersonAnnualServiceVariationPerPersonAndSchoolYearAsync(Guid inPersonId, Guid inSchoolYearId);
     Task<IEnumerable<PersonAnnualServiceVariation>> GetPersonAnnualServiceVariationsPerSchoolYearAsync(Guid inSchoolYearId);
 }

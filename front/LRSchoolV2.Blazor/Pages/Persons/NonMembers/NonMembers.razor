@@ -1,4 +1,5 @@
 ﻿@page "/NonMembers"
+@using LRSchoolV2.Blazor.Pages.Persons.Members.PersonServiceVariations
 @using Unit = LanguageExt.Unit
 @using LRSchoolV2.Blazor.Pages.Persons.NonMembers.SaveNonMember
 @using LRSchoolV2.Blazor.Pages.Persons.PersonRegistrations
@@ -27,6 +28,9 @@
                 <TemplateColumn>
                     <CellTemplate>
                         <MudStack Row>
+                            <MudTooltip Text="Services">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Piano" OnClick="@(() => OnPersonServiceVariationsClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
                             <MudTooltip Text="Adhésions">
                                 <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Login" OnClick="@(() => OnPersonRegistrationsClick(context.Item!))" Size="Size.Small"/>
                             </MudTooltip>
@@ -142,5 +146,21 @@
         await theDialog.Result;
         await ReloadDataAsync();
     }
-
+    
+    private async Task OnPersonServiceVariationsClick(Person inPerson)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(PersonServiceVariationsDialog.Person), inPerson }
+        };
+        var theDialog = await DialogService.ShowAsync<PersonServiceVariationsDialog>($"{inPerson.GetFullName()} - Inscriptions", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true
+        });
+        await theDialog.Result;
+        await ReloadDataAsync();
+    }
 }

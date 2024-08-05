@@ -28,7 +28,13 @@ public class PersonRegistrationsRepository(IDbContextFactory<ApplicationContext>
             .AllAsync(inPersonRegistration =>
                 inPersonRegistration.PersonId != inReferencePersonRegistration.Person.Id ||
                 inPersonRegistration.SchoolYearId != inReferencePersonRegistration.SchoolYear.Id);
-
+    
+    public async Task<bool> IsPersonRegisteredForYearAsync(Guid inPersonId, Guid inSchoolYearId) =>
+        await (await inContext.GetQueryableAsNoTrackingAsync<PersonRegistrationDataModel>())
+            .AnyAsync(inPersonRegistration =>
+                inPersonRegistration.PersonId == inPersonId &&
+                inPersonRegistration.SchoolYearId == inSchoolYearId);
+    
     public Task<IEnumerable<PersonRegistration>> GetNonBilledPersonRegistrations() =>
         inContext.GetAllAsync<PersonRegistrationDataModel, PersonRegistration>(inQueryable =>
             GetPersonRegistrationQueryableAsync(inQueryable)

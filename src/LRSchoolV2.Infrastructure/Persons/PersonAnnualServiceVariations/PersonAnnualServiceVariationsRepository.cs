@@ -32,17 +32,6 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
                 inPersonAnnualServiceVariation.SchoolYearId != inReferencePersonAnnualServiceVariation.SchoolYear.Id ||
                 inPersonAnnualServiceVariation.AnnualServiceVariationId != inReferencePersonAnnualServiceVariation.AnnualServiceVariation.Id);
 
-    public Task<IEnumerable<PersonAnnualServiceVariation>> GetNonBilledPersonAnnualServiceVariations() =>
-        inContext.GetAllAsync<PersonAnnualServiceVariationDataModel, PersonAnnualServiceVariation>(inQueryable =>
-            GetPersonServiceVariationQueryableAsync(inQueryable)
-                .Where(inPersonAnnualServiceVariation => !inPersonAnnualServiceVariation.IsFullyBilled));
-
-    public async Task SetFullyBilledAsync(IEnumerable<Guid> inIds, bool inIsFullyBilled) =>
-        await (await inContext.GetQueryableAsNoTrackingAsync<PersonAnnualServiceVariationDataModel>())
-            .Where(inPersonRegistration => inIds.Contains(inPersonRegistration.Id))
-            .ExecuteUpdateAsync(inUpdate => inUpdate.SetProperty(
-                inPersonAnnualServiceVariation => inPersonAnnualServiceVariation.IsFullyBilled, inIsFullyBilled));
-
     public async Task<IEnumerable<PersonAnnualServiceVariation>> GetPersonAnnualServiceVariationsPerAnnualServiceAsync(Guid inServiceId)
     {
         var context = await inContext.GetContextAsync();
@@ -55,7 +44,13 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
             .ProjectToType<PersonAnnualServiceVariation>()
             .ToListAsync();
     }
-
+    
+    public async Task<bool> AnyPersonAnnualServiceVariationPerPersonAndSchoolYearAsync(Guid inPersonId, Guid inSchoolYearId) =>
+        await (await inContext.GetQueryableAsNoTrackingAsync<PersonAnnualServiceVariationDataModel>())
+            .AnyAsync(inPersonAnnualServiceVariation => 
+                inPersonAnnualServiceVariation.PersonId != inPersonId &&
+                inPersonAnnualServiceVariation.SchoolYearId == inSchoolYearId);
+    
     public Task<IEnumerable<PersonAnnualServiceVariation>> GetPersonAnnualServiceVariationsPerSchoolYearAsync(Guid inSchoolYearId) =>
         inContext.GetAllAsync<PersonAnnualServiceVariationDataModel, PersonAnnualServiceVariation>(inQueryable =>
             GetPersonServiceVariationQueryableAsync(inQueryable)
@@ -66,6 +61,18 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
 
     public Task SavePersonAnnualServiceVariationAsync(PersonAnnualServiceVariation inPersonAnnual) =>
         inContext.SaveAsync<PersonAnnualServiceVariationDataModel, PersonAnnualServiceVariation>(inPersonAnnual);
+    
+    
+    public Task<IEnumerable<PersonAnnualServiceVariation>> GetNonBilledPersonAnnualServiceVariations() =>
+        inContext.GetAllAsync<PersonAnnualServiceVariationDataModel, PersonAnnualServiceVariation>(inQueryable =>
+            GetPersonServiceVariationQueryableAsync(inQueryable)
+                .Where(inPersonAnnualServiceVariation => !inPersonAnnualServiceVariation.IsFullyBilled));
+    
+    public async Task SetFullyBilledAsync(IEnumerable<Guid> inIds, bool inIsFullyBilled) =>
+        await (await inContext.GetQueryableAsNoTrackingAsync<PersonAnnualServiceVariationDataModel>())
+            .Where(inPersonRegistration => inIds.Contains(inPersonRegistration.Id))
+            .ExecuteUpdateAsync(inUpdate => inUpdate.SetProperty(
+                inPersonAnnualServiceVariation => inPersonAnnualServiceVariation.IsFullyBilled, inIsFullyBilled));
     
     // TODO
     /*public async Task<IEnumerable<CustomerInvoiceItem>> GetNonBilledPersonAnnualServiceVariationBilledItems()
