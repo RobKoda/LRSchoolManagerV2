@@ -100,7 +100,7 @@
             BackdropClick = false
         });
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled)
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -112,15 +112,15 @@
         {
             { nameof(SaveAnnualServiceConsultantWorkDialog.Model), inAnnualServiceConsultantWork.Adapt<SaveAnnualServiceConsultantWorkFormModel>() }
         };
-        var theDialog = await DialogService.ShowAsync<SaveAnnualServiceConsultantWorkDialog>("Edition d'un horaire d'intervenant", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<SaveAnnualServiceConsultantWorkDialog>("Edition d'un horaire d'intervenant", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true, 
             BackdropClick = false,
             CloseButton = true,
             FullWidth = true
         });
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -128,9 +128,9 @@
 
     private async Task OnServiceConsultantWorkDeleteClick(AnnualServiceConsultantWork inAnnualServiceConsultantWork)
     {
-        var theDialog = await DialogService.Confirm("Êtes-vous sur de vouloir supprimer le prix annuel ?", "Supprimer un prix annuel", "Annuler", "Supprimer");
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir supprimer le prix annuel ?", "Supprimer un prix annuel", "Annuler", "Supprimer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             var result = await AnnualServiceConsultantWorksService.DeleteAnnualServiceConsultantWorkAsync(inAnnualServiceConsultantWork);
             await result.MatchAsync(async inSuccess =>

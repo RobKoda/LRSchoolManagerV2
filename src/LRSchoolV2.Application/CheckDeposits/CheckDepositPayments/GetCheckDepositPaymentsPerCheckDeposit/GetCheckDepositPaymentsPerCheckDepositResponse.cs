@@ -1,0 +1,5 @@
+﻿using LRSchoolV2.Domain.CheckDeposits;
+
+namespace LRSchoolV2.Application.CheckDeposits.CheckDepositPayments.GetCheckDepositPaymentsPerCheckDeposit;
+
+public record GetCheckDepositPaymentsPerCheckDepositResponse(IEnumerable<CheckDepositPayment> CheckDepositPayments);

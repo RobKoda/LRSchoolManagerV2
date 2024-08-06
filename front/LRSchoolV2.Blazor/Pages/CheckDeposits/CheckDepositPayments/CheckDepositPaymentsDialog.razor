@@ -1,0 +1,108 @@
+﻿@using Unit = LanguageExt.Unit
+@using LRSchoolV2.Blazor.Pages.CheckDeposits.CheckDepositPayments.SaveCheckDepositPayment
+@using LRSchoolV2.Domain.CheckDeposits
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject CheckDepositPaymentsService CheckDepositPaymentsService
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid Class="mb-4">
+            <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddCheckDepositPaymentClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
+        </MudGrid>
+
+        <MudDataGrid T="CheckDepositPayment" Items="DisplayedCheckDepositPayments" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true">
+            <Columns>
+                <PropertyColumn T="CheckDepositPayment" TProperty="string" Property="inCheckDepositPayment => inCheckDepositPayment.CustomerPayment.Reference" Title="Numéro de chèque"/>
+                <PropertyColumn T="CheckDepositPayment" TProperty="decimal" Property="inCheckDepositPayment => inCheckDepositPayment.CustomerPayment.Amount" Title="Montant"/>
+                <PropertyColumn T="CheckDepositPayment" TProperty="string" Property="inCheckDepositPayment => inCheckDepositPayment.CustomerPayment.Person.GetFullName()" Title="Personne"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudTooltip Text="Suppression">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => OnCheckDepositPaymentDeleteClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel">Retour</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public CheckDeposit CheckDeposit { get; set; } = null!;
+
+    private ObservableCollection<CheckDepositPayment> DisplayedCheckDepositPayments { get; set; } = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        var result = await CheckDepositPaymentsService.GetCheckDepositPaymentsPerCheckDepositAsync(CheckDeposit.Id);
+        result.Match(
+            inSuccess => DisplayedCheckDepositPayments = new ObservableCollection<CheckDepositPayment>(inSuccess),
+            inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+    }
+
+    private async Task OnAddCheckDepositPaymentClick()
+    {
+        var theParameters = new DialogParameters
+        {
+            {
+                nameof(SaveCheckDepositPaymentDialog.Model), new SaveCheckDepositPaymentFormModel
+                {
+                    CheckDepositId = CheckDeposit.Id
+                }
+            }
+        };
+        var dialog = await DialogService.ShowAsync<SaveCheckDepositPaymentDialog>("Ajout d'un chèque", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Small,
+            BackdropClick = false
+        });
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await ReloadDataAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnCheckDepositPaymentDeleteClick(CheckDepositPayment inCheckDepositPayment)
+    {
+        var dialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer le chèque {inCheckDepositPayment.CustomerPayment.Reference} ?", "Supprimer un chèque", "Annuler", "Supprimer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            var result = await CheckDepositPaymentsService.DeleteCheckDepositPaymentAsync(inCheckDepositPayment);
+            await result.MatchAsync(async inSuccess =>
+            {
+                await ReloadDataAsync();
+                return inSuccess;
+            },
+                inFailure =>
+                {
+                    Snackbar.Add(inFailure.First(), Severity.Error);
+                    return Unit.Default;
+                }
+                );
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

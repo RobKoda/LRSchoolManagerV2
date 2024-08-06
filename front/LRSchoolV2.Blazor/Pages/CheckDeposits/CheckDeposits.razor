@@ -1,0 +1,178 @@
+﻿@page "/CheckDeposits"
+@* ReSharper disable once RedundantUsingDirective Needed for CheckDepositPayments component*@
+@using Unit = LanguageExt.Unit
+@using BlazorDownloadFile
+@using LRSchoolV2.Blazor.Pages.CheckDeposits.CheckDepositPayments
+@using LRSchoolV2.Blazor.Pages.CheckDeposits.SaveCheckDeposit
+@using LRSchoolV2.Blazor.Pages.Documents
+@using LRSchoolV2.Domain.CheckDeposits
+@using LRSchoolV2.Domain.Common
+
+@inject IDialogService DialogService
+@inject IBlazorDownloadFileService DownloadFileService
+@inject ISnackbar Snackbar
+@inject CheckDepositsService CheckDepositsService
+@inject DocumentsService DocumentsService
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddCheckDepositClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
+
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="CheckDeposit" Items="DisplayedCheckDeposits" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Remises de chèques</MudText>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn T="CheckDeposit" TProperty="DateTime" Property="inCheckDeposit => inCheckDeposit.Date" Title="Date" Format="dd/MM/yyyy"/>
+                <PropertyColumn T="CheckDeposit" TProperty="string" Property="inCheckDeposit => inCheckDeposit.Number" Title="Numéro"/>
+                <PropertyColumn T="CheckDeposit" TProperty="decimal" Property="inCheckDeposit => inCheckDeposit.Total" Title="Total" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudTooltip Text="Paiements">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Euro" OnClick="@(() => OnCheckDepositPaymentsClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Télécharger PDF">
+                                <MudIconButton Variant="Variant.Filled" Disabled="@(!context.Item!.HasDocument)" Color="Color.Primary" Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(() => OnCheckDepositPDFClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Upload">
+                                @* ReSharper disable once ArrangeRedundantParentheses - Nope*@
+                                <MudFileUpload T="IBrowserFile" Accept=".pdf" OnFilesChanged="@(inFile => UploadFiles(inFile, context.Item!))" MaximumFileCount="1" Class="ma-0">
+                                    <ActivatorContent>
+                                        <MudIconButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.UploadFile" Size="Size.Small"/>
+                                    </ActivatorContent>
+                                </MudFileUpload>
+                            </MudTooltip>
+                            <MudTooltip Text="Édition">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnCheckDepositEditClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Suppression">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => OnCheckDepositDeleteClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@if (_isLoading)
+{
+    <LoadingSpinner/>
+}
+
+@code {
+    private ObservableCollection<CheckDeposit> DisplayedCheckDeposits { get; set; } = null!;
+
+    private bool _isLoading;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync() =>
+        DisplayedCheckDeposits = new ObservableCollection<CheckDeposit>((await CheckDepositsService.GetCheckDepositsAsync())
+            .OrderByDescending(inCheckDeposit => inCheckDeposit.Date));
+
+    private async Task OnAddCheckDepositClick()
+    {
+        var dialog = await DialogService.ShowAsync<SaveCheckDepositDialog>("Ajout d'une remise de chèque", new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false
+        });
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnCheckDepositPaymentsClick(CheckDeposit inCheckDeposit)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(CheckDepositPaymentsDialog.CheckDeposit), inCheckDeposit }
+        };
+        var dialog = await DialogService.ShowAsync<CheckDepositPaymentsDialog>("Chèques", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium
+        });
+        await dialog.Result;
+        await ReloadDataAsync();
+    }
+
+    private async Task OnCheckDepositEditClick(CheckDeposit inCheckDeposit)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(SaveCheckDepositDialog.Model), inCheckDeposit.Adapt<SaveCheckDepositFormModel>() }
+        };
+        var dialog = await DialogService.ShowAsync<SaveCheckDepositDialog>("Edition d'une remise de chèque", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true
+        });
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnCheckDepositDeleteClick(CheckDeposit inCheckDeposit)
+    {
+        var dialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer la remise de chèque {inCheckDeposit.Number} ?", "Supprimer une remise de chèque", "Annuler", "Supprimer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            var result = await CheckDepositsService.DeleteCheckDepositAsync(inCheckDeposit);
+            await result.MatchAsync(
+                async inSuccess =>
+                {
+                    await ReloadDataAsync();
+                    return inSuccess;
+                },
+                inFailure =>
+                {
+                    Snackbar.Add(inFailure.First(), Severity.Error);
+                    return Unit.Default;
+                }
+                );
+        }
+    }
+
+    private async Task OnCheckDepositPDFClick(CheckDeposit inCheckDeposit)
+    {
+        var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inCheckDeposit.Id);
+        await document.IfSomeAsync(async inSome => await DownloadFileService.DownloadFile(inSome.FileName, inSome.FileContent, inSome.ContentType));
+        document.IfNone(() => Snackbar.Add("La remise de chèque n'a pas été trouvée", Severity.Error));
+    }
+
+    private async Task UploadFiles(InputFileChangeEventArgs  inArgs, CheckDeposit inCheckDeposit)
+    {
+        _isLoading = true;
+
+        var memoryStream = new MemoryStream();
+        
+        await inArgs.File.OpenReadStream(inArgs.File.Size).CopyToAsync(memoryStream);
+        await DocumentsService.SaveDocumentAsync(new Document(Guid.NewGuid(), inCheckDeposit.Id, inArgs.File.Name, inArgs.File.ContentType, memoryStream.ToArray()));
+        Snackbar.Add("La remise de chèque a été uploadée", Severity.Success);
+        
+        memoryStream.Close();
+        await memoryStream.DisposeAsync();
+
+        await ReloadDataAsync();
+        
+        _isLoading = false;
+    }
+}

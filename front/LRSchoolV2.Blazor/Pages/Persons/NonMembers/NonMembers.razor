@@ -77,7 +77,7 @@
             BackdropClick = false
         });
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled)
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -89,15 +89,15 @@
         {
             { nameof(SaveNonMemberDialog.Model), inPerson.Adapt<SaveNonMemberFormModel>() }
         };
-        var theDialog = await DialogService.ShowAsync<SaveNonMemberDialog>("Edition d'un non adhérent", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<SaveNonMemberDialog>("Edition d'un non adhérent", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true,
             BackdropClick = false,
             CloseButton = true,
             FullWidth = true
         });
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -105,9 +105,9 @@
 
     private async Task OnPersonDeleteClick(Person inPerson)
     {
-        var theDialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer le non adhérent {inPerson.GetFullName()} ?", "Supprimer un non adhérent", "Annuler", "Supprimer");
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer le non adhérent {inPerson.GetFullName()} ?", "Supprimer un non adhérent", "Annuler", "Supprimer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             var result = await PersonsService.DeletePersonAsync(inPerson);
             await result.MatchAsync(async inSuccess =>
@@ -136,14 +136,14 @@
         {
             { nameof(PersonRegistrationsDialog.Person), inPerson }
         };
-        var theDialog = await DialogService.ShowAsync<PersonRegistrationsDialog>($"{inPerson.GetFullName()} - Adhésions", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<PersonRegistrationsDialog>($"{inPerson.GetFullName()} - Adhésions", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true,
             BackdropClick = false,
             CloseButton = true,
             FullWidth = true
         });
-        await theDialog.Result;
+        await dialog.Result;
         await ReloadDataAsync();
     }
     
@@ -153,14 +153,14 @@
         {
             { nameof(PersonServiceVariationsDialog.Person), inPerson }
         };
-        var theDialog = await DialogService.ShowAsync<PersonServiceVariationsDialog>($"{inPerson.GetFullName()} - Inscriptions", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<PersonServiceVariationsDialog>($"{inPerson.GetFullName()} - Inscriptions", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true,
             BackdropClick = false,
             CloseButton = true,
             FullWidth = true
         });
-        await theDialog.Result;
+        await dialog.Result;
         await ReloadDataAsync();
     }
 }

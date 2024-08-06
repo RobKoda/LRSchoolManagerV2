@@ -1,5 +1,7 @@
 ﻿using LRSchoolV2.Application.Persons.PersonAnnualServiceVariations.Persistence;
+using LRSchoolV2.Domain.CustomerInvoices;
 using LRSchoolV2.Domain.Persons;
+using LRSchoolV2.Infrastructure.CustomerInvoices.CustomerInvoiceItems;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,9 +20,7 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
 
     public async Task<bool> CanPersonAnnualServiceVariationBeDeletedAsync(Guid inPersonAnnualServiceVariationId)
     {
-        // TODO
-        //var isBilled = await (await inContext.GetQueryableAsNoTrackingAsync<CustomerInvoiceItemDataModel>()).AnyAsync(inItem => inItem.ReferenceId == inPersonAnnualServiceVariationId);
-        var isBilled = false;
+        var isBilled = await (await inContext.GetQueryableAsNoTrackingAsync<CustomerInvoiceItemDataModel>()).AnyAsync(inItem => inItem.ReferenceId == inPersonAnnualServiceVariationId);
         return await inContext.CanBeDeleted<PersonAnnualServiceVariationDataModel>(inPersonAnnualServiceVariationId) && !isBilled;
     }
 
@@ -74,8 +74,7 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
             .ExecuteUpdateAsync(inUpdate => inUpdate.SetProperty(
                 inPersonAnnualServiceVariation => inPersonAnnualServiceVariation.IsFullyBilled, inIsFullyBilled));
     
-    // TODO
-    /*public async Task<IEnumerable<CustomerInvoiceItem>> GetNonBilledPersonAnnualServiceVariationBilledItems()
+    public async Task<IEnumerable<CustomerInvoiceItem>> GetNonBilledPersonAnnualServiceVariationBilledItems()
     {
         var context = await inContext.GetContextAsync();
         var nonBilledVariationsQueryable = context.PersonAnnualServiceVariations.AsNoTracking()
@@ -86,7 +85,7 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
             .Where(inCustomerInvoiceItem => nonBilledVariationsQueryable.Contains(inCustomerInvoiceItem.ReferenceId))
             .ProjectToType<CustomerInvoiceItem>()
             .ToListAsync();
-    }*/
+    }
 
     private static IQueryable<PersonAnnualServiceVariationDataModel> GetPersonServiceVariationQueryableAsync(IQueryable<PersonAnnualServiceVariationDataModel> inQueryable) =>
         inQueryable

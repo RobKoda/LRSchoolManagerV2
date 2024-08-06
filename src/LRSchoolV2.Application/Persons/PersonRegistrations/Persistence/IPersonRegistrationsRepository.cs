@@ -13,4 +13,6 @@ public interface IPersonRegistrationsRepository : IRepository
     Task<bool> CanPersonRegistrationBeDeletedAsync(Guid inPersonRegistrationId);
     Task<bool> IsPersonRegistrationUniqueAsync(PersonRegistration inReferencePersonRegistration);
     Task<bool> IsPersonRegisteredForYearAsync(Guid inPersonId, Guid inSchoolYearId);
+    Task SetFullyBilledAsync(IEnumerable<Guid> inIds, bool inFullyBilled = true);
+    Task<IEnumerable<PersonRegistration>> GetNonBilledPersonRegistrations();
 }

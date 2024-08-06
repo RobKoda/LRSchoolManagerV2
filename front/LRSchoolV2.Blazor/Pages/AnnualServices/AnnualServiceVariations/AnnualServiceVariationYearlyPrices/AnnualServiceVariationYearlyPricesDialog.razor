@@ -89,7 +89,7 @@
             BackdropClick = false
         });
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled)
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -101,15 +101,15 @@
         {
             { nameof(SaveAnnualServiceVariationYearlyPriceDialog.Model), inAnnualServiceVariationYearlyPrice.Adapt<SaveServiceVariationYearlyPriceFormModel>() }
         };
-        var theDialog = await DialogService.ShowAsync<SaveAnnualServiceVariationYearlyPriceDialog>("Edition d'un prix annuel", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<SaveAnnualServiceVariationYearlyPriceDialog>("Edition d'un prix annuel", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true, 
             BackdropClick = false,
             CloseButton = true,
             FullWidth = true
         });
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -117,9 +117,9 @@
 
     private async Task OnServiceVariationYearlyPriceDeleteClick(AnnualServiceVariationYearlyPrice inAnnualServiceVariationYearlyPrice)
     {
-        var theDialog = await DialogService.Confirm("Êtes-vous sur de vouloir supprimer le prix annuel ?", "Supprimer un prix annuel", "Annuler", "Supprimer");
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir supprimer le prix annuel ?", "Supprimer un prix annuel", "Annuler", "Supprimer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             var result = await AnnualServiceVariationYearlyPricesService.DeleteAnnualServiceVariationYearlyPriceAsync(inAnnualServiceVariationYearlyPrice);
             await result.MatchAsync(async inSuccess =>

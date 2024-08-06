@@ -92,7 +92,7 @@
             BackdropClick = false
         });
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled)
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
             StateHasChanged();
@@ -105,15 +105,15 @@
         {
             { nameof(SaveAnnualServiceVariationDialog.Model), inAnnualServiceVariation.Adapt<SaveAnnualServiceVariationFormModel>() }
         };
-        var theDialog = await DialogService.ShowAsync<SaveAnnualServiceVariationDialog>("Edition d'une variation", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<SaveAnnualServiceVariationDialog>("Edition d'une variation", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true,
             BackdropClick = false,
             CloseButton = true,
             FullWidth = true
         });
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -121,9 +121,9 @@
 
     private async Task OnServiceVariationDeleteClick(AnnualServiceVariation inAnnualServiceVariation)
     {
-        var theDialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer la variation {inAnnualServiceVariation.Name} ?", "Supprimer une variation", "Annuler", "Supprimer");
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer la variation {inAnnualServiceVariation.Name} ?", "Supprimer une variation", "Annuler", "Supprimer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             var result = await AnnualServiceVariationsService.DeleteAnnualServiceVariationAsync(inAnnualServiceVariation);
             await result.MatchAsync(async inSuccess =>
@@ -146,7 +146,7 @@
         {
             { nameof(AnnualServiceVariationConsultantWorksDialog.AnnualServiceVariation), inAnnualServiceVariation }
         };
-        var theDialog = await DialogService.ShowAsync<AnnualServiceVariationConsultantWorksDialog>($"{inAnnualServiceVariation.Name} - Horaires des intervenants", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<AnnualServiceVariationConsultantWorksDialog>($"{inAnnualServiceVariation.Name} - Horaires des intervenants", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true,
             BackdropClick = false,
@@ -154,7 +154,7 @@
             MaxWidth = MaxWidth.Medium,
             FullWidth = true
         });
-        await theDialog.Result;
+        await dialog.Result;
         await ReloadDataAsync();
     }
 
@@ -164,7 +164,7 @@
         {
             { nameof(AnnualServiceVariationYearlyPricesDialog.AnnualServiceVariation), inAnnualServiceVariation }
         };
-        var theDialog = await DialogService.ShowAsync<AnnualServiceVariationYearlyPricesDialog>($"{inAnnualServiceVariation.Name} - Tarifs", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<AnnualServiceVariationYearlyPricesDialog>($"{inAnnualServiceVariation.Name} - Tarifs", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true,
             BackdropClick = false,
@@ -172,7 +172,7 @@
             MaxWidth = MaxWidth.Medium,
             FullWidth = true
         });
-        await theDialog.Result;
+        await dialog.Result;
         await ReloadDataAsync();
     }
 

@@ -1,0 +1,61 @@
+﻿@using LRSchoolV2.Blazor.Pages.CustomerPayments
+@using LRSchoolV2.Domain.CheckDeposits
+@using LRSchoolV2.Domain.CustomerPayments
+@inject CheckDepositPaymentsService CheckDepositPaymentsService
+@inject CustomerPaymentsService CustomerPaymentsService
+@inject ISnackbar Snackbar
+
+@if (Model != null)
+{
+    <EditForm Model="Model" OnValidSubmit="Submit">- 
+    <DataAnnotationsValidator />
+        <MudDialog>
+            <DialogContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudSelect Label="Chèque" @bind-Value="Model.CustomerPayment" For="@(() => Model.CustomerPayment)" Clearable="true">
+                            @foreach (var check in _checks)
+                            {
+                                <MudSelectItem Value="check">@check.Reference - @check.Amount€ - @check.Person.GetFullName()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@Cancel">Annuler</MudButton>
+                <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Ok</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </EditForm>
+}
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public SaveCheckDepositPaymentFormModel? Model { get; set; }
+
+    private IOrderedEnumerable<CustomerPayment> _checks = Enumerable.Empty<CustomerPayment>().OrderBy(inCheck => inCheck.Reference);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        _checks = (await CustomerPaymentsService.GetUnlinkedChecksAsync()).OrderBy(inCheck => inCheck.Date);
+        Model ??= new SaveCheckDepositPaymentFormModel();
+    }
+
+    private async Task Submit()
+    {
+        var result = await CheckDepositPaymentsService.SaveCheckDepositPaymentAsync(Model.Adapt<CheckDepositPayment>());
+        result.Match(
+            _ => MudDialog.Close(DialogResult.Ok(true)),
+            inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
+

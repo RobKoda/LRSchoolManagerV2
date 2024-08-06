@@ -1,0 +1,82 @@
+﻿@using System.Globalization
+@using LRSchoolV2.Blazor.Pages.Persons
+@using LRSchoolV2.Domain.CustomerPayments
+@using LRSchoolV2.Domain.Persons
+
+@inject CustomerPaymentsService CustomerPaymentsService
+@inject ISnackbar Snackbar
+@inject PersonsService PersonsService
+
+@if (Model != null)
+{
+    <EditForm Model="Model" OnValidSubmit="Submit">
+        <DataAnnotationsValidator/>
+        <MudDialog>
+            <DialogContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudAutocomplete T="Person?" Label="Personne" @bind-Value="Model.Person" For="@(() => Model.Person)" ResetValueOnEmptyText="true" Clearable="true"
+                        ToStringFunc="@(inPerson => inPerson?.GetDropdownText() ?? string.Empty)" SearchFunc="SearchContactPerson"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudSelect Label="Type" @bind-Value="Model.CustomerInvoicePaymentType" For="@(() => Model.CustomerInvoicePaymentType)" Clearable="true">
+                            @foreach (var paymentType in CustomerPaymentType.List)
+                            {
+                                <MudSelectItem Value="paymentType">@paymentType.DisplayName</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudDatePicker Label="Date" @bind-Date="Model.Date" For="@(() => Model.Date)" Editable="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField HideSpinButtons="true" Label="Montant" @bind-Value="Model.Amount" For="@(() => Model.Amount)" Culture="CultureInfo.InvariantCulture"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField Label="Référence" @bind-Value="Model.Reference" For="@(() => Model.Reference)"/>
+                    </MudItem>
+                </MudGrid>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@Cancel">Annuler</MudButton>
+                <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Ok</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+    </EditForm>
+}
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public SaveCustomerPaymentFormModel? Model { get; set; }
+
+    private IOrderedEnumerable<Person> Persons { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ReloadPersons();
+        Model ??= new SaveCustomerPaymentFormModel();
+    }
+
+    private async Task ReloadPersons() => Persons = (await PersonsService.GetPersonsAsync())
+        .OrderBy(inPerson => inPerson.LastName).ThenBy(inPerson => inPerson.FirstName);
+
+    private async Task Submit() =>
+        (await CustomerPaymentsService.SaveCustomerPaymentAsync(Model.Adapt<CustomerPayment>()))
+            .Match(
+                _ => MudDialog.Close(DialogResult.Ok(true)),
+                inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private Task<IEnumerable<Person>> SearchContactPerson(string inValue, CancellationToken inCancellationToken) => Task.FromResult(
+        string.IsNullOrWhiteSpace(inValue) ?
+            Persons :
+            Persons.Where(inPerson => inPerson.GetFullName().Contains(inValue, StringComparison.InvariantCultureIgnoreCase))
+        );
+}

@@ -1,4 +1,5 @@
 ﻿using LRSchoolV2.Application.Core;
+using LRSchoolV2.Domain.CustomerInvoices;
 using LRSchoolV2.Domain.Persons;
 
 // ReSharper disable UnusedType.Global - Auto scan
@@ -14,5 +15,7 @@ public interface IPersonAnnualServiceVariationsRepository : IRepository
     Task<bool> IsPersonAnnualServiceVariationUniqueAsync(PersonAnnualServiceVariation inReferencePersonAnnualServiceVariation);
     Task<IEnumerable<PersonAnnualServiceVariation>> GetPersonAnnualServiceVariationsPerAnnualServiceAsync(Guid inAnnualServiceId);
     Task<bool> AnyPersonAnnualServiceVariationPerPersonAndSchoolYearAsync(Guid inPersonId, Guid inSchoolYearId);
-    Task<IEnumerable<PersonAnnualServiceVariation>> GetPersonAnnualServiceVariationsPerSchoolYearAsync(Guid inSchoolYearId);
+    Task SetFullyBilledAsync(IEnumerable<Guid> inIds, bool inFullyBilled = true);
+    Task<IEnumerable<CustomerInvoiceItem>> GetNonBilledPersonAnnualServiceVariationBilledItems();
+    Task<IEnumerable<PersonAnnualServiceVariation>> GetNonBilledPersonAnnualServiceVariations();
 }

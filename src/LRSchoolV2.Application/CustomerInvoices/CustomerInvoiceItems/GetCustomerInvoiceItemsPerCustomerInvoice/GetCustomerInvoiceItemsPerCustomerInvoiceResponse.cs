@@ -1,0 +1,6 @@
+﻿using LRSchoolV2.Domain.CustomerInvoices;
+
+// ReSharper disable NotAccessedPositionalProperty.Global - Implicit use
+namespace LRSchoolV2.Application.CustomerInvoices.CustomerInvoiceItems.GetCustomerInvoiceItemsPerCustomerInvoice;
+
+public record GetCustomerInvoiceItemsPerCustomerInvoiceResponse(IEnumerable<CustomerInvoiceItem> CustomerInvoiceItems);

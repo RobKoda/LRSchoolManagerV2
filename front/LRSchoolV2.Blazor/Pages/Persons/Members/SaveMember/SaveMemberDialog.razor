@@ -139,10 +139,10 @@
             BackdropClick = false
         });
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled)
+        if (dialogResult is { Canceled: false })
         {
             await ReloadPersons();
-            Model!.ContactPerson1 = Persons.SingleOrDefault(inPerson => inPerson.Id == (Guid) dialogResult.Data);
+            Model!.ContactPerson1 = Persons.SingleOrDefault(inPerson => inPerson.Id == (Guid) dialogResult.Data!);
         }
     }
 
@@ -154,10 +154,10 @@
             BackdropClick = false
         });
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled)
+        if (dialogResult is { Canceled: false })
         {
             await ReloadPersons();
-            Model!.ContactPerson2 = Persons.SingleOrDefault(inPerson => inPerson.Id == (Guid) dialogResult.Data);
+            Model!.ContactPerson2 = Persons.SingleOrDefault(inPerson => inPerson.Id == (Guid) dialogResult.Data!);
         }
     }
 }

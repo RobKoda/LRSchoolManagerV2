@@ -15,4 +15,15 @@
       <ProjectReference Include="..\..\src\LRSchoolV2.Domain\LRSchoolV2.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="CustomerInvoices\CustomerInvoiceTemplate.docx" />
+      <EmbeddedResource Include="CustomerInvoices\CustomerInvoiceTemplate.docx">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+      <Compile Remove="Consultants\ConsultantQuotes\ConsultantQuoteReport.cs" />
+      <EmbeddedResource Include="Consultants\ConsultantQuotes\ConsultantQuoteReport.cs">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+    </ItemGroup>
+
 </Project>

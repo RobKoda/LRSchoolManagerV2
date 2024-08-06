@@ -1,0 +1,3 @@
+﻿namespace LRSchoolV2.Application.CheckDeposits.CheckDepositPayments.GetCheckDepositPaymentsPerCheckDeposit;
+
+public record GetCheckDepositPaymentsPerCheckDepositRequest(Guid CheckDepositId);

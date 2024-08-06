@@ -1,0 +1,45 @@
+﻿@using LRSchoolV2.Domain.CustomerInvoices
+@inject ISnackbar Snackbar
+@inject CustomerInvoiceItemsService CustomerInvoiceItemsService
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="CustomerInvoiceItem" Items="DisplayedCustomerInvoiceItems" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true">
+            <Columns>
+                <PropertyColumn T="CustomerInvoiceItem" TProperty="string" Property="inCustomerInvoiceItem => inCustomerInvoiceItem.Denomination" Title="Désignation"/>
+                <PropertyColumn T="CustomerInvoiceItem" TProperty="int" Property="inCustomerInvoiceItem => inCustomerInvoiceItem.Quantity" Title="Quantité"/>
+                <PropertyColumn T="CustomerInvoiceItem" TProperty="decimal" Property="inCustomerInvoiceItem => inCustomerInvoiceItem.UnitPrice" Title="Prix unitaire"/>
+                <PropertyColumn T="CustomerInvoiceItem" TProperty="decimal" Property="inCustomerInvoiceItem => inCustomerInvoiceItem.GetTotal()" Title="Total HT"/>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public CustomerInvoice CustomerInvoice { get; set; } = null!;
+    
+    private ObservableCollection<CustomerInvoiceItem> DisplayedCustomerInvoiceItems { get; set; } = null!;
+
+    private bool _isLoading;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadDataAsync();
+    }
+    
+    private async Task ReloadDataAsync()
+    {
+        if (!_isLoading)
+        {
+            _isLoading = true;
+            var result = await CustomerInvoiceItemsService.GetCustomerInvoiceItemsPerCustomerInvoiceAsync(CustomerInvoice.Id);
+            result.Match(
+                inSuccess => DisplayedCustomerInvoiceItems = new ObservableCollection<CustomerInvoiceItem>(inSuccess.OrderBy(inCustomerInvoiceItem => inCustomerInvoiceItem.Denomination)),
+                inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+            _isLoading = false;
+        }
+    }
+}

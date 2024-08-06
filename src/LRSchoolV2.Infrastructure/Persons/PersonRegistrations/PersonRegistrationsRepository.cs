@@ -1,5 +1,6 @@
 ﻿using LRSchoolV2.Application.Persons.PersonRegistrations.Persistence;
 using LRSchoolV2.Domain.Persons;
+using LRSchoolV2.Infrastructure.CustomerInvoices.CustomerInvoiceItems;
 using Microsoft.EntityFrameworkCore;
 
 // ReSharper disable UnusedType.Global - Auto scan 
@@ -17,8 +18,7 @@ public class PersonRegistrationsRepository(IDbContextFactory<ApplicationContext>
 
     public async Task<bool> CanPersonRegistrationBeDeletedAsync(Guid inPersonRegistrationId)
     {
-        //var isBilled = await (await inContext.GetQueryableAsNoTrackingAsync<CustomerInvoiceItemDataModel>()).AnyAsync(inItem => inItem.ReferenceId == inPersonRegistrationId);
-        var isBilled = false;
+        var isBilled = await (await inContext.GetQueryableAsNoTrackingAsync<CustomerInvoiceItemDataModel>()).AnyAsync(inItem => inItem.ReferenceId == inPersonRegistrationId);
         return await inContext.CanBeDeleted<PersonRegistrationDataModel>(inPersonRegistrationId) && !isBilled;
     }
 

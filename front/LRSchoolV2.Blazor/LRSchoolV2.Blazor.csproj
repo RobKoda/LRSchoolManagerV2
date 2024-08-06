@@ -31,6 +31,12 @@
       <_ContentIncludedByDefault Remove="Layout\MainLayout.razor" />
       <_ContentIncludedByDefault Remove="Pages\Consultants\ConsultantQuotes\ConsultantQuoteItems\ConsultantQuoteItems.razor" />
       <_ContentIncludedByDefault Remove="Pages\Consultants\ConsultantQuotes\ConsultantQuotes.razor" />
+      <_ContentIncludedByDefault Remove="Pages\CustomerPayments\CustomerInvoicePayments\CustomerInvoicePayments.razor" />
+      <_ContentIncludedByDefault Remove="Pages\CustomerPayments\CustomerInvoicePayments\SaveCustomerInvoicePayment\SaveCustomerInvoicePaymentDialog.razor" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Pages\CustomerInvoices\SaveCustomerInvoice\" />
     </ItemGroup>
 
 </Project>

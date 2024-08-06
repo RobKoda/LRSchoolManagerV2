@@ -1,0 +1,3 @@
+﻿namespace LRSchoolV2.Application.CustomerInvoices.CustomerInvoiceItems.GetCustomerInvoiceItemsPerCustomerInvoice;
+
+public record GetCustomerInvoiceItemsPerCustomerInvoiceRequest(Guid CustomerInvoiceId);

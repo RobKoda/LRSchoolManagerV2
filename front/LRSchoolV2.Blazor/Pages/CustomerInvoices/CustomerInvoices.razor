@@ -1,0 +1,224 @@
+﻿@page "/CustomerInvoices"
+@using Unit = LanguageExt.Unit
+@* ReSharper disable once RedundantUsingDirective Needed for CustomerInvoiceItems component*@
+@using LRSchoolV2.Blazor.Pages.CustomerInvoices.CustomerInvoiceItems
+@using BlazorDownloadFile
+@using LRSchoolV2.Blazor.Pages.Documents
+@using LRSchoolV2.Domain.Common
+@using LRSchoolV2.Domain.CustomerInvoices
+@using LRSchoolV2.Email.Abstractions
+@using LRSchoolV2.Email.Emails.CustomerInvoice
+@using LRSchoolV2.Email.Models.Attachments
+@using LRSchoolV2.Reporting.CustomerInvoices
+
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject CustomerInvoicesService CustomerInvoicesService
+@inject IBlazorDownloadFileService DownloadFileService
+@inject DocumentsService DocumentsService
+@inject CustomerInvoiceItemsService CustomerInvoiceItemsService 
+@inject NavigationManager NavigationManager
+@inject IEmailSender EmailSender
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+    <MudButton StartIcon="@Icons.Material.Filled.NoteAdd" OnClick="@OnCustomerInvoicesGenerationClick" Variant="Variant.Filled" Color="Color.Primary">Génération des factures</MudButton>
+    <MudButton StartIcon="@Icons.Material.Filled.Email" OnClick="@OnCustomerInvoicesBulkSendEmailClick" Variant="Variant.Filled" Color="Color.Primary">Envoi d'emails</MudButton>
+    @if (_showAdvancedFunctions)
+    {
+        <MudButton Class="ml-8" StartIcon="@Icons.Material.Filled.Remove" OnClick="@OnCancelLastInvoiceClick" Variant="Variant.Filled" Color="Color.Error">Annuler la dernière facture</MudButton>
+    }
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="CustomerInvoice" Items="DisplayedCustomerInvoices" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true"
+                     @bind-SelectedItems="@SelectedItems" MultiSelection="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Factures Clients</MudText>
+                <MudSpacer/>
+                <MudSwitch @bind-Value="_showAdvancedFunctions" Label="Fonctions avancées (et dangereuses)" Color="Color.Primary"/>
+            </ToolBarContent>
+            <Columns>
+                <HierarchyColumn T="CustomerInvoice"/>
+                <SelectColumn T="CustomerInvoice"  ShowInHeader="false"  ShowInFooter="false"/>
+                <PropertyColumn T="CustomerInvoice" TProperty="string" Property="inCustomerInvoice => inCustomerInvoice.Number" Title="Numéro"/>
+                <PropertyColumn T="CustomerInvoice" TProperty="DateTime" Property="inCustomerInvoice => inCustomerInvoice.Date" Title="Date" Format="dd/MM/yyyy"/>
+                <PropertyColumn T="CustomerInvoice" TProperty="string" Property="inCustomerInvoice => inCustomerInvoice.InvoiceCustomerName" Title="Nom du client"/>
+                <PropertyColumn T="CustomerInvoice" TProperty="decimal" Property="inCustomerInvoice => inCustomerInvoice.TotalToPay" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px" Title="Total"/>
+                <TemplateColumn T="CustomerInvoice" Title="Email envoyé">
+                    <CellTemplate>
+                        <MudCheckBox Value="context.Item.EmailSent" ReadOnly="true" Color="Color.Primary"/>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudTooltip Text="Télécharger PDF">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(() => OnCustomerInvoicePDFClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Envoyer PDF par email">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Email" OnClick="@(() => OnCustomerInvoiceSendByEmailClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            @if (_showAdvancedFunctions)
+                            {
+                                <MudTooltip Text="Regénérer PDF">
+                                    <MudIconButton Variant="Variant.Filled" Color="Color.Error" Icon="@Icons.Material.Filled.RestartAlt" OnClick="@(() => OnCustomerInvoicePDFRegenerationClick(context.Item!))" Size="Size.Small"/>
+                                </MudTooltip>
+                            }
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <ChildRowContent>
+                <CustomerInvoiceItems CustomerInvoice="@context.Item"/>
+            </ChildRowContent>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+@if (_isLoading)
+{
+    <LoadingSpinner/>
+}
+
+@code {
+    private ObservableCollection<CustomerInvoice> DisplayedCustomerInvoices { get; set; } = null!;
+
+    private bool _showAdvancedFunctions;
+    private bool _isLoading;
+
+    private HashSet<CustomerInvoice> SelectedItems { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        var getInvoicesResponse = await CustomerInvoicesService.GetCustomerInvoicesAsync();
+        DisplayedCustomerInvoices = [];
+        DisplayedCustomerInvoices = new ObservableCollection<CustomerInvoice>(getInvoicesResponse.CustomerInvoices.OrderByDescending(inInvoice => inInvoice.Number)); 
+    }
+
+    private async Task OnCustomerInvoicePDFClick(CustomerInvoice inCustomerInvoice)
+    {
+        var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inCustomerInvoice.Id);
+        await document.IfSomeAsync(async inSome => await DownloadFileService.DownloadFile(inSome.FileName, inSome.FileContent, inSome.ContentType));
+        document.IfNone(() => Snackbar.Add("La facture n'a pas été trouvée", Severity.Error));
+    }
+
+    private async Task OnCustomerInvoicePDFRegenerationClick(CustomerInvoice inCustomerInvoice)
+    {
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir regénérer la facture ?", "Regénérer une facture", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            _isLoading = true;
+            StateHasChanged();
+            var items = await CustomerInvoiceItemsService.GetCustomerInvoiceItemsPerCustomerInvoiceAsync(inCustomerInvoice.Id);
+            await items.MatchAsync(async inSuccess =>
+            {
+                var report = new CustomerInvoiceReport(inCustomerInvoice, inSuccess);
+                var reportContent = (await report.GetReportMemoryStreamAsync()).ToArray();
+                var saveResult = await DocumentsService.SaveDocumentAsync(new Document(Guid.NewGuid(), inCustomerInvoice.Id, report.ExportFileName, CustomerInvoiceReport.ContentType, reportContent));
+
+                saveResult.IfSuccess(_ => Snackbar.Add("Facture générée", Severity.Success));
+                saveResult.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+
+                _isLoading = false;
+                return Unit.Default;
+            },
+                inFailure =>
+                {
+                    Snackbar.Add(inFailure.First(), Severity.Error);
+                    _isLoading = false;
+                    return Unit.Default;
+                });
+        }
+    }
+
+    private void OnCustomerInvoicesGenerationClick()
+    {
+        NavigationManager.NavigateTo("/CustomerInvoices/Generation");
+    }
+
+    private async Task OnCustomerInvoicesBulkSendEmailClick()
+    {
+        _isLoading = true;
+
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir envoyer les emails pour les factures sélectionnées ?", "Envoi des factures", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            foreach (var invoice in SelectedItems)
+            {
+                await SendEmail(invoice);
+            }
+            await ReloadDataAsync();
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task OnCancelLastInvoiceClick()
+    {
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir annuler la dernière la facture ?", "Annuler la dernière facture", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            var cancelResult = await CustomerInvoicesService.CancelInvoiceAsync(DisplayedCustomerInvoices.MaxBy(inInvoice => inInvoice.Date)!.Adapt<CustomerInvoice>());
+            cancelResult.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnCustomerInvoiceSendByEmailClick(CustomerInvoice inCustomerInvoice)
+    {
+        _isLoading = true;
+
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir envoyer la facture par email ?", "Envoyer la facture par email", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await SendEmail(inCustomerInvoice);
+        }
+        _isLoading = false;
+    }
+
+    private async Task SendEmail(CustomerInvoice inCustomerInvoice)
+    {
+        var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inCustomerInvoice.Id);
+        await document.IfSomeAsync(async inSome =>
+        {
+#if DEBUG
+            await EmailSender.SendEmailAsync("robin.kebaili@gmail.com", new CustomerInvoiceEmail(inCustomerInvoice.Number),
+                new EmailAttachment
+                {
+                    Filename = inSome.FileName,
+                    Content = inSome.FileContent,
+                    Type = EmailAttachmentType.Pdf
+                });
+#else
+            await EmailSender.SendEmailAsync(inCustomerInvoice.Customer.Email, new CustomerInvoiceEmail(inCustomerInvoice.Number),
+                new EmailAttachment
+                {
+                    Filename = inSome.FileName,
+                    Content = inSome.FileContent,
+                    Type = EmailAttachmentType.Pdf
+                });
+#endif
+
+            if (!inCustomerInvoice.EmailSent)
+            {
+                inCustomerInvoice = inCustomerInvoice with
+                {
+                    EmailSent = true
+                };
+                var result = await CustomerInvoicesService.SetCustomerInvoiceEmailSentAsync(inCustomerInvoice);
+                result.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+                await ReloadDataAsync();
+            }
+
+            Snackbar.Add($"La facture a été envoyée à {inCustomerInvoice.Customer.Email}", Severity.Success);
+        });
+        document.IfNone(() => { Snackbar.Add("La facture n'a pas été trouvée", Severity.Error); });
+    }
+}

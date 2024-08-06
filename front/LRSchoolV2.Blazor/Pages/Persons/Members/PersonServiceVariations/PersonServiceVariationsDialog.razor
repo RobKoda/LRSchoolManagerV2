@@ -89,7 +89,7 @@
             BackdropClick = false
         });
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled)
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -101,15 +101,15 @@
         {
             { nameof(SavePersonServiceVariationDialog.Model), inPersonAnnualServiceVariation.Adapt<SavePersonServiceVariationFormModel>() }
         };
-        var theDialog = await DialogService.ShowAsync<SavePersonServiceVariationDialog>("Edition d'une inscription", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<SavePersonServiceVariationDialog>("Edition d'une inscription", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true, 
             BackdropClick = false,
             CloseButton = true,
             FullWidth = true
         });
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -117,9 +117,9 @@
 
     private async Task OnPersonServiceVariationDeleteClick(PersonAnnualServiceVariation inPersonAnnualServiceVariation)
     {
-        var theDialog = await DialogService.Confirm("Êtes-vous sur de vouloir supprimer l'inscription ?", "Supprimer une inscription", "Annuler", "Supprimer");
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir supprimer l'inscription ?", "Supprimer une inscription", "Annuler", "Supprimer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             var result = await PersonAnnualServiceVariationsService.DeletePersonServiceVariationAsync(inPersonAnnualServiceVariation);
             await result.MatchAsync(async inSuccess =>

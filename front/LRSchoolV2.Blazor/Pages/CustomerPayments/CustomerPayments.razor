@@ -1,0 +1,121 @@
+﻿@page "/CustomerPayments"
+@* ReSharper disable once RedundantUsingDirective Needed for CustomerPaymentPayments component*@
+@using LRSchoolV2.Blazor.Pages.CustomerPayments.SaveCustomerPayment
+@using LRSchoolV2.Domain.CustomerPayments
+@using Unit = LanguageExt.Unit
+
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject CustomerPaymentsService CustomerPaymentsService
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddCustomerPaymentClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
+
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="CustomerPayment" Items="DisplayedCustomerPayments" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Paiements clients</MudText>
+            </ToolBarContent>
+            <Columns>
+                <HierarchyColumn T="CustomerPayment"/>
+                <PropertyColumn T="CustomerPayment" TProperty="DateTime" Property="inCustomerPayment => inCustomerPayment.Date" Title="Date" Format="dd/MM/yyyy"/>
+                <PropertyColumn T="CustomerPayment" TProperty="string" Property="inCustomerPayment => inCustomerPayment.Person.GetFullName()" Title="Client"/>
+                <PropertyColumn T="CustomerPayment" TProperty="decimal" Property="inCustomerPayment => inCustomerPayment.Amount" Title="Montant" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                <PropertyColumn T="CustomerPayment" TProperty="string" Property="inCustomerPayment => inCustomerPayment.Reference" Title="Référence"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudTooltip Text="Édition">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnCustomerPaymentEditClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Suppression">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => OnCustomerPaymentDeleteClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@if (_isLoading)
+{
+    <LoadingSpinner/>
+}
+
+@code {
+    private ObservableCollection<CustomerPayment> DisplayedCustomerPayments { get; set; } = null!;
+
+    private bool _isLoading;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync() =>
+        DisplayedCustomerPayments = new ObservableCollection<CustomerPayment>((await CustomerPaymentsService.GetCustomerPaymentsAsync())
+            .OrderByDescending(inCustomerPayment => inCustomerPayment.Date));
+
+    private async Task OnAddCustomerPaymentClick()
+    {
+        var dialog = await DialogService.ShowAsync<SaveCustomerPaymentDialog>("Ajout d'un paiement client", new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Large
+        });
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnCustomerPaymentEditClick(CustomerPayment inCustomerPayment)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(SaveCustomerPaymentDialog.Model), inCustomerPayment.Adapt<SaveCustomerPaymentFormModel>() }
+        };
+        var dialog = await DialogService.ShowAsync<SaveCustomerPaymentDialog>("Edition d'un paiement client", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true
+        });
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnCustomerPaymentDeleteClick(CustomerPayment inCustomerPayment)
+    {
+        var dialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer le paiement client {inCustomerPayment.Reference} ?", "Supprimer un paiement client", "Annuler", "Supprimer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            _isLoading = true;
+            var result = await CustomerPaymentsService.DeleteCustomerPaymentAsync(inCustomerPayment);
+            await result.MatchAsync(
+                async inSuccess =>
+                {
+                    await ReloadDataAsync();
+                    return inSuccess;
+                },
+                inFailure =>
+                {
+                    Snackbar.Add(inFailure.First(), Severity.Error);
+                    return Unit.Default;
+                }
+                );
+            _isLoading = false;
+        }
+    }
+}

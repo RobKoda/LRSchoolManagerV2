@@ -1,0 +1,5 @@
+﻿using LRSchoolV2.Domain.CheckDeposits;
+
+namespace LRSchoolV2.Application.CheckDeposits.CheckDepositPayments.DeleteCheckDepositPayment;
+
+public record DeleteCheckDepositPaymentRequest(CheckDepositPayment CheckDepositPayment);

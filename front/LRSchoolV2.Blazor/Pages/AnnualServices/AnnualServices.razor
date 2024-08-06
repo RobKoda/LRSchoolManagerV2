@@ -63,7 +63,7 @@
             BackdropClick = false
         });
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled)
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -75,15 +75,15 @@
         {
             { nameof(SaveAnnualServiceDialog.Model), inAnnualService.Adapt<SaveAnnualServiceFormModel>() }
         };
-        var theDialog = await DialogService.ShowAsync<SaveAnnualServiceDialog>("Edition d'un service annuel", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<SaveAnnualServiceDialog>("Edition d'un service annuel", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true, 
             BackdropClick = false,
             CloseButton = true,
             FullWidth = true
         });
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
@@ -91,9 +91,9 @@
 
     private async Task OnServiceDeleteClick(AnnualService inAnnualService)
     {
-        var theDialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer le service annuel {inAnnualService.Name}?", "Supprimer un service annuel", "Annuler", "Supprimer");
-        var theDialogResult = await theDialog.Result;
-        if (theDialogResult is { Canceled: false })
+        var dialog = await DialogService.Confirm($"Êtes-vous sur de vouloir supprimer le service annuel {inAnnualService.Name}?", "Supprimer un service annuel", "Annuler", "Supprimer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
         {
             var result = await AnnualServicesService.DeleteAnnualServiceAsync(inAnnualService);
             await result.MatchAsync(async inSuccess =>
@@ -116,7 +116,7 @@
         {
             { nameof(AnnualServiceConsultantWorksDialog.AnnualService), inAnnualService }
         };
-        var theDialog = await DialogService.ShowAsync<AnnualServiceConsultantWorksDialog>($"{inAnnualService.Name} - Horaires communs des intervenants", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<AnnualServiceConsultantWorksDialog>($"{inAnnualService.Name} - Horaires communs des intervenants", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true, 
             BackdropClick = false,
@@ -124,7 +124,7 @@
             MaxWidth = MaxWidth.Medium,
             FullWidth = true
         });
-        await theDialog.Result;
+        await dialog.Result;
         await ReloadDataAsync();
     }
 
@@ -134,7 +134,7 @@
         {
             { nameof(AnnualServiceMembersDialog.AnnualService), inAnnualService }
         };
-        var theDialog = await DialogService.ShowAsync<AnnualServiceMembersDialog>($"{inAnnualService.Name} - Membres inscrits", theParameters, new DialogOptions
+        var dialog = await DialogService.ShowAsync<AnnualServiceMembersDialog>($"{inAnnualService.Name} - Membres inscrits", theParameters, new DialogOptions
         {
             CloseOnEscapeKey = true, 
             BackdropClick = false,
@@ -143,7 +143,7 @@
             MaxWidth = MaxWidth.Medium
                 
         });
-        await theDialog.Result;
+        await dialog.Result;
         await ReloadDataAsync();
     }
 }
