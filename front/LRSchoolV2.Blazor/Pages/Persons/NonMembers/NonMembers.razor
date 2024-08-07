@@ -11,7 +11,8 @@
 <MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
     <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddPersonClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
     <MudPaper Class="mt-4">
-        <MudDataGrid T="Person" Items="DisplayedPersons" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true" QuickFilter="@SearchFilter">
+        <MudDataGrid T="Person" Items="DisplayedPersons" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None"
+                     Dense="true" QuickFilter="@SearchFilter" RowStyleFunc="@RowStyle">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Non adhérents</MudText>
                 <MudSpacer/>
@@ -25,6 +26,7 @@
                 <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.PhoneNumber" Title="Téléphone"/>
                 <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.Email" Title="Email"/>
                 <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.Address.GetAddressFullDisplay()" Title="Adresse"/>
+                <PropertyColumn T="Person" TProperty="decimal" Property="inPerson => inPerson.GetBalance()" Title="Balance" Format="0.00" CellStyle="text-align: right; max-width: 150px"/>
                 <TemplateColumn>
                     <CellTemplate>
                         <MudStack Row>
@@ -163,4 +165,12 @@
         await dialog.Result;
         await ReloadDataAsync();
     }
+    
+    private static string RowStyle(Person inPerson, int _) =>
+        inPerson.GetBalance() switch
+        {
+            0 => string.Empty,
+            < 0 => "background-color: rgba(255, 0, 0, 0.3)",
+            > 0 => "background-color: rgba(0, 255, 0, 0.3)"
+        };
 }

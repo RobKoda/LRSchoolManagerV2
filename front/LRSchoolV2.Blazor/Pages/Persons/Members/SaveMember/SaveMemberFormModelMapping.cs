@@ -28,7 +28,9 @@ public class SaveMemberFormModelMapping : IRegister
                 ),
                 inFormModel.ContactPerson1,
                 inFormModel.ContactPerson2,
-                inFormModel.BillingToContactPerson1
+                inFormModel.BillingToContactPerson1,
+                0,
+                0
             ));
     }
 }

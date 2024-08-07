@@ -33,6 +33,7 @@
       <_ContentIncludedByDefault Remove="Pages\Consultants\ConsultantQuotes\ConsultantQuotes.razor" />
       <_ContentIncludedByDefault Remove="Pages\CustomerPayments\CustomerInvoicePayments\CustomerInvoicePayments.razor" />
       <_ContentIncludedByDefault Remove="Pages\CustomerPayments\CustomerInvoicePayments\SaveCustomerInvoicePayment\SaveCustomerInvoicePaymentDialog.razor" />
+      <_ContentIncludedByDefault Remove="Pages\Persons\Unbalanced\SaveNonMember\SaveNonMemberDialog.razor" />
     </ItemGroup>
 
     <ItemGroup>

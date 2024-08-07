@@ -5,6 +5,7 @@ using LRSchoolV2.Application.Persons.Persons.DeletePerson;
 using LRSchoolV2.Application.Persons.Persons.GetMembers;
 using LRSchoolV2.Application.Persons.Persons.GetNonMembers;
 using LRSchoolV2.Application.Persons.Persons.GetPersons;
+using LRSchoolV2.Application.Persons.Persons.GetUnbalancedPersons;
 using LRSchoolV2.Application.Persons.Persons.SavePerson;
 using LRSchoolV2.Blazor.Shared;
 using LRSchoolV2.Domain.Persons;
@@ -20,6 +21,8 @@ public class PersonsService(
 {
     public async Task<IEnumerable<Person>> GetPersonsAsync() =>
         (await inMediator.Send(new GetPersonsQuery())).Persons;
+    public async Task<IEnumerable<Person>> GetUnbalancedPersons() =>
+        (await inMediator.Send(new GetUnbalancedPersonsQuery())).Persons;
 
     public async Task<OptionAsync<IEnumerable<Person>>> GetMembersAsync() => 
         (await inMediator.Send(new GetMembersQuery())).Persons;

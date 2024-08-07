@@ -17,7 +17,6 @@
                 <MudText Typo="Typo.h6">Paiements clients</MudText>
             </ToolBarContent>
             <Columns>
-                <HierarchyColumn T="CustomerPayment"/>
                 <PropertyColumn T="CustomerPayment" TProperty="DateTime" Property="inCustomerPayment => inCustomerPayment.Date" Title="Date" Format="dd/MM/yyyy"/>
                 <PropertyColumn T="CustomerPayment" TProperty="string" Property="inCustomerPayment => inCustomerPayment.Person.GetFullName()" Title="Client"/>
                 <PropertyColumn T="CustomerPayment" TProperty="decimal" Property="inCustomerPayment => inCustomerPayment.Amount" Title="Montant" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>

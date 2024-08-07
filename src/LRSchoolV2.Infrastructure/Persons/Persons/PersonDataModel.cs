@@ -2,6 +2,8 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using LRSchoolV2.Domain.Persons;
 using LRSchoolV2.Infrastructure.Common.Addresses;
+using LRSchoolV2.Infrastructure.CustomerInvoices.CustomerInvoices;
+using LRSchoolV2.Infrastructure.CustomerPayments.CustomerPayments;
 using LRSchoolV2.Infrastructure.Persons.PersonRegistrations;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global - Implicit use
@@ -44,4 +46,10 @@ public class PersonDataModel : IGuidEntity
 
     [InverseProperty(nameof(PersonRegistrationDataModel.Person))]
     public ICollection<PersonRegistrationDataModel> Registrations { get; set; } = new List<PersonRegistrationDataModel>();
+    
+    [InverseProperty(nameof(CustomerInvoiceDataModel.Customer))]
+    public ICollection<CustomerInvoiceDataModel> CustomerInvoices { get; set; } = new List<CustomerInvoiceDataModel>();
+    
+    [InverseProperty(nameof(CustomerPaymentDataModel.Person))]
+    public ICollection<CustomerPaymentDataModel> CustomerPayments { get; set; } = new List<CustomerPaymentDataModel>();
 }

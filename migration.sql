@@ -6,6 +6,16 @@ GO
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 
+DELETE FROM [LRSchoolV2_Dev].[dbo].[CustomerInvoiceItem]
+GO
+DELETE FROM [LRSchoolV2_Dev].[dbo].[CustomerInvoice]
+GO
+DELETE FROM [LRSchoolV2_Dev].[dbo].[CheckDepositPayment]
+GO
+DELETE FROM [LRSchoolV2_Dev].[dbo].[CheckDeposit]
+GO
+DELETE FROM [LRSchoolV2_Dev].[dbo].[CustomerPayment]
+GO
 DELETE FROM [LRSchoolV2_Dev].[dbo].[PersonAnnualServiceVariation]
 GO
 DELETE FROM [LRSchoolV2_Dev].[dbo].[PersonRegistration]
@@ -126,6 +136,46 @@ PRINT 'PERSON ANNUAL SERVICE REGISTRATION'
 INSERT INTO [LRSchoolV2_Dev].[dbo].[PersonAnnualServiceVariation] ([Id], [PersonId], [SchoolYearId], [AnnualServiceVariationId], [PaymentsCount], [IsFullyBilled], [BilledPersonId])
 SELECT [Id], [PersonId], [SchoolYearId], [AnnualServiceVariationId], [PaymentsCount], [IsFullyBilled], [BilledPersonId]
 FROM [LRSchool].[dbo].[PersonAnnualServiceVariation]
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+PRINT 'CUSTOMER PAYMENT'
+
+INSERT INTO [LRSchoolV2_Dev].[dbo].[CustomerPayment] ([Id], [PersonId], [Date], [CustomerPaymentTypeValue], [Amount], [Reference])
+SELECT [Id], [PersonId], [Date], [CustomerPaymentTypeValue], [Amount], [Reference]
+FROM [LRSchool].[dbo].[CustomerPayment]
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+PRINT 'CHECK DEPOSIT'
+
+INSERT INTO [LRSchoolV2_Dev].[dbo].[CheckDeposit] ([Id], [Date], [Number])
+SELECT [Id], [Date], [Number]
+FROM [LRSchool].[dbo].[CheckDeposit]
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+PRINT 'CHECK DEPOSIT PAYMENT'
+
+INSERT INTO [LRSchoolV2_Dev].[dbo].[CheckDepositPayment] ([Id], [CheckDepositId], [CustomerPaymentId])
+SELECT [Id], [CheckDepositId], [CustomerPaymentId]
+FROM [LRSchool].[dbo].[CheckDepositPayment]
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+PRINT 'CUSTOMER INVOICE'
+
+INSERT INTO [LRSchoolV2_Dev].[dbo].[CustomerInvoice] ([Id], [Number], [Date], [CustomerId], [InvoiceCustomerName], [InvoiceCustomerAddress], [EmailSent])
+SELECT [Id], [Number], [Date], [CustomerId], [InvoiceCustomerName], [InvoiceCustomerAddress], [EmailSent]
+FROM [LRSchool].[dbo].[CustomerInvoice]
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+PRINT 'CUSTOMER INVOICE ITEM'
+
+INSERT INTO [LRSchoolV2_Dev].[dbo].[CustomerInvoiceItem] ([Id], [CustomerInvoiceId], [ReferenceId], [Quantity], [Denomination], [UnitPrice])
+SELECT [Id], [CustomerInvoiceId], [ReferenceId], [Quantity], [Denomination], [UnitPrice]
+FROM [LRSchool].[dbo].[CustomerInvoiceItem]
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 

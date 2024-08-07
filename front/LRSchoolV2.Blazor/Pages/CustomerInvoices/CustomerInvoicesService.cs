@@ -5,13 +5,18 @@ using LRSchoolV2.Application.CustomerInvoices.CustomerInvoices.CancelCustomerInv
 using LRSchoolV2.Application.CustomerInvoices.CustomerInvoices.GenerateCustomerInvoices;
 using LRSchoolV2.Application.CustomerInvoices.CustomerInvoices.GetCustomerInvoices;
 using LRSchoolV2.Application.CustomerInvoices.CustomerInvoices.SetCustomerInvoiceEmailSent;
+using LRSchoolV2.Blazor.Shared;
 using LRSchoolV2.Domain.CustomerInvoices;
 using MediatR;
 using Unit = LanguageExt.Unit;
 
 namespace LRSchoolV2.Blazor.Pages.CustomerInvoices;
 
-public class CustomerInvoicesService(ISender inMediator, IValidator<CancelCustomerInvoiceRequest> inCancelCustomerInvoiceRequestValidator, IValidator<SetCustomerInvoiceEmailSentRequest> inSetCustomerInvoiceEmailSentRequestValidator)
+public class CustomerInvoicesService(
+    ISender inMediator, 
+    IValidator<CancelCustomerInvoiceRequest> inCancelCustomerInvoiceRequestValidator, 
+    IValidator<SetCustomerInvoiceEmailSentRequest> inSetCustomerInvoiceEmailSentRequestValidator
+    ) : IFrontDataService
 {
     public Task<GetCustomerInvoicesResponse> GetCustomerInvoicesAsync() => 
         inMediator.Send(new GetCustomerInvoicesQuery());

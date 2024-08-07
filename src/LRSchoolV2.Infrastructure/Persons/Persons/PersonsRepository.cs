@@ -30,14 +30,17 @@ public class PersonsRepository(
 
     public Task SavePersonAsync(Person inPerson) => 
         inContext.SaveAsync<PersonDataModel, Person>(inPerson);
-
+    
     private static IQueryable<PersonDataModel> GetPersonQueryableAsync(IQueryable<PersonDataModel> inQueryable) =>
         inQueryable
             .Include(inPerson => inPerson.Address)
             .Include(inPerson => inPerson.ContactPerson1)
             .ThenInclude(inContactPerson => inContactPerson!.Address)
             .Include(inPerson => inPerson.ContactPerson2)
-            .ThenInclude(inContactPerson => inContactPerson!.Address);
+            .ThenInclude(inContactPerson => inContactPerson!.Address)
+            .Include(inPerson => inPerson.CustomerInvoices)
+            .ThenInclude(inCustomerInvoice => inCustomerInvoice.Items)
+            .Include(inPerson => inPerson.CustomerPayments);
 
     private static IQueryable<PersonDataModel> GetMemberQueryable(IQueryable<PersonDataModel> inQueryable, Guid inCurrentSchoolYear, bool inIsMember)
     {

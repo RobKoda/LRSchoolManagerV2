@@ -30,7 +30,9 @@ public class PersonDataModelMapping : IRegister
                 inDataModel.Address.Adapt<Address>(),
                 inDataModel.ContactPerson1.Adapt<Person>(),
                 inDataModel.ContactPerson2.Adapt<Person>(),
-                inDataModel.BillingToContactPerson1
+                inDataModel.BillingToContactPerson1,
+                inDataModel.CustomerInvoices.SelectMany(inInvoice => inInvoice.Items).Sum(inItem => inItem.UnitPrice * inItem.Quantity),
+                inDataModel.CustomerPayments.Sum(inPayment => inPayment.Amount)
                 ));
     }
 }

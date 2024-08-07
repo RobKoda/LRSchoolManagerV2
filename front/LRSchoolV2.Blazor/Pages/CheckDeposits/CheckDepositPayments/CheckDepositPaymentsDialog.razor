@@ -8,7 +8,9 @@
 <MudDialog>
     <DialogContent>
         <MudGrid Class="mb-4">
-            <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddCheckDepositPaymentClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
+            <MudItem xs="4">
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddCheckDepositPaymentClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
+            </MudItem>
         </MudGrid>
 
         <MudDataGrid T="CheckDepositPayment" Items="DisplayedCheckDepositPayments" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true">

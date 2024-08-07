@@ -24,6 +24,7 @@
                 <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.PhoneNumber" Title="Téléphone"/>
                 <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.Email" Title="Email"/>
                 <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.Address.GetAddressFullDisplay()" Title="Adresse"/>
+                <PropertyColumn T="Person" TProperty="decimal" Property="inPerson => inPerson.GetBalance()" Title="Balance" Format="0.00" CellStyle="text-align: right; max-width: 150px"/>
                 <TemplateColumn>
                     <CellTemplate>
                         <MudStack Row>

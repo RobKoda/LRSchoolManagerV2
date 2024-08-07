@@ -13,7 +13,9 @@ public record Person(
     Address Address,
     Person? ContactPerson1,
     Person? ContactPerson2,
-    bool BillingToContactPerson1)
+    bool BillingToContactPerson1,
+    decimal TotalInvoiced,
+    decimal TotalPaid)
 {
     public string GetFullName() => $"{LastName} {FirstName}";
     public string GetDropdownText() => $"{GetFullName()} {Address.GetAddressDisplay()}";
@@ -24,4 +26,6 @@ public record Person(
         string.IsNullOrWhiteSpace(Address.City);
 
     public string GetSearchString() => $"{LastName} {FirstName} {PhoneNumber} {Email} {Address.GetAddressFullDisplay()}";
+    
+    public decimal GetBalance() => TotalPaid - TotalInvoiced;
 }

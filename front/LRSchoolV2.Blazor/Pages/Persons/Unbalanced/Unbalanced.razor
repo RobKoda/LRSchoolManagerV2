@@ -1,0 +1,60 @@
+﻿@page "/Unbalanced"
+
+@using LRSchoolV2.Domain.Persons
+
+@inject PersonsService PersonsService
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="Person" Items="DisplayedPersons" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None"
+                     Dense="true" QuickFilter="@SearchFilter" RowStyleFunc="@RowStyle">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Comptes clients non balancés</MudText>
+                <MudSpacer/>
+                <MudTextField T="string" @bind-Value="_searchString" Placeholder="Recherche" Adornment="Adornment.Start" Immediate="true"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.LastName" Title="Nom"/>
+                <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.FirstName" Title="Prénom"/>
+                <PropertyColumn T="Person" TProperty="DateTime?" Property="inPerson => inPerson.BirthDate" Title="Date de naissance"/>
+                <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.PhoneNumber" Title="Téléphone"/>
+                <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.Email" Title="Email"/>
+                <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.Address.GetAddressFullDisplay()" Title="Adresse"/>
+                <PropertyColumn T="Person" TProperty="decimal" Property="inPerson => inPerson.GetBalance()" Title="Balance" Format="0.00" CellStyle="text-align: right; max-width: 150px"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private ObservableCollection<Person> DisplayedPersons { get; set; } = null!;
+    private string _searchString = string.Empty;
+
+    private Func<Person, bool> SearchFilter =>
+        inPerson =>
+            string.IsNullOrWhiteSpace(_searchString) || inPerson.GetSearchString().Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync() =>
+        DisplayedPersons = new ObservableCollection<Person>(await PersonsService.GetUnbalancedPersons());
+    
+    private static string RowStyle(Person inPerson, int _) =>
+        inPerson.GetBalance() switch
+        {
+            0 => string.Empty,
+            < 0 => "background-color: rgba(255, 0, 0, 0.3)",
+            > 0 => "background-color: rgba(0, 255, 0, 0.3)"
+        };
+}
