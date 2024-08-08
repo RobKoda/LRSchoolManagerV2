@@ -1,6 +1,7 @@
 ﻿@page "/CustomerPayments"
 @* ReSharper disable once RedundantUsingDirective Needed for CustomerPaymentPayments component*@
 @using LRSchoolV2.Blazor.Pages.CustomerPayments.SaveCustomerPayment
+@using LRSchoolV2.Domain.CustomerInvoices
 @using LRSchoolV2.Domain.CustomerPayments
 @using Unit = LanguageExt.Unit
 
@@ -12,7 +13,7 @@
     <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnAddCustomerPaymentClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter</MudButton>
 
     <MudPaper Class="mt-4">
-        <MudDataGrid T="CustomerPayment" Items="DisplayedCustomerPayments" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true">
+        <MudDataGrid T="CustomerPayment" Items="DisplayedCustomerPayments" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true" RowStyleFunc="@RowStyle" >
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Paiements clients</MudText>
             </ToolBarContent>
@@ -117,4 +118,7 @@
             _isLoading = false;
         }
     }
+    
+    private static string RowStyle(CustomerPayment inPayment, int _) =>
+        $"background-color: {CustomerPaymentType.FromValue(inPayment.CustomerPaymentTypeValue).RgbaString}";
 }

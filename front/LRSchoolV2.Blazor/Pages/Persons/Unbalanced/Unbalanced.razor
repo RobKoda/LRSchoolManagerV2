@@ -21,6 +21,8 @@
                 <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.PhoneNumber" Title="Téléphone"/>
                 <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.Email" Title="Email"/>
                 <PropertyColumn T="Person" TProperty="string" Property="inPerson => inPerson.Address.GetAddressFullDisplay()" Title="Adresse"/>
+                <PropertyColumn T="Person" TProperty="decimal" Property="inPerson => inPerson.TotalInvoiced" Title="Facturé" Format="0.00" CellStyle="text-align: right; max-width: 150px"/>
+                <PropertyColumn T="Person" TProperty="decimal" Property="inPerson => inPerson.TotalPaid" Title="Payé" Format="0.00" CellStyle="text-align: right; max-width: 150px"/>
                 <PropertyColumn T="Person" TProperty="decimal" Property="inPerson => inPerson.GetBalance()" Title="Balance" Format="0.00" CellStyle="text-align: right; max-width: 150px"/>
                 <TemplateColumn>
                     <CellTemplate>
@@ -48,7 +50,10 @@
     }
 
     private async Task ReloadDataAsync() =>
-        DisplayedPersons = new ObservableCollection<Person>(await PersonsService.GetUnbalancedPersons());
+        DisplayedPersons = new ObservableCollection<Person>(
+            (await PersonsService.GetUnbalancedPersons())
+            .OrderBy(inPerson => inPerson.LastName)
+            .ThenBy(inPerson => inPerson.FirstName));
     
     private static string RowStyle(Person inPerson, int _) =>
         inPerson.GetBalance() switch
