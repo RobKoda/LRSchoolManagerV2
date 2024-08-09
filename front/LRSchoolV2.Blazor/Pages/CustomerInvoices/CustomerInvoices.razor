@@ -3,6 +3,7 @@
 @* ReSharper disable once RedundantUsingDirective Needed for CustomerInvoiceItems component*@
 @using LRSchoolV2.Blazor.Pages.CustomerInvoices.CustomerInvoiceItems
 @using BlazorDownloadFile
+@using LRSchoolV2.Blazor.Pages.CustomerInvoices.SaveCustomerInvoice
 @using LRSchoolV2.Blazor.Pages.Documents
 @using LRSchoolV2.Domain.Common
 @using LRSchoolV2.Domain.CustomerInvoices
@@ -21,6 +22,7 @@
 @inject IEmailSender EmailSender
 
 <MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnCustomerInvoiceAddClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter une facture</MudButton>
     <MudButton StartIcon="@Icons.Material.Filled.NoteAdd" OnClick="@OnCustomerInvoicesGenerationClick" Variant="Variant.Filled" Color="Color.Primary">Génération des factures</MudButton>
     <MudButton StartIcon="@Icons.Material.Filled.Email" OnClick="@OnCustomerInvoicesBulkSendEmailClick" Variant="Variant.Filled" Color="Color.Primary">Envoi d'emails</MudButton>
     @if (_showAdvancedFunctions)
@@ -113,28 +115,33 @@
         {
             _isLoading = true;
             StateHasChanged();
-            var items = await CustomerInvoiceItemsService.GetCustomerInvoiceItemsPerCustomerInvoiceAsync(inCustomerInvoice.Id);
-            await items.MatchAsync(async inSuccess =>
+            await GeneratePdf(inCustomerInvoice);
+        }
+    }
+    
+    private async Task GeneratePdf(CustomerInvoice inCustomerInvoice)
+    {
+        var items = await CustomerInvoiceItemsService.GetCustomerInvoiceItemsPerCustomerInvoiceAsync(inCustomerInvoice.Id);
+        await items.MatchAsync(async inSuccess =>
             {
                 var report = new CustomerInvoiceReport(inCustomerInvoice, inSuccess);
                 var reportContent = (await report.GetReportMemoryStreamAsync()).ToArray();
                 var saveResult = await DocumentsService.SaveDocumentAsync(new Document(Guid.NewGuid(), inCustomerInvoice.Id, report.ExportFileName, CustomerInvoiceReport.ContentType, reportContent));
-
+                
                 saveResult.IfSuccess(_ => Snackbar.Add("Facture générée", Severity.Success));
                 saveResult.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
-
+                
                 _isLoading = false;
                 return Unit.Default;
             },
-                inFailure =>
-                {
-                    Snackbar.Add(inFailure.First(), Severity.Error);
-                    _isLoading = false;
-                    return Unit.Default;
-                });
-        }
+            inFailure =>
+            {
+                Snackbar.Add(inFailure.First(), Severity.Error);
+                _isLoading = false;
+                return Unit.Default;
+            });
     }
-
+    
     private void OnCustomerInvoicesGenerationClick()
     {
         NavigationManager.NavigateTo("/CustomerInvoices/Generation");
@@ -164,7 +171,7 @@
         var dialogResult = await dialog.Result;
         if (dialogResult is { Canceled: false })
         {
-            var cancelResult = await CustomerInvoicesService.CancelInvoiceAsync(DisplayedCustomerInvoices.MaxBy(inInvoice => inInvoice.Date)!.Adapt<CustomerInvoice>());
+            var cancelResult = await CustomerInvoicesService.CancelCustomerInvoiceAsync(DisplayedCustomerInvoices.MaxBy(inInvoice => inInvoice.Date)!.Adapt<CustomerInvoice>());
             cancelResult.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
             await ReloadDataAsync();
         }
@@ -181,6 +188,31 @@
             await SendEmail(inCustomerInvoice);
         }
         _isLoading = false;
+    }
+    
+    private async Task OnCustomerInvoiceAddClick()
+    {
+        var dialogParameters = new DialogParameters
+        {
+            {
+#pragma warning disable CS8974 // Converting method group to non-delegate type
+                nameof(SaveCustomerInvoiceDialog.GeneratePdfMethod), GeneratePdf
+#pragma warning restore CS8974 // Converting method group to non-delegate type
+            }
+        };
+        var dialog = await DialogService.ShowAsync<SaveCustomerInvoiceDialog>("Ajout d'une facture client", dialogParameters,
+        new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Large
+        });
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await ReloadDataAsync();
+        }
     }
 
     private async Task SendEmail(CustomerInvoice inCustomerInvoice)

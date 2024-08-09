@@ -1,0 +1,148 @@
+﻿@using System.Globalization
+@using LRSchoolV2.Blazor.Pages.CustomerInvoices.CustomerInvoiceItems
+@using LRSchoolV2.Blazor.Pages.Persons
+@using LRSchoolV2.Domain.CustomerInvoices
+@using LRSchoolV2.Domain.Persons
+
+@inject CustomerInvoicesService CustomerInvoicesService
+@inject CustomerInvoiceItemsService CustomerInvoiceItemsService
+@inject ISnackbar Snackbar
+@inject PersonsService PersonsService
+
+@if (Model != null)
+{
+    <EditForm Model="Model" OnValidSubmit="Submit">
+        <DataAnnotationsValidator/>
+        <MudDialog>
+            <DialogContent>
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudTextField Label="Numéro" Value="Model.Number" For="@(() => Model.Number)" ReadOnly="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudDatePicker Label="Date de facturation" @bind-Date="Model.Date" For="@(() => Model.Date)" Editable="true"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudAutocomplete T="Person?" Label="Client" @bind-Value="Model.Customer" For="@(() => Model.Customer)" ResetValueOnEmptyText="true" Clearable="true"
+                                         ToStringFunc="@(inPerson => inPerson?.GetDropdownText() ?? string.Empty)" SearchFunc="SearchContactPerson"/>
+                    </MudItem>
+                    <MudItem xs="12" Class="pl-8 mt-4 mb-2">
+                        <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="@(() => { Model.Items.Add(new SaveCustomerInvoiceItemFormModel()); })" Color="Color.Primary" Variant="Variant.Filled"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudPaper Class="ma-4 pl-4 pr-4 pb-4 ts-form">
+                            <MudGrid>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <MudItem xs="7">
+                                        <MudTextField Label="Nom" @bind-Value="item.Denomination" For="@(() => item.Denomination)"/>
+                                    </MudItem>
+                                    <MudItem xs="2">
+                                        <MudNumericField HideSpinButtons="false" Label="Quantité" @bind-Value="item.Quantity" For="@(() => item.Quantity)" Culture="CultureInfo.InvariantCulture"/>
+                                    </MudItem>
+                                    <MudItem xs="2">
+                                        <MudNumericField HideSpinButtons="true" Label="Prix" @bind-Value="item.UnitPrice" For="@(() => item.UnitPrice)" Culture="CultureInfo.InvariantCulture"/>
+                                    </MudItem>
+                                    <MudItem xs="1">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Remove" OnClick="@(() => Model.Items.Remove(item))" Color="Color.Error" Variant="Variant.Filled"/>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@Cancel">Annuler</MudButton>
+                <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Ok</MudButton>
+            </DialogActions>
+        </MudDialog>
+        
+    </EditForm>
+}
+
+@if (_isLoading)
+{
+<LoadingSpinner/>
+}
+
+@code {
+    
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+    
+    [Parameter]
+    public SaveCustomerInvoiceFormModel? Model { get; set; }
+    
+    [Parameter]
+    public Func<CustomerInvoice, Task> GeneratePdfMethod { get; set; } = null!;
+    
+    private IOrderedEnumerable<Person> Persons { get; set; } = null!;
+    
+    private bool _isLoading;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ReloadPersons();
+        var customerInvoices = (await CustomerInvoicesService.GetCustomerInvoicesAsync()).CustomerInvoices;
+        Model ??= new SaveCustomerInvoiceFormModel(customerInvoices);
+    }
+    
+    private async Task ReloadPersons() => Persons = (await PersonsService.GetPersonsAsync())
+        .OrderBy(inPerson => inPerson.LastName).ThenBy(inPerson => inPerson.FirstName);
+    
+    private async Task Submit()
+    {
+        _isLoading = true;
+        var customerInvoices = (await CustomerInvoicesService.GetCustomerInvoicesAsync()).CustomerInvoices;
+        Model!.CustomerInvoices = customerInvoices;
+        var customerInvoice = Model.Adapt<CustomerInvoice>();
+        
+        var simulationResult = (await CustomerInvoicesService.SimulateSaveCustomerInvoiceAsync(Model.Adapt<CustomerInvoice>()))
+            .Map(async _ =>
+            {
+                foreach (var item in Model.Items)
+                {
+                    item.CustomerInvoice = customerInvoice;
+                }
+                
+                var customerInvoiceItems = Model.Items.Adapt<IEnumerable<CustomerInvoiceItem>>();
+                foreach (var item in customerInvoiceItems)
+                {
+                    await CustomerInvoiceItemsService.SimulateSaveCustomerInvoiceItemAsync(item);
+                }
+            });
+        
+        if (simulationResult.IsFail)
+        {
+            _isLoading = false;
+            simulationResult.IfFail(inFailure => Snackbar.Add(inFailure.ToFullString("-"), Severity.Error));
+            return;
+        }
+        
+        await CustomerInvoicesService.SaveCustomerInvoiceAsync(Model.Adapt<CustomerInvoice>());
+        foreach (var item in Model.Items)
+        {
+            item.CustomerInvoice = customerInvoice;
+        }
+        
+        var customerInvoiceItems = Model.Items.Adapt<IEnumerable<CustomerInvoiceItem>>();
+        foreach (var item in customerInvoiceItems)
+        {
+            await CustomerInvoiceItemsService.SaveCustomerInvoiceItemAsync(item);
+        }
+        
+        await GeneratePdfMethod.Invoke(customerInvoice);
+        
+        _isLoading = false;
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    
+    private void Cancel() => MudDialog.Cancel();
+    
+    private Task<IEnumerable<Person>> SearchContactPerson(string inValue, CancellationToken inCancellationToken) => Task.FromResult(
+        string.IsNullOrWhiteSpace(inValue) ? Persons : Persons.Where(inPerson => inPerson.GetFullName().Contains(inValue, StringComparison.InvariantCultureIgnoreCase))
+    );
+    
+}

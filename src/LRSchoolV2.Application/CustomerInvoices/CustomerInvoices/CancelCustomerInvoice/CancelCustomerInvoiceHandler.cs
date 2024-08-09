@@ -24,8 +24,11 @@ public class CancelCustomerInvoiceHandler(
         var items = await inCustomerInvoiceItemsRepository.GetCustomerInvoiceItemsPerCustomerInvoiceAsync(inRequest.CustomerInvoice.Id);
         foreach (var item in items)
         {
-            await inPersonRegistrationsRepository.SetFullyBilledAsync(new[] { item.ReferenceId }, false);
-            await inPersonAnnualServiceVariationsRepository.SetFullyBilledAsync(new[] { item.ReferenceId }, false);
+            await item.ReferenceId.IfSomeAsync(async inReferenceId =>
+            {
+                await inPersonRegistrationsRepository.SetFullyBilledAsync(new[] { inReferenceId }, false);
+                await inPersonAnnualServiceVariationsRepository.SetFullyBilledAsync(new[] { inReferenceId }, false);
+            });
             
             await inCustomerInvoiceItemsRepository.DeleteCustomerInvoiceItemAsync(item.Id);
         }

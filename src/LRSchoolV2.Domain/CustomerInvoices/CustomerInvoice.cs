@@ -19,4 +19,6 @@ public record CustomerInvoice(
             .Where(inItem => inItem.CustomerInvoice.Id == Id)
             .Sum(inItem => inItem.GetTotal());
     
+    public static string GetInvoiceNumber(DateTime inDate, IEnumerable<CustomerInvoice> inAllInvoices) =>
+        $"{inDate.Year}-{inAllInvoices.Count(inInvoice => inInvoice.Date.Year == inDate.Year) + 1:D3}";
 }

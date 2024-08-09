@@ -5,15 +5,8 @@ using MediatR;
 
 namespace LRSchoolV2.Application.CustomerInvoices.CustomerInvoices.SaveCustomerInvoice;
 
-public class SaveCustomerInvoiceHandler : IRequestHandler<SaveCustomerInvoiceCommand>
+public class SaveCustomerInvoiceHandler(ICustomerInvoicesRepository inCustomerInvoicesRepository) : IRequestHandler<SaveCustomerInvoiceCommand>
 {
-    private readonly ICustomerInvoicesRepository _customerInvoicesRepository;
-
-    public SaveCustomerInvoiceHandler(ICustomerInvoicesRepository inCustomerInvoicesRepository)
-    {
-        _customerInvoicesRepository = inCustomerInvoicesRepository;
-    }
-
     public Task Handle(SaveCustomerInvoiceCommand inRequest, CancellationToken inCancellationToken) => 
-        _customerInvoicesRepository.SaveCustomerInvoiceAsync(inRequest.CustomerInvoice);
+        inCustomerInvoicesRepository.SaveCustomerInvoiceAsync(inRequest.CustomerInvoice);
 }

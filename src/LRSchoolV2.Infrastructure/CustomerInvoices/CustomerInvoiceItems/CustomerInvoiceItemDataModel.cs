@@ -18,7 +18,7 @@ public class CustomerInvoiceItemDataModel : IGuidEntity
     public Guid CustomerInvoiceId { get; set; }
     public CustomerInvoiceDataModel? CustomerInvoice { get; set; }
     
-    public Guid ReferenceId { get; set; }
+    public Guid? ReferenceId { get; set; }
     
     public int Quantity { get; set; }
 

@@ -45,10 +45,8 @@ public class GenerateCustomerInvoicesHandler(
         return new GenerateCustomerInvoicesResponse(Validation<string, Unit>.Success(Unit.Default));
     }
 
-    private async Task<int> GetInvoicesCountAsync(int inGenerationDateYear) =>
-        (await inMediator.Send(new GetCustomerInvoicesQuery()))
-        .CustomerInvoices
-        .Count(inInvoice => inInvoice.Date.Year == inGenerationDateYear);
+    private async Task<IEnumerable<CustomerInvoice>> GetInvoicesAsync() =>
+        (await inMediator.Send(new GetCustomerInvoicesQuery())).CustomerInvoices;
 
     private async Task GenerateAndIterateOnCustomerInvoicesAsync(IList<Payable> inPayables, Func<CustomerInvoice, IList<CustomerInvoiceItem>, Task> inFunction)
     {
@@ -63,7 +61,7 @@ public class GenerateCustomerInvoicesHandler(
             var generationDate = DateTime.Now;
             var customerInvoice = new CustomerInvoice(
                 Guid.NewGuid(),
-                $"{generationDate.Year}-{await GetInvoicesCountAsync(generationDate.Year)+1:D3}",
+                CustomerInvoice.GetInvoiceNumber(generationDate, await GetInvoicesAsync()),
                 generationDate,
                 customer,
                 customer.GetFullName(),

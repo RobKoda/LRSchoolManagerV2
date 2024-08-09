@@ -82,7 +82,7 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
             .Select(inPersonAnnualServiceVariation => inPersonAnnualServiceVariation.Id);
         
         return await context.CustomerInvoiceItems.AsNoTracking()
-            .Where(inCustomerInvoiceItem => nonBilledVariationsQueryable.Contains(inCustomerInvoiceItem.ReferenceId))
+            .Where(inCustomerInvoiceItem => inCustomerInvoiceItem.ReferenceId.HasValue && nonBilledVariationsQueryable.Contains(inCustomerInvoiceItem.ReferenceId.Value))
             .ProjectToType<CustomerInvoiceItem>()
             .ToListAsync();
     }
