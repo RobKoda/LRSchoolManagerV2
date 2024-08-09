@@ -9,6 +9,7 @@ public interface IAnnualServiceVariationYearlyPricesRepository : IRepository
     Task<IEnumerable<AnnualServiceVariationYearlyPrice>> GetAnnualServiceVariationYearlyPricesAsync();
     Task<IEnumerable<AnnualServiceVariationYearlyPrice>> GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationAsync(Guid inAnnualServiceVariationId);
     Task<bool> AnyAnnualServiceVariationYearlyPriceAsync(Guid inAnnualServiceVariationYearlyPriceId);
+    Task<bool> AnyAnnualServiceVariationPriceForYearAsync(Guid inAnnualServiceVariationId, Guid inSchoolYearId);
     Task DeleteAnnualServiceVariationYearlyPriceAsync(Guid inAnnualServiceVariationYearlyPriceId);
     Task SaveAnnualServiceVariationYearlyPriceAsync(AnnualServiceVariationYearlyPrice inAnnualServiceVariationYearlyPrice);
     Task<bool> IsAnnualServiceVariationYearlyPriceUniqueAsync(AnnualServiceVariationYearlyPrice inReferenceAnnualServiceVariationYearlyPrice);

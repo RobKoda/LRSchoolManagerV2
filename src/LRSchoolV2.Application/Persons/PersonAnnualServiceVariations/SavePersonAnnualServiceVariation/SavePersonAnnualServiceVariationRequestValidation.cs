@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
+using LRSchoolV2.Application.AnnualServices.AnnualServiceVariationYearlyPrices.Persistence;
 using LRSchoolV2.Application.Persons.PersonAnnualServiceVariations.Persistence;
 using LRSchoolV2.Application.Persons.PersonRegistrations.Persistence;
 
@@ -9,7 +10,8 @@ namespace LRSchoolV2.Application.Persons.PersonAnnualServiceVariations.SavePerso
 
 public class SavePersonAnnualServiceVariationRequestValidation(
     IPersonAnnualServiceVariationsRepository inPersonAnnualServiceVariationsRepository,
-    IPersonRegistrationsRepository inPersonRegistrationsRepository
+    IPersonRegistrationsRepository inPersonRegistrationsRepository,
+    IAnnualServiceVariationYearlyPricesRepository inAnnualServiceVariationYearlyPricesRepository
     ) : AbstractValidator<SavePersonAnnualServiceVariationRequest>
 {
     public override Task<ValidationResult> ValidateAsync(ValidationContext<SavePersonAnnualServiceVariationRequest> inContext,
@@ -17,6 +19,7 @@ public class SavePersonAnnualServiceVariationRequestValidation(
     {
         ValidatePaymentCount();
         ValidateRegistration();
+        ValidateServiceHasPrice();
         ValidateUniqueness();
 
         return base.ValidateAsync(inContext, inCancellation);
@@ -30,6 +33,10 @@ public class SavePersonAnnualServiceVariationRequestValidation(
     private void ValidateRegistration() => RuleFor(inRequest => inRequest.PersonAnnualServiceVariation)
         .MustAsync((inPersonServiceVariation, _) => inPersonRegistrationsRepository.IsPersonRegisteredForYearAsync(inPersonServiceVariation.Person.Id, inPersonServiceVariation.SchoolYear.Id))
         .WithMessage(SavePersonAnnualServiceVariationRequestValidationErrors.PersonNotRegisteredForYear);
+    
+    private void ValidateServiceHasPrice() => RuleFor(inRequest => inRequest.PersonAnnualServiceVariation)
+        .MustAsync((inPersonServiceVariation, _) => inAnnualServiceVariationYearlyPricesRepository.AnyAnnualServiceVariationPriceForYearAsync(inPersonServiceVariation.AnnualServiceVariation.Id, inPersonServiceVariation.SchoolYear.Id))
+        .WithMessage(SavePersonAnnualServiceVariationRequestValidationErrors.ServiceHasNoPrice);
     
     private void ValidateUniqueness() =>
         RuleFor(inRequest => inRequest.PersonAnnualServiceVariation)

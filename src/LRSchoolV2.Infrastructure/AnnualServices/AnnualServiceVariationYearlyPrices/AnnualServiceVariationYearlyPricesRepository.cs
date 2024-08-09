@@ -17,7 +17,13 @@ public class AnnualServiceVariationYearlyPricesRepository(IDbContextFactory<Appl
 
     public Task<bool> AnyAnnualServiceVariationYearlyPriceAsync(Guid inAnnualServiceVariationYearlyPriceId) =>
         inContext.AnyAsync<AnnualServiceVariationYearlyPriceDataModel>(inAnnualServiceVariationYearlyPriceId);
-
+    
+    public async Task<bool> AnyAnnualServiceVariationPriceForYearAsync(Guid inAnnualServiceVariationId, Guid inSchoolYearId) =>
+        await (await inContext.GetQueryableAsNoTrackingAsync<AnnualServiceVariationYearlyPriceDataModel>())
+            .AnyAsync(inAnnualServiceVariationYearlyPrice => 
+                inAnnualServiceVariationYearlyPrice.AnnualServiceVariationId == inAnnualServiceVariationId &&
+                inAnnualServiceVariationYearlyPrice.SchoolYearId == inSchoolYearId);
+    
     public Task DeleteAnnualServiceVariationYearlyPriceAsync(Guid inAnnualServiceVariationYearlyPriceId) =>
         inContext.DeleteAsync<AnnualServiceVariationYearlyPriceDataModel>(inAnnualServiceVariationYearlyPriceId);
 
