@@ -17,4 +17,10 @@
       <ProjectReference Include="..\LRSchoolV2.Domain\LRSchoolV2.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <EmbeddedResource Include="Emails\logo.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+    </ItemGroup>
+
 </Project>
