@@ -433,6 +433,74 @@ namespace LRSchoolV2.Infrastructure.Migrations
                     b.ToTable("CustomerPayment");
                 });
 
+            modelBuilder.Entity("LRSchoolV2.Infrastructure.CustomerQuotes.CustomerQuoteItems.CustomerQuoteItemDataModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CustomerQuoteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Denomination")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ReferenceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerQuoteId");
+
+                    b.ToTable("CustomerQuoteItem");
+                });
+
+            modelBuilder.Entity("LRSchoolV2.Infrastructure.CustomerQuotes.CustomerQuotes.CustomerQuoteDataModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("EmailSent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("QuoteCustomerAddress")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<string>("QuoteCustomerName")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("CustomerQuote");
+                });
+
             modelBuilder.Entity("LRSchoolV2.Infrastructure.Persons.PersonAnnualServiceVariations.PersonAnnualServiceVariationDataModel", b =>
                 {
                     b.Property<Guid>("Id")
@@ -701,6 +769,28 @@ namespace LRSchoolV2.Infrastructure.Migrations
                     b.Navigation("Person");
                 });
 
+            modelBuilder.Entity("LRSchoolV2.Infrastructure.CustomerQuotes.CustomerQuoteItems.CustomerQuoteItemDataModel", b =>
+                {
+                    b.HasOne("LRSchoolV2.Infrastructure.CustomerQuotes.CustomerQuotes.CustomerQuoteDataModel", "CustomerQuote")
+                        .WithMany("Items")
+                        .HasForeignKey("CustomerQuoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CustomerQuote");
+                });
+
+            modelBuilder.Entity("LRSchoolV2.Infrastructure.CustomerQuotes.CustomerQuotes.CustomerQuoteDataModel", b =>
+                {
+                    b.HasOne("LRSchoolV2.Infrastructure.Persons.Persons.PersonDataModel", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("LRSchoolV2.Infrastructure.Persons.PersonAnnualServiceVariations.PersonAnnualServiceVariationDataModel", b =>
                 {
                     b.HasOne("LRSchoolV2.Infrastructure.AnnualServices.AnnualServiceVariations.AnnualServiceVariationDataModel", "AnnualServiceVariation")
@@ -808,6 +898,11 @@ namespace LRSchoolV2.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("LRSchoolV2.Infrastructure.CustomerInvoices.CustomerInvoices.CustomerInvoiceDataModel", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("LRSchoolV2.Infrastructure.CustomerQuotes.CustomerQuotes.CustomerQuoteDataModel", b =>
                 {
                     b.Navigation("Items");
                 });

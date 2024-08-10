@@ -6,10 +6,14 @@
 @inject ISnackbar Snackbar
 @inject PersonsService PersonsService
 
+@{
+#pragma warning disable CS8669
+}
+
 @if (Model != null)
 {
     <EditForm Model="Model" OnValidSubmit="Submit">
-    <DataAnnotationsValidator />
+        <DataAnnotationsValidator/>
         <MudDialog>
             <DialogContent>
                 <MudGrid>
@@ -22,7 +26,7 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12">
-                        <MudSwitch Label="Autorisation droit à l'image" @bind-Value="Model.ImageRightsGranted" Color="Color.Primary" />
+                        <MudSwitch Label="Autorisation droit à l'image" @bind-Value="Model.ImageRightsGranted" Color="Color.Primary"/>
                     </MudItem>
                     <MudItem xs="12">
                         <MudSwitch Label="Facturer à : (à cocher uniquement si l'adhérent ou sa personne de contact 1 ne doit pas être le destinataire de la facture)" @bind-Value="BilledPersonShow" Color="Color.Primary"/>
@@ -42,19 +46,24 @@
     </EditForm>
 }
 
-@code {
+@{
+#pragma warning restore CS8669
+}
 
+@code {
+    
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = null!;
-
+    
     [Parameter]
     public SavePersonRegistrationFormModel? Model { get; set; }
-
+    
     public IOrderedEnumerable<SchoolYear> SchoolYears { get; set; } = Enumerable.Empty<SchoolYear>().OrderByDescending(inSchoolYear => inSchoolYear.StartDate);
-
+    
     private IOrderedEnumerable<Person> Persons { get; set; } = null!;
-
+    
     private bool _billedPersonShow;
+    
     private bool BilledPersonShow
     {
         get => _billedPersonShow;
@@ -75,38 +84,34 @@
         
         SchoolYears = (await SchoolYearsService.GetSchoolYearsAsync()).OrderByDescending(inSchoolYear => inSchoolYear.StartDate);
         Model ??= new SavePersonRegistrationFormModel();
-
+        
         _billedPersonShow = Model.BilledPerson != null;
         StateHasChanged();
     }
-
+    
     private async Task Submit()
     {
         var result = await PersonRegistrationsService.SavePersonRegistrationAsync(Model.Adapt<PersonRegistration>());
         result.Match(
             _ => MudDialog.Close(DialogResult.Ok(true)),
             inFailure => Snackbar.Add(inFailure.First(), Severity.Error)
-            );
+        );
     }
-
+    
     private void Cancel() => MudDialog.Cancel();
-
+    
     private async Task ReloadPersons()
     {
         Persons = (await PersonsService.GetPersonsAsync())
             .OrderBy(inPerson => inPerson.LastName).ThenBy(inPerson => inPerson.FirstName);
     }
-
+    
     private Task<IEnumerable<Person>> SearchContactPerson(string inValue, CancellationToken inCancellationToken)
     {
         var persons = Persons.Where(inPerson => inPerson.Id != Model!.Id);
         return Task.FromResult(
-            string.IsNullOrWhiteSpace(inValue) ?
-                persons :
-                persons.Where(inPerson => inPerson.GetFullName().Contains(inValue, StringComparison.InvariantCultureIgnoreCase))
-            );
+            string.IsNullOrWhiteSpace(inValue) ? persons : persons.Where(inPerson => inPerson.GetFullName().Contains(inValue, StringComparison.InvariantCultureIgnoreCase))
+        );
     }
-
     
 }
-

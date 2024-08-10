@@ -1,0 +1,46 @@
+﻿@using LRSchoolV2.Domain.CustomerQuotes
+
+@inject CustomerQuoteItemsService CustomerQuoteItemsService
+@inject ISnackbar Snackbar
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="CustomerQuoteItem" Items="DisplayedCustomerQuoteItems" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true">
+            <Columns>
+                <PropertyColumn T="CustomerQuoteItem" TProperty="string" Property="inCustomerQuoteItem => inCustomerQuoteItem.Denomination" Title="Désignation"/>
+                <PropertyColumn T="CustomerQuoteItem" TProperty="int" Property="inCustomerQuoteItem => inCustomerQuoteItem.Quantity" Title="Quantité"/>
+                <PropertyColumn T="CustomerQuoteItem" TProperty="decimal" Property="inCustomerQuoteItem => inCustomerQuoteItem.UnitPrice" Title="Prix unitaire"/>
+                <PropertyColumn T="CustomerQuoteItem" TProperty="decimal" Property="inCustomerQuoteItem => inCustomerQuoteItem.GetTotal()" Title="Total HT"/>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public CustomerQuote CustomerQuote { get; set; } = null!;
+    
+    private ObservableCollection<CustomerQuoteItem> DisplayedCustomerQuoteItems { get; set; } = null!;
+
+    private bool _isLoading;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadDataAsync();
+    }
+    
+    private async Task ReloadDataAsync()
+    {
+        if (!_isLoading)
+        {
+            _isLoading = true;
+            var result = await CustomerQuoteItemsService.GetCustomerQuoteItemsPerCustomerQuoteAsync(CustomerQuote.Id);
+            result.Match(
+                inSuccess => DisplayedCustomerQuoteItems = new ObservableCollection<CustomerQuoteItem>(inSuccess.OrderBy(inCustomerQuoteItem => inCustomerQuoteItem.Denomination)),
+                inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+            _isLoading = false;
+        }
+    }
+}

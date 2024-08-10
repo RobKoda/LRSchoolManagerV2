@@ -1,0 +1,3 @@
+﻿namespace LRSchoolV2.Application.CustomerQuotes.CustomerQuoteItems.GetCustomerQuoteItemsPerCustomerQuote;
+
+public record GetCustomerQuoteItemsPerCustomerQuoteRequest(Guid CustomerQuoteId);

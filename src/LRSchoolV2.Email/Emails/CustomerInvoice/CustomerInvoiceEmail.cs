@@ -17,7 +17,7 @@ public class CustomerInvoiceEmail : EmailMessage
         Subject = $"Facture {inInvoiceNumber}";
         BodyBuilder.HtmlBody =
             "<p>Bonjour,</p>" +
-            "<p>Veuillez trouver ci-joint la facture du mois.</p>" +
+            $"<p>Veuillez trouver ci-joint la facture {inInvoiceNumber}.</p>" +
             "<p>Cordialement,<br/>" +
             "L'équipe LR School</p>" +
             $"""<img style="width: 200px" src="cid:{image.ContentId}"><br/>""" +

@@ -36,4 +36,9 @@
       <_ContentIncludedByDefault Remove="Pages\Persons\Unbalanced\SaveNonMember\SaveNonMemberDialog.razor" />
     </ItemGroup>
 
+    <ItemGroup>
+      <AdditionalFiles Include="Pages\CustomerQuotes\CustomerQuoteItems\CustomerQuoteItems.razor" />
+      <AdditionalFiles Include="Pages\CustomerQuotes\CustomerQuotes.razor" />
+    </ItemGroup>
+
 </Project>

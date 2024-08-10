@@ -2,8 +2,8 @@
 using LRSchoolV2.Domain.CustomerInvoices;
 using LRSchoolV2.Domain.Persons;
 
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global - Implicit use
 // ReSharper disable UnusedMember.Global - Implicit use
-
 namespace LRSchoolV2.Blazor.Pages.CustomerInvoices.SaveCustomerInvoice;
 
 public class SaveCustomerInvoiceFormModel(IEnumerable<CustomerInvoice> inCustomerInvoices)

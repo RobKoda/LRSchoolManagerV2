@@ -1,6 +1,5 @@
 ﻿using LRSchoolV2.Application.AnnualServices.AnnualServiceConsultantWorks.Persistence;
 using LRSchoolV2.Domain.AnnualServices;
-using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 // ReSharper disable UnusedType.Global - Auto scan
@@ -32,14 +31,4 @@ public class AnnualServiceConsultantWorksRepository(IDbContextFactory<Applicatio
 
     public Task<bool> CanAnnualServiceConsultantWorkBeDeletedAsync(Guid inAnnualServiceConsultantWorkId) =>
         inContext.CanBeDeleted<AnnualServiceConsultantWorkDataModel>(inAnnualServiceConsultantWorkId);
-
-    public async Task<IEnumerable<AnnualServiceConsultantWork>> GetSubscribedAnnualServiceConsultantWorksAsync(Guid inSchoolYearId)
-    {
-        return await (await inContext.GetQueryableAsNoTrackingAsync<AnnualServiceConsultantWorkDataModel>())
-            .Where(inAnnualServiceConsultantWork => inAnnualServiceConsultantWork.SchoolYearId == inSchoolYearId &&
-                                                    inAnnualServiceConsultantWork.AnnualService!.Variations
-                                                        .Any(inServiceVariation => inServiceVariation.PersonAnnualServiceVariations.Count != 0))
-            .ProjectToType<AnnualServiceConsultantWork>()
-            .ToListAsync();
-    }
 }

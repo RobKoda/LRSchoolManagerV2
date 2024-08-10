@@ -9,7 +9,7 @@ using LRSchoolV2.Application.Persons.PersonRegistrations.Persistence;
 using LRSchoolV2.Domain.Common;
 using LRSchoolV2.Domain.CustomerInvoices;
 using LRSchoolV2.Domain.Persons;
-using LRSchoolV2.Reporting.CustomerInvoices;
+using LRSchoolV2.Reporting.Customers.CustomerInvoices;
 using MediatR;
 using Unit = LanguageExt.Unit;
 

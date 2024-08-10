@@ -16,14 +16,17 @@
     </ItemGroup>
 
     <ItemGroup>
+      <EmbeddedResource Include="Customers\CustomerInvoices\CustomerInvoiceTemplate.docx" />
+      <EmbeddedResource Include="Customers\CustomerQuotes\CustomerQuoteTemplate.docx" />
       <None Remove="CustomerInvoices\CustomerInvoiceTemplate.docx" />
-      <EmbeddedResource Include="CustomerInvoices\CustomerInvoiceTemplate.docx">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </EmbeddedResource>
       <Compile Remove="Consultants\ConsultantQuotes\ConsultantQuoteReport.cs" />
       <EmbeddedResource Include="Consultants\ConsultantQuotes\ConsultantQuoteReport.cs">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Customers\" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 ﻿@using System.Globalization
+@using LanguageExt
 @using LRSchoolV2.Blazor.Pages.CustomerInvoices.CustomerInvoiceItems
 @using LRSchoolV2.Blazor.Pages.Persons
 @using LRSchoolV2.Domain.CustomerInvoices
@@ -8,6 +9,10 @@
 @inject CustomerInvoiceItemsService CustomerInvoiceItemsService
 @inject ISnackbar Snackbar
 @inject PersonsService PersonsService
+
+@{
+#pragma warning disable CS8669
+}
 
 @if (Model != null)
 {
@@ -63,7 +68,12 @@
 
 @if (_isLoading)
 {
-<LoadingSpinner/>
+    <LoadingSpinner/>
+}
+
+
+@{
+#pragma warning restore CS8669
 }
 
 @code {
@@ -107,11 +117,15 @@
                     item.CustomerInvoice = customerInvoice;
                 }
                 
+                var failures = new Seq<string>();
                 var customerInvoiceItems = Model.Items.Adapt<IEnumerable<CustomerInvoiceItem>>();
                 foreach (var item in customerInvoiceItems)
                 {
-                    await CustomerInvoiceItemsService.SimulateSaveCustomerInvoiceItemAsync(item);
+                    (await CustomerInvoiceItemsService.SimulateSaveCustomerInvoiceItemAsync(item))
+                        .IfFail(inFailure => failures = failures.Concat(inFailure));
                 }
+                
+                return failures;
             });
         
         if (simulationResult.IsFail)

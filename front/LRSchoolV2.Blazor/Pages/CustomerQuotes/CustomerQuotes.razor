@@ -1,0 +1,250 @@
+﻿@page "/CustomerQuotes"
+
+@* ReSharper disable once RedundantUsingDirective Needed for CustomerQuoteItems component*@
+@using BlazorDownloadFile
+@using LRSchoolV2.Blazor.Pages.CustomerQuotes.CustomerQuoteItems
+@using LRSchoolV2.Blazor.Pages.CustomerQuotes.SaveCustomerQuote
+@using LRSchoolV2.Blazor.Pages.Documents
+@using LRSchoolV2.Domain.Common
+@using LRSchoolV2.Domain.CustomerQuotes
+@using LRSchoolV2.Email.Abstractions
+@using LRSchoolV2.Email.Emails.CustomerQuote
+@using LRSchoolV2.Email.Models.Attachments
+@using LRSchoolV2.Reporting.Customers.CustomerQuotes
+@using Unit = LanguageExt.Unit
+
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject CustomerQuotesService CustomerQuotesService
+@inject IBlazorDownloadFileService DownloadFileService
+@inject DocumentsService DocumentsService
+@inject CustomerQuoteItemsService CustomerQuoteItemsService 
+@inject IEmailSender EmailSender
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnCustomerQuoteAddClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter un devis</MudButton>
+    <MudButton StartIcon="@Icons.Material.Filled.Email" OnClick="@OnCustomerQuotesBulkSendEmailClick" Variant="Variant.Filled" Color="Color.Primary">Envoi d'emails</MudButton>
+    @if (_showAdvancedFunctions)
+    {
+        <MudButton Class="ml-8" StartIcon="@Icons.Material.Filled.Remove" OnClick="@OnCancelLastQuoteClick" Variant="Variant.Filled" Color="Color.Error">Annuler le dernier devis</MudButton>
+    }
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="CustomerQuote" Items="DisplayedCustomerQuotes" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true"
+                     @bind-SelectedItems="@SelectedItems" MultiSelection="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Devis Clients</MudText>
+                <MudSpacer/>
+                <MudSwitch @bind-Value="_showAdvancedFunctions" Label="Fonctions avancées (et dangereuses)" Color="Color.Primary"/>
+            </ToolBarContent>
+            <Columns>
+                <HierarchyColumn T="CustomerQuote"/>
+                <SelectColumn T="CustomerQuote"  ShowInHeader="false"  ShowInFooter="false"/>
+                <PropertyColumn T="CustomerQuote" TProperty="string" Property="inCustomerQuote => inCustomerQuote.Number" Title="Numéro"/>
+                <PropertyColumn T="CustomerQuote" TProperty="DateTime" Property="inCustomerQuote => inCustomerQuote.Date" Title="Date" Format="dd/MM/yyyy"/>
+                <PropertyColumn T="CustomerQuote" TProperty="string" Property="inCustomerQuote => inCustomerQuote.QuoteCustomerName" Title="Nom du client"/>
+                <PropertyColumn T="CustomerQuote" TProperty="decimal" Property="inCustomerQuote => inCustomerQuote.TotalToPay" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px" Title="Total"/>
+                <TemplateColumn T="CustomerQuote" Title="Email envoyé">
+                    <CellTemplate>
+                        <MudCheckBox Value="context.Item.EmailSent" ReadOnly="true" Color="Color.Primary"/>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudTooltip Text="Télécharger PDF">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(() => OnCustomerQuotePDFClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Envoyer PDF par email">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Email" OnClick="@(() => OnCustomerQuoteSendByEmailClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            @if (_showAdvancedFunctions)
+                            {
+                            <MudTooltip Text="Regénérer PDF">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Error" Icon="@Icons.Material.Filled.RestartAlt" OnClick="@(() => OnCustomerQuotePDFRegenerationClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            }
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <ChildRowContent>
+                <CustomerQuoteItems CustomerQuote="@context.Item"/>
+            </ChildRowContent>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+@if (_isLoading)
+{
+    <LoadingSpinner/>
+}
+
+@code {
+    private ObservableCollection<CustomerQuote> DisplayedCustomerQuotes { get; set; } = null!;
+
+    private bool _showAdvancedFunctions;
+    private bool _isLoading;
+
+    private HashSet<CustomerQuote> SelectedItems { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        var getQuotesResponse = await CustomerQuotesService.GetCustomerQuotesAsync();
+        DisplayedCustomerQuotes = [];
+        DisplayedCustomerQuotes = new ObservableCollection<CustomerQuote>(getQuotesResponse.CustomerQuotes.OrderByDescending(inQuote => inQuote.Number)); 
+    }
+
+    private async Task OnCustomerQuotePDFClick(CustomerQuote inCustomerQuote)
+    {
+        var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inCustomerQuote.Id);
+        await document.IfSomeAsync(async inSome => await DownloadFileService.DownloadFile(inSome.FileName, inSome.FileContent, inSome.ContentType));
+        document.IfNone(() => Snackbar.Add("Le devis n'a pas été trouvée", Severity.Error));
+    }
+
+    private async Task OnCustomerQuotePDFRegenerationClick(CustomerQuote inCustomerQuote)
+    {
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir regénérer le devis ?", "Regénérer un devis", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            _isLoading = true;
+            StateHasChanged();
+            await GeneratePdf(inCustomerQuote);
+        }
+    }
+    
+    private async Task GeneratePdf(CustomerQuote inCustomerQuote)
+    {
+        var items = await CustomerQuoteItemsService.GetCustomerQuoteItemsPerCustomerQuoteAsync(inCustomerQuote.Id);
+        await items.MatchAsync(async inSuccess =>
+            {
+                var report = new CustomerQuoteReport(inCustomerQuote, inSuccess);
+                var reportContent = (await report.GetReportMemoryStreamAsync()).ToArray();
+                var saveResult = await DocumentsService.SaveDocumentAsync(new Document(Guid.NewGuid(), inCustomerQuote.Id, report.ExportFileName, CustomerQuoteReport.ContentType, reportContent));
+                
+                saveResult.IfSuccess(_ => Snackbar.Add("Devis généré", Severity.Success));
+                saveResult.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+                
+                _isLoading = false;
+                return Unit.Default;
+            },
+            inFailure =>
+            {
+                Snackbar.Add(inFailure.First(), Severity.Error);
+                _isLoading = false;
+                return Unit.Default;
+            });
+    }
+
+    private async Task OnCustomerQuotesBulkSendEmailClick()
+    {
+        _isLoading = true;
+
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir envoyer les emails pour le devis sélectionnées ?", "Envoi des devis", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            foreach (var quote in SelectedItems)
+            {
+                await SendEmail(quote);
+            }
+            await ReloadDataAsync();
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task OnCancelLastQuoteClick()
+    {
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir annuler le dernier le devis ?", "Annuler le dernier devis", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            var cancelResult = await CustomerQuotesService.CancelCustomerQuoteAsync(DisplayedCustomerQuotes.MaxBy(inQuote => inQuote.Date)!.Adapt<CustomerQuote>());
+            cancelResult.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnCustomerQuoteSendByEmailClick(CustomerQuote inCustomerQuote)
+    {
+        _isLoading = true;
+
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir envoyer le devis par email ?", "Envoyer le devis par email", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await SendEmail(inCustomerQuote);
+        }
+        _isLoading = false;
+    }
+    
+    private async Task OnCustomerQuoteAddClick()
+    {
+        var dialogParameters = new DialogParameters
+        {
+            {
+#pragma warning disable CS8974 // Converting method group to non-delegate type
+                nameof(SaveCustomerQuoteDialog.GeneratePdfMethod), GeneratePdf
+#pragma warning restore CS8974 // Converting method group to non-delegate type
+            }
+        };
+        var dialog = await DialogService.ShowAsync<SaveCustomerQuoteDialog>("Ajout d'un devis client", dialogParameters,
+        new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Large
+        });
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task SendEmail(CustomerQuote inCustomerQuote)
+    {
+        var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inCustomerQuote.Id);
+        await document.IfSomeAsync(async inSome =>
+        {
+#if DEBUG
+            await EmailSender.SendEmailAsync("robin.kebaili@gmail.com", new CustomerQuoteEmail(inCustomerQuote.Number),
+                new EmailAttachment
+                {
+                    Filename = inSome.FileName,
+                    Content = inSome.FileContent,
+                    Type = EmailAttachmentType.Pdf
+                });
+#else
+            await EmailSender.SendEmailAsync(inCustomerQuote.Customer.Email, new CustomerQuoteEmail(inCustomerQuote.Number),
+                new EmailAttachment
+                {
+                    Filename = inSome.FileName,
+                    Content = inSome.FileContent,
+                    Type = EmailAttachmentType.Pdf
+                });
+#endif
+
+            if (!inCustomerQuote.EmailSent)
+            {
+                inCustomerQuote = inCustomerQuote with
+                {
+                    EmailSent = true
+                };
+                var result = await CustomerQuotesService.SetCustomerQuoteEmailSentAsync(inCustomerQuote);
+                result.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+                await ReloadDataAsync();
+            }
+
+            Snackbar.Add($"Le devis a été envoyée à {inCustomerQuote.Customer.Email}", Severity.Success);
+        });
+        document.IfNone(() => { Snackbar.Add("Le devis n'a pas été trouvée", Severity.Error); });
+    }
+}

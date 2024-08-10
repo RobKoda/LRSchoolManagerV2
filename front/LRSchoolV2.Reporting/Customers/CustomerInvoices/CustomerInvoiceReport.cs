@@ -7,7 +7,7 @@ using Table = DocumentFormat.OpenXml.Wordprocessing.Table;
 using TableCell = DocumentFormat.OpenXml.Wordprocessing.TableCell;
 using TableRow = DocumentFormat.OpenXml.Wordprocessing.TableRow;
 
-namespace LRSchoolV2.Reporting.CustomerInvoices;
+namespace LRSchoolV2.Reporting.Customers.CustomerInvoices;
 
 public class CustomerInvoiceReport(CustomerInvoice inCustomerInvoice, IEnumerable<CustomerInvoiceItem> inCustomerInvoiceItems)
 {

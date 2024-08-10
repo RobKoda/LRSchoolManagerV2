@@ -2,6 +2,10 @@
 @inject PersonsService PersonsService
 @inject IDialogService DialogService
 
+@{
+#pragma warning disable CS8669
+}
+
 @if (Model != null)
 {
     <EditForm Model="Model" OnValidSubmit="Submit">
@@ -61,6 +65,10 @@
             </DialogActions>
         </MudDialog>
     </EditForm>
+}
+
+@{
+#pragma warning restore CS8669
 }
 
 @code {

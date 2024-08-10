@@ -1,5 +1,6 @@
 ﻿using LRSchoolV2.Domain.CustomerInvoices;
 
+// ReSharper disable UnusedAutoPropertyAccessor.Global - Implicit use
 // ReSharper disable UnusedMember.Global - Implicit use
 namespace LRSchoolV2.Blazor.Pages.CustomerInvoices.SaveCustomerInvoice;
 

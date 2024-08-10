@@ -12,5 +12,4 @@ public interface IAnnualServiceVariationConsultantWorksRepository : IRepository
     Task SaveAnnualServiceVariationConsultantWorkAsync(AnnualServiceVariationConsultantWork inAnnualServiceVariationConsultantWork);
     Task<bool> IsAnnualServiceVariationConsultantWorkUniqueAsync(AnnualServiceVariationConsultantWork inReferenceAnnualServiceVariationConsultantWork);
     Task<bool> CanAnnualServiceVariationConsultantWorkBeDeletedAsync(Guid inAnnualServiceVariationConsultantWorkId);
-    Task<IEnumerable<AnnualServiceVariationConsultantWork>> GetSubscribedAnnualServiceVariationConsultantWorksAsync(Guid inSchoolYearId);
 }

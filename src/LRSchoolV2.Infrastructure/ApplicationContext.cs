@@ -13,6 +13,8 @@ using LRSchoolV2.Infrastructure.Consultants.Consultants;
 using LRSchoolV2.Infrastructure.CustomerInvoices.CustomerInvoiceItems;
 using LRSchoolV2.Infrastructure.CustomerInvoices.CustomerInvoices;
 using LRSchoolV2.Infrastructure.CustomerPayments.CustomerPayments;
+using LRSchoolV2.Infrastructure.CustomerQuotes.CustomerQuoteItems;
+using LRSchoolV2.Infrastructure.CustomerQuotes.CustomerQuotes;
 using LRSchoolV2.Infrastructure.Persons.PersonAnnualServiceVariations;
 using LRSchoolV2.Infrastructure.Persons.PersonRegistrations;
 using LRSchoolV2.Infrastructure.Persons.Persons;
@@ -37,6 +39,8 @@ public class ApplicationContext(DbContextOptions inOptions) : DbContext(inOption
     //public DbSet<ConsultantQuoteItemDataModel> ConsultantQuoteItems => Set<ConsultantQuoteItemDataModel>();
     public DbSet<CustomerInvoiceDataModel> CustomerInvoices => Set<CustomerInvoiceDataModel>();
     public DbSet<CustomerInvoiceItemDataModel> CustomerInvoiceItems => Set<CustomerInvoiceItemDataModel>();
+    public DbSet<CustomerQuoteDataModel> CustomerQuotes => Set<CustomerQuoteDataModel>();
+    public DbSet<CustomerQuoteItemDataModel> CustomerQuoteItems => Set<CustomerQuoteItemDataModel>();
     public DbSet<CustomerPaymentDataModel> CustomerPayments => Set<CustomerPaymentDataModel>();
     public DbSet<DocumentDataModel> Documents => Set<DocumentDataModel>();
     public DbSet<PersonDataModel> Persons => Set<PersonDataModel>();

@@ -12,5 +12,4 @@ public interface IAnnualServiceConsultantWorksRepository : IRepository
     Task SaveAnnualServiceConsultantWorkAsync(AnnualServiceConsultantWork inAnnualServiceConsultantWork);
     Task<bool> IsAnnualServiceConsultantWorkUniqueAsync(AnnualServiceConsultantWork inReferenceAnnualServiceConsultantWork);
     Task<bool> CanAnnualServiceConsultantWorkBeDeletedAsync(Guid inAnnualServiceConsultantWorkId);
-    Task<IEnumerable<AnnualServiceConsultantWork>> GetSubscribedAnnualServiceConsultantWorksAsync(Guid inSchoolYearId);
 }

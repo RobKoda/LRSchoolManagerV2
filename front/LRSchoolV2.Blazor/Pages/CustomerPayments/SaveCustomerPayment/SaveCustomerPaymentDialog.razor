@@ -7,6 +7,10 @@
 @inject ISnackbar Snackbar
 @inject PersonsService PersonsService
 
+@{
+#pragma warning disable CS8669
+}
+
 @if (Model != null)
 {
     <EditForm Model="Model" OnValidSubmit="Submit">
@@ -16,7 +20,7 @@
                 <MudGrid>
                     <MudItem xs="12">
                         <MudAutocomplete T="Person?" Label="Personne" @bind-Value="Model.Person" For="@(() => Model.Person)" ResetValueOnEmptyText="true" Clearable="true"
-                        ToStringFunc="@(inPerson => inPerson?.GetDropdownText() ?? string.Empty)" SearchFunc="SearchContactPerson"/>
+                                         ToStringFunc="@(inPerson => inPerson?.GetDropdownText() ?? string.Empty)" SearchFunc="SearchContactPerson"/>
                     </MudItem>
                     <MudItem xs="6">
                         <MudSelect Label="Type" @bind-Value="Model.CustomerInvoicePaymentType" For="@(() => Model.CustomerInvoicePaymentType)" Clearable="true">
@@ -42,41 +46,44 @@
                 <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Ok</MudButton>
             </DialogActions>
         </MudDialog>
-
+        
     </EditForm>
 }
 
-@code {
+@{
+#pragma warning restore CS8669
+}
 
+@code {
+    
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = null!;
-
+    
     [Parameter]
     public SaveCustomerPaymentFormModel? Model { get; set; }
-
+    
     private IOrderedEnumerable<Person> Persons { get; set; } = null!;
-
+    
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         await ReloadPersons();
         Model ??= new SaveCustomerPaymentFormModel();
     }
-
+    
     private async Task ReloadPersons() => Persons = (await PersonsService.GetPersonsAsync())
         .OrderBy(inPerson => inPerson.LastName).ThenBy(inPerson => inPerson.FirstName);
-
+    
     private async Task Submit() =>
         (await CustomerPaymentsService.SaveCustomerPaymentAsync(Model.Adapt<CustomerPayment>()))
-            .Match(
-                _ => MudDialog.Close(DialogResult.Ok(true)),
-                inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
-
+        .Match(
+            _ => MudDialog.Close(DialogResult.Ok(true)),
+            inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+    
     private void Cancel() => MudDialog.Cancel();
-
+    
     private Task<IEnumerable<Person>> SearchContactPerson(string inValue, CancellationToken inCancellationToken) => Task.FromResult(
-        string.IsNullOrWhiteSpace(inValue) ?
-            Persons :
-            Persons.Where(inPerson => inPerson.GetFullName().Contains(inValue, StringComparison.InvariantCultureIgnoreCase))
-        );
+        string.IsNullOrWhiteSpace(inValue) ? Persons : Persons.Where(inPerson => inPerson.GetFullName().Contains(inValue, StringComparison.InvariantCultureIgnoreCase))
+    );
+    
 }

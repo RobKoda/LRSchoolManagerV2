@@ -50,11 +50,6 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
             .AnyAsync(inPersonAnnualServiceVariation => 
                 inPersonAnnualServiceVariation.PersonId != inPersonId &&
                 inPersonAnnualServiceVariation.SchoolYearId == inSchoolYearId);
-    
-    public Task<IEnumerable<PersonAnnualServiceVariation>> GetPersonAnnualServiceVariationsPerSchoolYearAsync(Guid inSchoolYearId) =>
-        inContext.GetAllAsync<PersonAnnualServiceVariationDataModel, PersonAnnualServiceVariation>(inQueryable =>
-            GetPersonServiceVariationQueryableAsync(inQueryable)
-                .Where(inPersonServiceVariation => inPersonServiceVariation.SchoolYearId == inSchoolYearId));
 
     public Task DeletePersonAnnualServiceVariationAsync(Guid inPersonId) =>
         inContext.DeleteAsync<PersonAnnualServiceVariationDataModel>(inPersonId);

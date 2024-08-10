@@ -5,15 +5,10 @@ using MediatR;
 
 namespace LRSchoolV2.Application.Common.Documents.GetDocumentPerReferenceId;
 
-public class GetDocumentPerReferenceIdHandler : IRequestHandler<GetDocumentPerReferenceIdQuery, GetDocumentPerReferenceIdResponse>
+public class GetDocumentPerReferenceIdHandler(
+    IDocumentsRepository inDocumentsRepository
+    ) : IRequestHandler<GetDocumentPerReferenceIdQuery, GetDocumentPerReferenceIdResponse>
 {
-    private readonly IDocumentsRepository _documentsRepository;
-
-    public GetDocumentPerReferenceIdHandler(IDocumentsRepository inDocumentsRepository)
-    {
-        _documentsRepository = inDocumentsRepository;
-    }
-
     public async Task<GetDocumentPerReferenceIdResponse> Handle(GetDocumentPerReferenceIdQuery inRequest, CancellationToken inCancellationToken) => 
-        new(await _documentsRepository.GetDocumentPerReferenceIdAsync(inRequest.ReferenceId));
+        new(await inDocumentsRepository.GetDocumentPerReferenceIdAsync(inRequest.ReferenceId));
 }

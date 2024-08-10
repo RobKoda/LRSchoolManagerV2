@@ -8,21 +8,15 @@ using MediatR;
 
 namespace LRSchoolV2.Application.Persons.Persons.GetMembers;
 
-public class GetMembersHandler : IRequestHandler<GetMembersQuery, GetMembersResponse>
+public class GetMembersHandler(
+    IPersonsRepository inPersonsRepository, 
+    ISender inMediator
+    ) : IRequestHandler<GetMembersQuery, GetMembersResponse>
 {
-    private readonly IPersonsRepository _personsRepository;
-    private readonly IMediator _mediator;
-
-    public GetMembersHandler(IPersonsRepository inPersonsRepository, IMediator inMediator)
-    {
-        _personsRepository = inPersonsRepository;
-        _mediator = inMediator;
-    }
-
     public async Task<GetMembersResponse> Handle(GetMembersQuery inRequest, CancellationToken inCancellationToken)
     {
-        var currentSchoolYear = await _mediator.Send(new GetCurrentSchoolYearQuery(), inCancellationToken);
+        var currentSchoolYear = await inMediator.Send(new GetCurrentSchoolYearQuery(), inCancellationToken);
         return new GetMembersResponse(currentSchoolYear.SchoolYear
-            .MapAsync<SchoolYear, IEnumerable<Person>>(inSome => _personsRepository.GetPersonsAsync(inSome.Id, true)));
+            .MapAsync<SchoolYear, IEnumerable<Person>>(inSome => inPersonsRepository.GetPersonsAsync(inSome.Id, true)));
     }
 }
