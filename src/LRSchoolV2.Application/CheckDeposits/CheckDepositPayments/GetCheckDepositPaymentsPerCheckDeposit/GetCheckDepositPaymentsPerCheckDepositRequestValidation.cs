@@ -6,15 +6,10 @@ using LRSchoolV2.Application.CheckDeposits.CheckDeposits.Persistence;
 
 namespace LRSchoolV2.Application.CheckDeposits.CheckDepositPayments.GetCheckDepositPaymentsPerCheckDeposit;
 
-public class GetCheckDepositPaymentsPerCheckDepositRequestValidation : AbstractValidator<GetCheckDepositPaymentsPerCheckDepositRequest>
+public class GetCheckDepositPaymentsPerCheckDepositRequestValidation(
+    ICheckDepositsRepository inCheckDepositsRepository
+    ) : AbstractValidator<GetCheckDepositPaymentsPerCheckDepositRequest>
 {
-    private readonly ICheckDepositsRepository _checkDepositsRepository;
-
-    public GetCheckDepositPaymentsPerCheckDepositRequestValidation(ICheckDepositsRepository inCheckDepositsRepository)
-    {
-        _checkDepositsRepository = inCheckDepositsRepository;
-    }
-    
     public override Task<ValidationResult> ValidateAsync(ValidationContext<GetCheckDepositPaymentsPerCheckDepositRequest> inContext,
         CancellationToken inCancellation = new())
     {
@@ -25,6 +20,6 @@ public class GetCheckDepositPaymentsPerCheckDepositRequestValidation : AbstractV
     
     private void ValidateId() =>
         RuleFor(inRequest => inRequest.CheckDepositId)
-            .MustAsync((inCheckDepositId, _) => _checkDepositsRepository.AnyCheckDepositAsync(inCheckDepositId))
+            .MustAsync((inCheckDepositId, _) => inCheckDepositsRepository.AnyCheckDepositAsync(inCheckDepositId))
             .WithMessage(GetCheckDepositPaymentsPerCheckDepositRequestValidationErrors.CheckDepositNotFound);
 }

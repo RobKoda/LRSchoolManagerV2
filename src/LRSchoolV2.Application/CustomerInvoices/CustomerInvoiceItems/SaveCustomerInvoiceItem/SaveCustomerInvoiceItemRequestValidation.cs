@@ -6,15 +6,10 @@ using LRSchoolV2.Application.CustomerInvoices.CustomerInvoices.Persistence;
 
 namespace LRSchoolV2.Application.CustomerInvoices.CustomerInvoiceItems.SaveCustomerInvoiceItem;
 
-public class SaveCustomerInvoiceItemRequestValidation : AbstractValidator<SaveCustomerInvoiceItemRequest>
+public class SaveCustomerInvoiceItemRequestValidation(
+    ICustomerInvoicesRepository inCustomerInvoicesRepository
+) : AbstractValidator<SaveCustomerInvoiceItemRequest>
 {
-    private readonly ICustomerInvoicesRepository _customerInvoicesRepository;
-
-    public SaveCustomerInvoiceItemRequestValidation(ICustomerInvoicesRepository inCustomerInvoicesRepository)
-    {
-        _customerInvoicesRepository = inCustomerInvoicesRepository;
-    }
-    
     public override Task<ValidationResult> ValidateAsync(ValidationContext<SaveCustomerInvoiceItemRequest> inContext,
         CancellationToken inCancellation = new())
     {
@@ -26,7 +21,7 @@ public class SaveCustomerInvoiceItemRequestValidation : AbstractValidator<SaveCu
     
     private void ValidateCustomerInvoice() =>
         RuleFor(inRequest => inRequest.CustomerInvoiceItem.CustomerInvoice.Id)
-            .MustAsync((inCustomerInvoiceId, _) => _customerInvoicesRepository.AnyCustomerInvoiceAsync(inCustomerInvoiceId))
+            .MustAsync((inCustomerInvoiceId, _) => inCustomerInvoicesRepository.AnyCustomerInvoiceAsync(inCustomerInvoiceId))
             .WithMessage(SaveCustomerInvoiceItemRequestValidationErrors.CustomerInvoiceNotFound);
 
     private void ValidateQuantity() =>

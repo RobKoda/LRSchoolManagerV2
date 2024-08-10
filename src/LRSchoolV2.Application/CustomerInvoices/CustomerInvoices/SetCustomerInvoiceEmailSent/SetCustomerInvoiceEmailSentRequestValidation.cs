@@ -6,15 +6,10 @@ using LRSchoolV2.Application.CustomerInvoices.CustomerInvoices.Persistence;
 
 namespace LRSchoolV2.Application.CustomerInvoices.CustomerInvoices.SetCustomerInvoiceEmailSent;
 
-public class SetCustomerInvoiceEmailSentRequestValidation : AbstractValidator<SetCustomerInvoiceEmailSentRequest>
+public class SetCustomerInvoiceEmailSentRequestValidation(
+    ICustomerInvoicesRepository inCustomerInvoicesRepository
+    ) : AbstractValidator<SetCustomerInvoiceEmailSentRequest>
 {
-    private readonly ICustomerInvoicesRepository _customerInvoicesRepository;
-
-    public SetCustomerInvoiceEmailSentRequestValidation(ICustomerInvoicesRepository inCustomerInvoicesRepository)
-    {
-        _customerInvoicesRepository = inCustomerInvoicesRepository;
-    }
-
     public override Task<ValidationResult> ValidateAsync(ValidationContext<SetCustomerInvoiceEmailSentRequest> inContext,
         CancellationToken inCancellation = new())
     {
@@ -25,6 +20,6 @@ public class SetCustomerInvoiceEmailSentRequestValidation : AbstractValidator<Se
 
     private void ValidateCustomerInvoiceExistence() =>
         RuleFor(inRequest => inRequest.CustomerInvoiceId)
-            .MustAsync((inId, _) => _customerInvoicesRepository.AnyCustomerInvoiceAsync(inId))
+            .MustAsync((inId, _) => inCustomerInvoicesRepository.AnyCustomerInvoiceAsync(inId))
             .WithMessage(SetCustomerInvoiceEmailSentRequestValidationErrors.CustomerInvoiceNotFound);
 }

@@ -7,13 +7,13 @@ namespace LRSchoolV2.Application.Common.SchoolYears.SaveSchoolYear;
 
 public class SaveSchoolYearRequestValidation(ISchoolYearsRepository inRepository) : AbstractValidator<SaveSchoolYearRequest>
 {
-    public override async Task<ValidationResult> ValidateAsync(ValidationContext<SaveSchoolYearRequest> inContext,
+    public override Task<ValidationResult> ValidateAsync(ValidationContext<SaveSchoolYearRequest> inContext,
         CancellationToken inCancellation = new())
     {
         ValidateSchoolYear();
         ValidateMembershipFee();
         
-        return await base.ValidateAsync(inContext, inCancellation);
+        return base.ValidateAsync(inContext, inCancellation);
     }
     
     private void ValidateSchoolYear()

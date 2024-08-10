@@ -1,30 +1,29 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
 using LRSchoolV2.Application.CustomerQuotes.CustomerQuotes.Persistence;
-using LRSchoolV2.Domain.CustomerQuotes;
 
 // ReSharper disable UnusedType.Global - Implicit use
-
 namespace LRSchoolV2.Application.CustomerQuotes.CustomerQuotes.CancelCustomerQuote;
 
 public class CancelCustomerQuoteRequestValidation(
     ICustomerQuotesRepository inCustomerQuotesRepository
 ) : AbstractValidator<CancelCustomerQuoteRequest>
 {
-    public override async Task<ValidationResult> ValidateAsync(ValidationContext<CancelCustomerQuoteRequest> inContext,
+    public override Task<ValidationResult> ValidateAsync(ValidationContext<CancelCustomerQuoteRequest> inContext,
         CancellationToken inCancellation = new())
     {
-        var customerQuotes = await inCustomerQuotesRepository.GetCustomerQuotesAsync();
-        var lastCustomerQuote = customerQuotes.MaxBy(inQuote => inQuote.Date);
-        ValidateIsLastCustomerQuote(lastCustomerQuote!);
+        ValidateIsLastCustomerQuote();
         ValidateCanBeDeleted();
         
-        return await base.ValidateAsync(inContext, inCancellation);
+        return base.ValidateAsync(inContext, inCancellation);
     }
-
-    private void ValidateIsLastCustomerQuote(CustomerQuote inLastCustomerQuote) =>
+    
+    private void ValidateIsLastCustomerQuote() =>
         RuleFor(inRequest => inRequest.CustomerQuote)
-            .Must(inQuote => inQuote.Id == inLastCustomerQuote.Id)
+            .MustAsync(async (inQuote, _) =>
+                (await inCustomerQuotesRepository.GetLastCustomerQuoteAsync())
+                .Match(inSome => inQuote.Id == inSome.Id, () => false)
+            )
             .WithMessage(CancelCustomerQuoteRequestValidationErrors.NotTheLastCustomerQuote);
     
     private void ValidateCanBeDeleted() =>

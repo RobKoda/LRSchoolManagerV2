@@ -7,17 +7,11 @@ using LRSchoolV2.Application.CustomerPayments.CustomerPayments.Persistence;
 
 namespace LRSchoolV2.Application.CheckDeposits.CheckDepositPayments.SaveCheckDepositPayment;
 
-public class SaveCheckDepositPaymentRequestValidation : AbstractValidator<SaveCheckDepositPaymentRequest>
+public class SaveCheckDepositPaymentRequestValidation(
+    ICheckDepositsRepository inCheckDepositsRepository, 
+    ICustomerPaymentsRepository inCustomerPaymentsRepository
+    ) : AbstractValidator<SaveCheckDepositPaymentRequest>
 {
-    private readonly ICheckDepositsRepository _checkDepositsRepository;
-    private readonly ICustomerPaymentsRepository _customerPaymentsRepository;
-
-    public SaveCheckDepositPaymentRequestValidation(ICheckDepositsRepository inCheckDepositsRepository, ICustomerPaymentsRepository inCustomerPaymentsRepository)
-    {
-        _checkDepositsRepository = inCheckDepositsRepository;
-        _customerPaymentsRepository = inCustomerPaymentsRepository;
-    }
-    
     public override Task<ValidationResult> ValidateAsync(ValidationContext<SaveCheckDepositPaymentRequest> inContext,
         CancellationToken inCancellation = new())
     {
@@ -29,11 +23,11 @@ public class SaveCheckDepositPaymentRequestValidation : AbstractValidator<SaveCh
     
     private void ValidateCheckDeposit() =>
         RuleFor(inRequest => inRequest.CheckDepositPayment.CheckDepositId)
-            .MustAsync((inCheckDepositId, _) => _checkDepositsRepository.AnyCheckDepositAsync(inCheckDepositId))
+            .MustAsync((inCheckDepositId, _) => inCheckDepositsRepository.AnyCheckDepositAsync(inCheckDepositId))
             .WithMessage(SaveCheckDepositPaymentRequestValidationErrors.CheckDepositNotFound);
     
     private void ValidateCustomerPayment() =>
         RuleFor(inRequest => inRequest.CheckDepositPayment.CustomerPayment)
-            .MustAsync((inCustomerPayment, _) => _customerPaymentsRepository.AnyCustomerPaymentAsync(inCustomerPayment.Id))
+            .MustAsync((inCustomerPayment, _) => inCustomerPaymentsRepository.AnyCustomerPaymentAsync(inCustomerPayment.Id))
             .WithMessage(SaveCheckDepositPaymentRequestValidationErrors.CustomerPaymentNotFound);
 }

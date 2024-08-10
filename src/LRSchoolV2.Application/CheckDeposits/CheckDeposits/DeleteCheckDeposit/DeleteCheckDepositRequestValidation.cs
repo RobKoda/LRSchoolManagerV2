@@ -6,15 +6,10 @@ using LRSchoolV2.Application.CheckDeposits.CheckDeposits.Persistence;
 
 namespace LRSchoolV2.Application.CheckDeposits.CheckDeposits.DeleteCheckDeposit;
 
-public class DeleteCheckDepositRequestValidation : AbstractValidator<DeleteCheckDepositRequest>
+public class DeleteCheckDepositRequestValidation(
+    ICheckDepositsRepository inRepository
+    ) : AbstractValidator<DeleteCheckDepositRequest>
 {
-    private readonly ICheckDepositsRepository _repository;
-
-    public DeleteCheckDepositRequestValidation(ICheckDepositsRepository inRepository)
-    {
-        _repository = inRepository;
-    }
-
     public override Task<ValidationResult> ValidateAsync(ValidationContext<DeleteCheckDepositRequest> inContext,
         CancellationToken inCancellation = new())
     {
@@ -26,11 +21,11 @@ public class DeleteCheckDepositRequestValidation : AbstractValidator<DeleteCheck
     
     private void ValidateId() =>
         RuleFor(inRequest => inRequest.CheckDeposit.Id)
-            .MustAsync((inCheckDepositId, _) => _repository.AnyCheckDepositAsync(inCheckDepositId))
+            .MustAsync((inCheckDepositId, _) => inRepository.AnyCheckDepositAsync(inCheckDepositId))
             .WithMessage(DeleteCheckDepositRequestValidationErrors.CheckDepositNotFound);
     
     private void ValidateCanBeDeleted() =>
         RuleFor(inRequest => inRequest.CheckDeposit)
-            .MustAsync((inCheckDeposit, _) => _repository.CanCheckDepositBeDeleted(inCheckDeposit.Id))
+            .MustAsync((inCheckDeposit, _) => inRepository.CanCheckDepositBeDeleted(inCheckDeposit.Id))
             .WithMessage(DeleteCheckDepositRequestValidationErrors.CheckDepositCannotBeDeleted);
 }

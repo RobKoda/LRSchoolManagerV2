@@ -6,15 +6,10 @@ using LRSchoolV2.Application.CustomerPayments.CustomerPayments.Persistence;
 
 namespace LRSchoolV2.Application.CustomerPayments.CustomerPayments.DeleteCustomerPayment;
 
-public class DeleteCustomerPaymentRequestValidation : AbstractValidator<DeleteCustomerPaymentRequest>
+public class DeleteCustomerPaymentRequestValidation(
+    ICustomerPaymentsRepository inRepository
+    ) : AbstractValidator<DeleteCustomerPaymentRequest>
 {
-    private readonly ICustomerPaymentsRepository _repository;
-
-    public DeleteCustomerPaymentRequestValidation(ICustomerPaymentsRepository inRepository)
-    {
-        _repository = inRepository;
-    }
-
     public override Task<ValidationResult> ValidateAsync(ValidationContext<DeleteCustomerPaymentRequest> inContext,
         CancellationToken inCancellation = new())
     {
@@ -26,11 +21,11 @@ public class DeleteCustomerPaymentRequestValidation : AbstractValidator<DeleteCu
     
     private void ValidateId() =>
         RuleFor(inRequest => inRequest.CustomerPayment.Id)
-            .MustAsync((inCustomerPaymentId, _) => _repository.AnyCustomerPaymentAsync(inCustomerPaymentId))
+            .MustAsync((inCustomerPaymentId, _) => inRepository.AnyCustomerPaymentAsync(inCustomerPaymentId))
             .WithMessage(DeleteCustomerPaymentRequestValidationErrors.CustomerPaymentNotFound);
     
     private void ValidateCanBeDeleted() =>
         RuleFor(inRequest => inRequest.CustomerPayment)
-            .MustAsync((inCustomerPayment, _) => _repository.CanCustomerPaymentBeDeleted(inCustomerPayment.Id))
+            .MustAsync((inCustomerPayment, _) => inRepository.CanCustomerPaymentBeDeleted(inCustomerPayment.Id))
             .WithMessage(DeleteCustomerPaymentRequestValidationErrors.CustomerPaymentCannotBeDeleted);
 }

@@ -6,15 +6,10 @@ using LRSchoolV2.Application.CheckDeposits.CheckDepositPayments.Persistence;
 
 namespace LRSchoolV2.Application.CheckDeposits.CheckDepositPayments.DeleteCheckDepositPayment;
 
-public class DeleteCheckDepositPaymentRequestValidation : AbstractValidator<DeleteCheckDepositPaymentRequest>
+public class DeleteCheckDepositPaymentRequestValidation(
+    ICheckDepositPaymentsRepository inCheckDepositPaymentsRepository
+    ) : AbstractValidator<DeleteCheckDepositPaymentRequest>
 {
-    private readonly ICheckDepositPaymentsRepository _checkDepositPaymentsRepository;
-
-    public DeleteCheckDepositPaymentRequestValidation(ICheckDepositPaymentsRepository inCheckDepositPaymentsRepository)
-    {
-        _checkDepositPaymentsRepository = inCheckDepositPaymentsRepository;
-    }
-    
     public override Task<ValidationResult> ValidateAsync(ValidationContext<DeleteCheckDepositPaymentRequest> inContext,
         CancellationToken inCancellation = new())
     {
@@ -26,11 +21,11 @@ public class DeleteCheckDepositPaymentRequestValidation : AbstractValidator<Dele
     
     private void ValidateId() =>
         RuleFor(inRequest => inRequest.CheckDepositPayment.Id)
-            .MustAsync((inCheckDepositPaymentId, _) => _checkDepositPaymentsRepository.AnyCheckDepositPaymentAsync(inCheckDepositPaymentId))
+            .MustAsync((inCheckDepositPaymentId, _) => inCheckDepositPaymentsRepository.AnyCheckDepositPaymentAsync(inCheckDepositPaymentId))
             .WithMessage(DeleteCheckDepositPaymentRequestValidationErrors.CheckDepositPaymentNotFound);
     
     private void ValidateCanBeDeleted() =>
         RuleFor(inRequest => inRequest.CheckDepositPayment.Id)
-            .MustAsync((inCheckDepositPaymentId, _) => _checkDepositPaymentsRepository.CanCheckDepositPaymentBeDeletedAsync(inCheckDepositPaymentId))
+            .MustAsync((inCheckDepositPaymentId, _) => inCheckDepositPaymentsRepository.CanCheckDepositPaymentBeDeletedAsync(inCheckDepositPaymentId))
             .WithMessage(DeleteCheckDepositPaymentRequestValidationErrors.CheckDepositPaymentCannotBeDeleted);
 }

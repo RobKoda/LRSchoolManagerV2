@@ -9,14 +9,14 @@ public class DeleteSchoolYearRequestValidation(
     ISchoolYearsRepository inRepository
     ) : AbstractValidator<DeleteSchoolYearRequest>
 {
-    public override async Task<ValidationResult> ValidateAsync(ValidationContext<DeleteSchoolYearRequest> inContext,
+    public override Task<ValidationResult> ValidateAsync(ValidationContext<DeleteSchoolYearRequest> inContext,
         CancellationToken inCancellation = new())
     {
         ValidateId();
         ValidateNotBetweenSchoolYears();
         ValidateCanBeDeleted();
 
-        return await base.ValidateAsync(inContext, inCancellation);
+        return base.ValidateAsync(inContext, inCancellation);
     }
     
     private void ValidateId() =>

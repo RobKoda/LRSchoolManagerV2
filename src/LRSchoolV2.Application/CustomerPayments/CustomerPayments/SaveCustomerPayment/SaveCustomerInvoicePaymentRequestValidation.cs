@@ -7,16 +7,10 @@ using LRSchoolV2.Domain.CustomerPayments;
 
 namespace LRSchoolV2.Application.CustomerPayments.CustomerPayments.SaveCustomerPayment;
 
-public class SaveCustomerPaymentRequestValidation : AbstractValidator<SaveCustomerPaymentRequest>
+public class SaveCustomerPaymentRequestValidation(
+    ICheckDepositPaymentsRepository inCheckDepositPaymentsRepository
+    ) : AbstractValidator<SaveCustomerPaymentRequest>
 {
-    private readonly ICheckDepositPaymentsRepository _checkDepositPaymentsRepository;
-
-    public SaveCustomerPaymentRequestValidation( 
-        ICheckDepositPaymentsRepository inCheckDepositPaymentsRepository)
-    {
-        _checkDepositPaymentsRepository = inCheckDepositPaymentsRepository;
-    }
-    
     public override Task<ValidationResult> ValidateAsync(ValidationContext<SaveCustomerPaymentRequest> inContext,
         CancellationToken inCancellation = new())
     {
@@ -34,6 +28,6 @@ public class SaveCustomerPaymentRequestValidation : AbstractValidator<SaveCustom
     private void ValidateNonCheckIsNotInCustomerPayment() =>
         RuleFor(inRequest => inRequest.CustomerPayment)
             .MustAsync(async (inPayment, _) => inPayment.CustomerPaymentTypeValue == CustomerPaymentType.BankCheck ||
-                                               !await _checkDepositPaymentsRepository.AnyCheckDepositPaymentPerCheckIdAsync(inPayment.Id))
+                                               !await inCheckDepositPaymentsRepository.AnyCheckDepositPaymentPerCheckIdAsync(inPayment.Id))
             .WithMessage(SaveCustomerPaymentRequestValidationErrors.NonCheckIsReferencedInCustomerPayment);
 }

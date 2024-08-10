@@ -18,8 +18,6 @@ public class CustomerQuoteItemDataModel : IGuidEntity
     public Guid CustomerQuoteId { get; set; }
     public CustomerQuoteDataModel? CustomerQuote { get; set; }
     
-    public Guid? ReferenceId { get; set; }
-    
     public int Quantity { get; set; }
 
     [MaxLength(512)]

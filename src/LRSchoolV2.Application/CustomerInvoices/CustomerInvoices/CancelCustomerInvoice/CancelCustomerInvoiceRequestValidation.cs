@@ -1,39 +1,33 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
 using LRSchoolV2.Application.CustomerInvoices.CustomerInvoices.Persistence;
-using LRSchoolV2.Domain.CustomerInvoices;
 
 // ReSharper disable UnusedType.Global - Implicit use
-
 namespace LRSchoolV2.Application.CustomerInvoices.CustomerInvoices.CancelCustomerInvoice;
 
-public class CancelCustomerInvoiceRequestValidation : AbstractValidator<CancelCustomerInvoiceRequest>
+public class CancelCustomerInvoiceRequestValidation(
+    ICustomerInvoicesRepository inCustomerInvoicesRepository
+    ) : AbstractValidator<CancelCustomerInvoiceRequest>
 {
-    private readonly ICustomerInvoicesRepository _customerInvoicesRepository;
-
-    public CancelCustomerInvoiceRequestValidation(ICustomerInvoicesRepository inCustomerInvoicesRepository)
-    {
-        _customerInvoicesRepository = inCustomerInvoicesRepository;
-    }
-
-    public override async Task<ValidationResult> ValidateAsync(ValidationContext<CancelCustomerInvoiceRequest> inContext,
+    public override Task<ValidationResult> ValidateAsync(ValidationContext<CancelCustomerInvoiceRequest> inContext,
         CancellationToken inCancellation = new())
     {
-        var customerInvoices = await _customerInvoicesRepository.GetCustomerInvoicesAsync();
-        var lastCustomerInvoice = customerInvoices.MaxBy(inInvoice => inInvoice.Date);
-        ValidateIsLastCustomerInvoice(lastCustomerInvoice!);
+        ValidateIsLastCustomerInvoice();
         ValidateCanBeDeleted();
         
-        return await base.ValidateAsync(inContext, inCancellation);
+        return base.ValidateAsync(inContext, inCancellation);
     }
 
-    private void ValidateIsLastCustomerInvoice(CustomerInvoice inLastCustomerInvoice) =>
+    private void ValidateIsLastCustomerInvoice() =>
         RuleFor(inRequest => inRequest.CustomerInvoice)
-            .Must(inInvoice => inInvoice.Id == inLastCustomerInvoice.Id)
+            .MustAsync(async (inInvoice, _) =>
+                (await inCustomerInvoicesRepository.GetLastCustomerInvoiceAsync())
+                    .Match(inSome => inInvoice.Id == inSome.Id, () => false)
+            )
             .WithMessage(CancelCustomerInvoiceRequestValidationErrors.NotTheLastCustomerInvoice);
     
     private void ValidateCanBeDeleted() =>
         RuleFor(inRequest => inRequest.CustomerInvoice.Id)
-            .MustAsync((inInvoiceId, _) => _customerInvoicesRepository.CanCustomerInvoiceBeDeletedAsync(inInvoiceId))
+            .MustAsync((inInvoiceId, _) => inCustomerInvoicesRepository.CanCustomerInvoiceBeDeletedAsync(inInvoiceId))
             .WithMessage(CancelCustomerInvoiceRequestValidationErrors.CustomerInvoiceCannotBeDeleted);
 }
