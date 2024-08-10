@@ -7,7 +7,8 @@ public record CustomerQuoteItem(
     CustomerQuote CustomerQuote, 
     int Quantity, 
     string Denomination, 
-    decimal UnitPrice)
+    decimal UnitPrice,
+    int Order)
 {
     public decimal GetTotal() => Quantity * UnitPrice;
 }

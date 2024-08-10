@@ -10,7 +10,8 @@ public record CustomerInvoiceItem(
     Option<Guid> ReferenceId,
     int Quantity, 
     string Denomination, 
-    decimal UnitPrice)
+    decimal UnitPrice,
+    int Order)
 {
     public decimal GetTotal() => Quantity * UnitPrice;
 }

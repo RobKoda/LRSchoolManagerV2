@@ -38,7 +38,8 @@
             _isLoading = true;
             var result = await CustomerQuoteItemsService.GetCustomerQuoteItemsPerCustomerQuoteAsync(CustomerQuote.Id);
             result.Match(
-                inSuccess => DisplayedCustomerQuoteItems = new ObservableCollection<CustomerQuoteItem>(inSuccess.OrderBy(inCustomerQuoteItem => inCustomerQuoteItem.Denomination)),
+                inSuccess => DisplayedCustomerQuoteItems = new ObservableCollection<CustomerQuoteItem>(inSuccess
+                    .OrderBy(inCustomerQuoteItem => inCustomerQuoteItem.Order)),
                 inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
             _isLoading = false;
         }

@@ -53,8 +53,8 @@ public class GenerateCustomerInvoicesHandler(
         var customers = inPayables.Select(inPayable => inPayable.Person)
             .OrderBy(inPerson => inPerson.GetFullName())
             .Distinct();
-        var nonBilledPersonServiceVariations = await inPersonAnnualServiceVariationsRepository.GetNonBilledPersonAnnualServiceVariations();
-        var unpaidPersonServiceVariationBilledItems = await inPersonAnnualServiceVariationsRepository.GetNonBilledPersonAnnualServiceVariationBilledItems();
+        var nonBilledPersonServiceVariations = (await inPersonAnnualServiceVariationsRepository.GetNonBilledPersonAnnualServiceVariations()).ToList();
+        var unpaidPersonServiceVariationBilledItems = (await inPersonAnnualServiceVariationsRepository.GetNonBilledPersonAnnualServiceVariationBilledItems()).ToList();
         
         foreach (var customer in customers)
         {
@@ -69,16 +69,20 @@ public class GenerateCustomerInvoicesHandler(
                 0,
                 false
             );
-
-            var items = inPayables.Where(inPayable => inPayable.Person == customer)
-                .Select(inPayable => new CustomerInvoiceItem(
-                    Guid.NewGuid(), 
+            
+            var items = new List<CustomerInvoiceItem>();
+            foreach (var payable in inPayables)
+            {
+                items.Add(new CustomerInvoiceItem(
+                    Guid.NewGuid(),
                     customerInvoice,
-                    inPayable.ReferenceId,
-                    1, 
-                    inPayable.Denomination, 
-                    GetCustomerInvoiceItemPrice(inPayable, nonBilledPersonServiceVariations, unpaidPersonServiceVariationBilledItems)))
-                .ToList();
+                    payable.ReferenceId,
+                    1,
+                    payable.Denomination,
+                    GetCustomerInvoiceItemPrice(payable, nonBilledPersonServiceVariations, unpaidPersonServiceVariationBilledItems),
+                    items.Count + 1
+                ));
+            }
 
             await inFunction(customerInvoice, items);
         }

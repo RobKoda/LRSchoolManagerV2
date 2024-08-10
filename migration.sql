@@ -6,6 +6,12 @@ GO
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 
+
+DELETE FROM [LRSchoolV2_Dev].[dbo].[CustomerQuoteItem]
+GO
+DELETE FROM [LRSchoolV2_Dev].[dbo].[CustomerQuote]
+GO
+
 DELETE FROM [LRSchoolV2_Dev].[dbo].[CustomerInvoiceItem]
 GO
 DELETE FROM [LRSchoolV2_Dev].[dbo].[CustomerInvoice]
@@ -175,7 +181,30 @@ PRINT 'CUSTOMER INVOICE ITEM'
 
 INSERT INTO [LRSchoolV2_Dev].[dbo].[CustomerInvoiceItem] ([Id], [CustomerInvoiceId], [ReferenceId], [Quantity], [Denomination], [UnitPrice])
 SELECT [Id], [CustomerInvoiceId], [ReferenceId], [Quantity], [Denomination], [UnitPrice]
-FROM [LRSchool].[dbo].[CustomerInvoiceItem]
+FROM [LRSchool].[dbo].[CustomerInvoiceItem];
+
+WITH OrderedItems AS (
+    SELECT
+        [Id],
+        [CustomerInvoiceId],
+        [ReferenceId],
+        [Quantity],
+        [Denomination],
+        [UnitPrice],
+        [Order],
+        ROW_NUMBER() OVER(PARTITION BY [CustomerInvoiceId] ORDER BY [Denomination]) AS RowNum
+    FROM 
+        [LRSchoolV2_Dev].[dbo].[CustomerInvoiceItem]
+)
+
+UPDATE [LRSchoolV2_Dev].[dbo].[CustomerInvoiceItem]
+SET [Order] = OrderedItems.RowNum
+FROM 
+    [LRSchoolV2_Dev].[dbo].[CustomerInvoiceItem]
+JOIN 
+    OrderedItems
+ON 
+    [LRSchoolV2_Dev].[dbo].[CustomerInvoiceItem].Id = OrderedItems.Id;
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 

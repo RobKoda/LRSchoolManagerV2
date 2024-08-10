@@ -37,7 +37,8 @@
             _isLoading = true;
             var result = await CustomerInvoiceItemsService.GetCustomerInvoiceItemsPerCustomerInvoiceAsync(CustomerInvoice.Id);
             result.Match(
-                inSuccess => DisplayedCustomerInvoiceItems = new ObservableCollection<CustomerInvoiceItem>(inSuccess.OrderBy(inCustomerInvoiceItem => inCustomerInvoiceItem.Denomination)),
+                inSuccess => DisplayedCustomerInvoiceItems = new ObservableCollection<CustomerInvoiceItem>(
+                    inSuccess.OrderBy(inCustomerInvoiceItem => inCustomerInvoiceItem.Order)),
                 inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
             _isLoading = false;
         }

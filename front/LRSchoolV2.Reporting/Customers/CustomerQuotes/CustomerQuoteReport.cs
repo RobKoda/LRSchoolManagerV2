@@ -91,7 +91,7 @@ public class CustomerQuoteReport(CustomerQuote inCustomerQuote, IEnumerable<Cust
         var rows = table.Elements<TableRow>().ToList();
         for (var i = 0 ; i < inCustomerQuoteItems.Count() ; i++)
         {
-            var item = inCustomerQuoteItems.ElementAt(i);
+            var item = inCustomerQuoteItems.OrderBy(inItem => inItem.Order).ElementAt(i);
             var row = rows.ElementAt(i + 1);
             var cells = row.Elements<TableCell>().ToList();
             

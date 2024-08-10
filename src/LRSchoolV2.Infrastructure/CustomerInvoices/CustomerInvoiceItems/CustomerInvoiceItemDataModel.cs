@@ -26,4 +26,6 @@ public class CustomerInvoiceItemDataModel : IGuidEntity
     public string Denomination { get; set; } = string.Empty;
     
     public decimal UnitPrice { get; set; }
+    
+    public int Order { get; set; }
 }

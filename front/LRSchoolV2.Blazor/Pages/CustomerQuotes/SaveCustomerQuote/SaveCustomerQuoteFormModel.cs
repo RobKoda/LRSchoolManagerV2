@@ -41,4 +41,6 @@ public class SaveCustomerQuoteFormModel
     {
         return Date.HasValue ? CustomerQuote.GetQuoteNumber(Date.Value, CustomerQuotes) : string.Empty;
     }
+    
+    public int GetNextOrder() => Items.Count > 0 ? Items.Max(inItem => inItem.Order) + 1 : 1;
 }

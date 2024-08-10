@@ -32,7 +32,7 @@
                                          ToStringFunc="@(inPerson => inPerson?.GetDropdownText() ?? string.Empty)" SearchFunc="SearchContactPerson"/>
                     </MudItem>
                     <MudItem xs="12" Class="pl-8 mt-4 mb-2">
-                        <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="@(() => { Model.Items.Add(new SaveCustomerInvoiceItemFormModel()); })" Color="Color.Primary" Variant="Variant.Filled"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="@(() => { Model.Items.Add(new SaveCustomerInvoiceItemFormModel(Model.GetNextOrder())); })" Color="Color.Primary" Variant="Variant.Filled"/>
                     </MudItem>
                     <MudItem xs="12">
                         <MudPaper Class="ma-4 pl-4 pr-4 pb-4 ts-form">

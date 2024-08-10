@@ -91,7 +91,7 @@ public class CustomerInvoiceReport(CustomerInvoice inCustomerInvoice, IEnumerabl
         var rows = table.Elements<TableRow>().ToList();
         for (var i = 0 ; i < inCustomerInvoiceItems.Count() ; i++)
         {
-            var item = inCustomerInvoiceItems.ElementAt(i);
+            var item = inCustomerInvoiceItems.OrderBy(inItem => inItem.Order).ElementAt(i);
             var row = rows.ElementAt(i + 1);
             var cells = row.Elements<TableCell>().ToList();
             
