@@ -2,7 +2,7 @@
 using FluentValidation.Results;
 using LRSchoolV2.Application.AnnualServices.AnnualServiceConsultantWorks.Persistence;
 using LRSchoolV2.Application.Common.SchoolYears.Persistence;
-using LRSchoolV2.Application.Consultants.Consultants.Persistence;
+using LRSchoolV2.Application.Consultants.Persistence;
 
 // ReSharper disable UnusedType.Global - Implicit use
 

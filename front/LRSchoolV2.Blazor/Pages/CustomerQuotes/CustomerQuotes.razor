@@ -103,7 +103,7 @@
     {
         var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inCustomerQuote.Id);
         await document.IfSomeAsync(async inSome => await DownloadFileService.DownloadFile(inSome.FileName, inSome.FileContent, inSome.ContentType));
-        document.IfNone(() => Snackbar.Add("Le devis n'a pas été trouvée", Severity.Error));
+        document.IfNone(() => Snackbar.Add("Le devis n'a pas été trouvé", Severity.Error));
     }
 
     private async Task OnCustomerQuotePDFRegenerationClick(CustomerQuote inCustomerQuote)
@@ -245,6 +245,6 @@
 
             Snackbar.Add($"Le devis a été envoyée à {inCustomerQuote.Customer.Email}", Severity.Success);
         });
-        document.IfNone(() => { Snackbar.Add("Le devis n'a pas été trouvée", Severity.Error); });
+        document.IfNone(() => { Snackbar.Add("Le devis n'a pas été trouvé", Severity.Error); });
     }
 }

@@ -1,0 +1,170 @@
+﻿@using System.Globalization
+@using LanguageExt
+@using LRSchoolV2.Blazor.Pages.ConsultantQuotes.ConsultantQuoteItems
+@using LRSchoolV2.Blazor.Pages.Consultants
+@using LRSchoolV2.Domain.ConsultantQuotes
+@using LRSchoolV2.Domain.Consultants
+
+@inject ConsultantsService ConsultantsService
+@inject ConsultantQuotesService ConsultantQuotesService
+@inject ConsultantQuoteItemsService ConsultantQuoteItemsService
+@inject ISnackbar Snackbar
+
+@{
+#pragma warning disable CS8669
+}
+
+@if (Model != null)
+{
+    <EditForm Model="Model" OnValidSubmit="Submit">
+        <DataAnnotationsValidator/>
+        <MudDialog>
+            <DialogContent>
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudTextField Label="Numéro" Value="Model.Number" For="@(() => Model.Number)" ReadOnly="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudDatePicker Label="Date du devis" @bind-Date="Model.Date" For="@(() => Model.Date)" Editable="true"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudAutocomplete T="Consultant?" Label="Intervenant" @bind-Value="Model.Consultant" For="@(() => Model.Consultant)" ResetValueOnEmptyText="true" Clearable="true"
+                                         ToStringFunc="@(inConsultant => inConsultant?.GetDropdownText() ?? string.Empty)" SearchFunc="SearchConsultant"/>
+                    </MudItem>
+                    <MudItem xs="12" Class="pl-8 mt-4 mb-2">
+                        <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="@(() => { Model.Items.Add(new SaveConsultantQuoteItemFormModel(Model.GetNextOrder())); })" Color="Color.Primary" Variant="Variant.Filled"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudPaper Class="ma-4 pl-4 pr-4 pb-4 ts-form">
+                            <MudGrid>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <MudItem xs="7">
+                                        <MudTextField Label="Nom" @bind-Value="item.Denomination" For="@(() => item.Denomination)"/>
+                                    </MudItem>
+                                    <MudItem xs="2">
+                                        <MudNumericField HideSpinButtons="false" Label="Quantité" @bind-Value="item.Quantity" For="@(() => item.Quantity)" Culture="CultureInfo.InvariantCulture"/>
+                                    </MudItem>
+                                    <MudItem xs="2">
+                                        <MudNumericField HideSpinButtons="true" Label="Prix" @bind-Value="item.UnitPrice" For="@(() => item.UnitPrice)" Culture="CultureInfo.InvariantCulture"/>
+                                    </MudItem>
+                                    <MudItem xs="1">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Remove" OnClick="@(() => Model.Items.Remove(item))" Color="Color.Error" Variant="Variant.Filled"/>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@Cancel">Annuler</MudButton>
+                <MudButton Color="Color.Primary" ButtonType="ButtonType.Submit">Ok</MudButton>
+            </DialogActions>
+        </MudDialog>
+        
+    </EditForm>
+}
+
+@if (_isLoading)
+{
+    <LoadingSpinner/>
+}
+
+
+@{
+#pragma warning restore CS8669
+}
+
+@code {
+    
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+    
+    [Parameter]
+    public SaveConsultantQuoteFormModel? Model { get; set; }
+    
+    [Parameter]
+    public Func<ConsultantQuote, Task> GeneratePdfMethod { get; set; } = null!;
+    
+    private IOrderedEnumerable<Consultant> Consultants { get; set; } = null!;
+    
+    private bool _isLoading;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ReloadPersons();
+        var consultantQuotes = (await ConsultantQuotesService.GetConsultantQuotesAsync()).ConsultantQuotes;
+        Model ??= new SaveConsultantQuoteFormModel(consultantQuotes);
+    }
+    
+    private async Task ReloadPersons() => Consultants = (await ConsultantsService.GetConsultantsAsync())
+        .OrderBy(inPerson => inPerson.LastName).ThenBy(inPerson => inPerson.FirstName);
+    
+    private async Task Submit()
+    {
+        _isLoading = true;
+        var document = await ConsultantsService.GetConsultantQuoteDocumentAsync(Model!.Consultant!.Id);
+        if (document.IsNone)
+        {
+            Snackbar.Add("Pas de document de devis uploadé pour le consultant", Severity.Error);
+            _isLoading = false;
+            return;
+        }
+        
+        var consultantQuotes = (await ConsultantQuotesService.GetConsultantQuotesAsync()).ConsultantQuotes;
+        Model.ConsultantQuotes = consultantQuotes;
+        var consultantQuote = Model.Adapt<ConsultantQuote>();
+        
+        var simulationResult = (await ConsultantQuotesService.SimulateSaveConsultantQuoteAsync(Model.Adapt<ConsultantQuote>()))
+            .Map(async _ =>
+            {
+                foreach (var item in Model.Items)
+                {
+                    item.ConsultantQuote = consultantQuote;
+                }
+                
+                var failures = new Seq<string>();
+                var consultantQuoteItems = Model.Items.Adapt<IEnumerable<ConsultantQuoteItem>>();
+                foreach (var item in consultantQuoteItems)
+                {
+                    (await ConsultantQuoteItemsService.SimulateSaveConsultantQuoteItemAsync(item))
+                        .IfFail(inFailure => failures = failures.Concat(inFailure));
+                }
+                
+                return failures;
+            });
+        
+        if (simulationResult.IsFail)
+        {
+            _isLoading = false;
+            simulationResult.IfFail(inFailure => Snackbar.Add(inFailure.ToFullString("-"), Severity.Error));
+            return;
+        }
+        
+        await ConsultantQuotesService.SaveConsultantQuoteAsync(Model.Adapt<ConsultantQuote>());
+        foreach (var item in Model.Items)
+        {
+            item.ConsultantQuote = consultantQuote;
+        }
+        
+        var consultantQuoteItems = Model.Items.Adapt<IEnumerable<ConsultantQuoteItem>>();
+        foreach (var item in consultantQuoteItems)
+        {
+            await ConsultantQuoteItemsService.SaveConsultantQuoteItemAsync(item);
+        }
+        
+        await GeneratePdfMethod.Invoke(consultantQuote);
+        
+        _isLoading = false;
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    
+    private void Cancel() => MudDialog.Cancel();
+    
+    private Task<IEnumerable<Consultant>> SearchConsultant(string inValue, CancellationToken inCancellationToken) => Task.FromResult(
+        string.IsNullOrWhiteSpace(inValue) ? Consultants : Consultants.Where(inPerson => inPerson.GetFullName().Contains(inValue, StringComparison.InvariantCultureIgnoreCase))
+    );
+    
+}

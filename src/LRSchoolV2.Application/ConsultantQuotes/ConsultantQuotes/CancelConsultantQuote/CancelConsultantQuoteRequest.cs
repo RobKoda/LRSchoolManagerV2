@@ -1,0 +1,5 @@
+﻿using LRSchoolV2.Domain.ConsultantQuotes;
+
+namespace LRSchoolV2.Application.ConsultantQuotes.ConsultantQuotes.CancelConsultantQuote;
+
+public record CancelConsultantQuoteRequest(ConsultantQuote ConsultantQuote);

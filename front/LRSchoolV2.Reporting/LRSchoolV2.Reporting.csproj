@@ -19,10 +19,6 @@
       <EmbeddedResource Include="Customers\CustomerInvoices\CustomerInvoiceTemplate.docx" />
       <EmbeddedResource Include="Customers\CustomerQuotes\CustomerQuoteTemplate.docx" />
       <None Remove="CustomerInvoices\CustomerInvoiceTemplate.docx" />
-      <Compile Remove="Consultants\ConsultantQuotes\ConsultantQuoteReport.cs" />
-      <EmbeddedResource Include="Consultants\ConsultantQuotes\ConsultantQuoteReport.cs">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>

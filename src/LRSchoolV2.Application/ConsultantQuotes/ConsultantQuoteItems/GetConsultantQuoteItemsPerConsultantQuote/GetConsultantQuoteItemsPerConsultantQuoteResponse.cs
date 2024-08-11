@@ -1,0 +1,6 @@
+﻿using LRSchoolV2.Domain.ConsultantQuotes;
+
+// ReSharper disable NotAccessedPositionalProperty.Global - Implicit use
+namespace LRSchoolV2.Application.ConsultantQuotes.ConsultantQuoteItems.GetConsultantQuoteItemsPerConsultantQuote;
+
+public record GetConsultantQuoteItemsPerConsultantQuoteResponse(IEnumerable<ConsultantQuoteItem> ConsultantQuoteItems);

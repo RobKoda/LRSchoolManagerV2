@@ -283,6 +283,74 @@ namespace LRSchoolV2.Infrastructure.Migrations
                     b.ToTable("SchoolYear");
                 });
 
+            modelBuilder.Entity("LRSchoolV2.Infrastructure.ConsultantQuotes.ConsultantQuoteItems.ConsultantQuoteItemDataModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConsultantQuoteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Denomination")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultantQuoteId");
+
+                    b.ToTable("ConsultantQuoteItem");
+                });
+
+            modelBuilder.Entity("LRSchoolV2.Infrastructure.ConsultantQuotes.ConsultantQuotes.ConsultantQuoteDataModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConsultantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("EmailSent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("QuoteConsultantAddress")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<string>("QuoteConsultantName")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultantId");
+
+                    b.ToTable("ConsultantQuote");
+                });
+
             modelBuilder.Entity("LRSchoolV2.Infrastructure.Consultants.Consultants.ConsultantDataModel", b =>
                 {
                     b.Property<Guid>("Id")
@@ -317,6 +385,10 @@ namespace LRSchoolV2.Infrastructure.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<byte[]>("InvoiceDocument")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -326,6 +398,10 @@ namespace LRSchoolV2.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
+
+                    b.Property<byte[]>("QuoteDocument")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
 
                     b.HasKey("Id");
 
@@ -728,6 +804,28 @@ namespace LRSchoolV2.Infrastructure.Migrations
                     b.Navigation("CustomerPayment");
                 });
 
+            modelBuilder.Entity("LRSchoolV2.Infrastructure.ConsultantQuotes.ConsultantQuoteItems.ConsultantQuoteItemDataModel", b =>
+                {
+                    b.HasOne("LRSchoolV2.Infrastructure.ConsultantQuotes.ConsultantQuotes.ConsultantQuoteDataModel", "ConsultantQuote")
+                        .WithMany("Items")
+                        .HasForeignKey("ConsultantQuoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ConsultantQuote");
+                });
+
+            modelBuilder.Entity("LRSchoolV2.Infrastructure.ConsultantQuotes.ConsultantQuotes.ConsultantQuoteDataModel", b =>
+                {
+                    b.HasOne("LRSchoolV2.Infrastructure.Consultants.Consultants.ConsultantDataModel", "Consultant")
+                        .WithMany()
+                        .HasForeignKey("ConsultantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Consultant");
+                });
+
             modelBuilder.Entity("LRSchoolV2.Infrastructure.Consultants.Consultants.ConsultantDataModel", b =>
                 {
                     b.HasOne("LRSchoolV2.Infrastructure.Common.Addresses.AddressDataModel", "Address")
@@ -898,6 +996,11 @@ namespace LRSchoolV2.Infrastructure.Migrations
             modelBuilder.Entity("LRSchoolV2.Infrastructure.CheckDeposits.CheckDeposits.CheckDepositDataModel", b =>
                 {
                     b.Navigation("CheckDepositPayments");
+                });
+
+            modelBuilder.Entity("LRSchoolV2.Infrastructure.ConsultantQuotes.ConsultantQuotes.ConsultantQuoteDataModel", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("LRSchoolV2.Infrastructure.CustomerInvoices.CustomerInvoices.CustomerInvoiceDataModel", b =>

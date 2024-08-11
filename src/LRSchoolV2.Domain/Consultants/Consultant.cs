@@ -15,5 +15,6 @@ public record Consultant(
     string BicCode
 )
 {
+    public string GetDropdownText() => $"{GetFullName()} {Address.GetAddressDisplay()}";
     public string GetFullName() => $"{LastName} {FirstName}";
 }

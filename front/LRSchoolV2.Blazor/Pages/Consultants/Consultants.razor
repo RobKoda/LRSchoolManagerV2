@@ -1,9 +1,11 @@
 ﻿@page "/Consultants"
+@using BlazorDownloadFile
 @using Unit = LanguageExt.Unit
 @using LRSchoolV2.Blazor.Pages.Consultants.SaveConsultant
 @using LRSchoolV2.Domain.Consultants
 
 @inject IDialogService DialogService
+@inject IBlazorDownloadFileService DownloadFileService
 @inject ISnackbar Snackbar
 @inject ConsultantsService ConsultantsService
 
@@ -26,6 +28,28 @@
                 <TemplateColumn>
                     <CellTemplate>
                         <MudStack Row>
+                            <MudTooltip Text="Modèle de facture">
+                                @* ReSharper disable once ArrangeRedundantParentheses - Nope*@
+                                <MudFileUpload T="IBrowserFile" Accept=".docx" OnFilesChanged="@(inFile => OnUploadInvoiceDocumentClick(inFile, context.Item!))" MaximumFileCount="1" Class="ma-0">
+                                    <ActivatorContent>
+                                        <MudIconButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small"/>
+                                    </ActivatorContent>
+                                </MudFileUpload>
+                            </MudTooltip>
+                            <MudTooltip Text="Télécharger modèle de facture">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(() => OnConsultantInvoicePDFClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Modèle de devis">
+                                @* ReSharper disable once ArrangeRedundantParentheses - Nope*@
+                                <MudFileUpload T="IBrowserFile" Accept=".docx" OnFilesChanged="@(inFile => OnUploadQuoteDocumentClick(inFile, context.Item!))" MaximumFileCount="1" Class="ma-0">
+                                    <ActivatorContent>
+                                        <MudIconButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Receipt" Size="Size.Small"/>
+                                    </ActivatorContent>
+                                </MudFileUpload>
+                            </MudTooltip>
+                            <MudTooltip Text="Télécharger modèle de devis">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(() => OnConsultantQuotePDFClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
                             <MudTooltip Text="Édition">
                                 <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OnConsultantEditClick(context.Item!))" Size="Size.Small"/>
                             </MudTooltip>
@@ -126,5 +150,55 @@
                 }
                 );
         }
+    }
+    
+    private async Task OnUploadQuoteDocumentClick(InputFileChangeEventArgs  inArgs, Consultant inConsultant)
+    {
+        _isLoading = true;
+        
+        var memoryStream = new MemoryStream();
+        
+        await inArgs.File.OpenReadStream(inArgs.File.Size).CopyToAsync(memoryStream);
+        await ConsultantsService.SetConsultantQuoteDocumentAsync(inConsultant.Id, memoryStream.ToArray());
+        Snackbar.Add("Le document a été uploadé", Severity.Success);
+        
+        memoryStream.Close();
+        await memoryStream.DisposeAsync();
+        
+        await ReloadDataAsync();
+        
+        _isLoading = false;
+    }
+    
+    private async Task OnUploadInvoiceDocumentClick(InputFileChangeEventArgs  inArgs, Consultant inConsultant)
+    {
+        _isLoading = true;
+        
+        var memoryStream = new MemoryStream();
+        
+        await inArgs.File.OpenReadStream(inArgs.File.Size).CopyToAsync(memoryStream);
+        await ConsultantsService.SetConsultantInvoiceDocumentAsync(inConsultant.Id, memoryStream.ToArray());
+        Snackbar.Add("Le document a été uploadé", Severity.Success);
+        
+        memoryStream.Close();
+        await memoryStream.DisposeAsync();
+        
+        await ReloadDataAsync();
+        
+        _isLoading = false;
+    }
+    
+    private async Task OnConsultantQuotePDFClick(Consultant inConsultant)
+    {
+        var document = await ConsultantsService.GetConsultantQuoteDocumentAsync(inConsultant.Id);
+        await document.IfSomeAsync(async inSome => await DownloadFileService.DownloadFile("Modèle Devis.docx", inSome, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+        document.IfNone(() => Snackbar.Add("Le modèle de devis n'a pas été trouvé", Severity.Error));
+    }
+    
+    private async Task OnConsultantInvoicePDFClick(Consultant inConsultant)
+    {
+        var document = await ConsultantsService.GetConsultantInvoiceDocumentAsync(inConsultant.Id);
+        await document.IfSomeAsync(async inSome => await DownloadFileService.DownloadFile("Modèle Facture.docx", inSome, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+        document.IfNone(() => Snackbar.Add("Le modèle de facture n'a pas été trouvé", Severity.Error));
     }
 }

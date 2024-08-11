@@ -1,0 +1,47 @@
+﻿@using LRSchoolV2.Domain.ConsultantQuotes
+
+@inject ConsultantQuoteItemsService ConsultantQuoteItemsService
+@inject ISnackbar Snackbar
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="ConsultantQuoteItem" Items="DisplayedConsultantQuoteItems" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true">
+            <Columns>
+                <PropertyColumn T="ConsultantQuoteItem" TProperty="string" Property="inConsultantQuoteItem => inConsultantQuoteItem.Denomination" Title="Désignation"/>
+                <PropertyColumn T="ConsultantQuoteItem" TProperty="int" Property="inConsultantQuoteItem => inConsultantQuoteItem.Quantity" Title="Quantité"/>
+                <PropertyColumn T="ConsultantQuoteItem" TProperty="decimal" Property="inConsultantQuoteItem => inConsultantQuoteItem.UnitPrice" Title="Prix unitaire"/>
+                <PropertyColumn T="ConsultantQuoteItem" TProperty="decimal" Property="inConsultantQuoteItem => inConsultantQuoteItem.GetTotal()" Title="Total HT"/>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public ConsultantQuote ConsultantQuote { get; set; } = null!;
+    
+    private ObservableCollection<ConsultantQuoteItem> DisplayedConsultantQuoteItems { get; set; } = null!;
+
+    private bool _isLoading;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadDataAsync();
+    }
+    
+    private async Task ReloadDataAsync()
+    {
+        if (!_isLoading)
+        {
+            _isLoading = true;
+            var result = await ConsultantQuoteItemsService.GetConsultantQuoteItemsPerConsultantQuoteAsync(ConsultantQuote.Id);
+            result.Match(
+                inSuccess => DisplayedConsultantQuoteItems = new ObservableCollection<ConsultantQuoteItem>(inSuccess
+                    .OrderBy(inConsultantQuoteItem => inConsultantQuoteItem.Order)),
+                inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+            _isLoading = false;
+        }
+    }
+}

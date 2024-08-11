@@ -38,4 +38,8 @@ public class ConsultantDataModel : IGuidEntity
     
     [StringLength(64)]
     public string BicCode { get; set; } = string.Empty;
+    
+    public byte[] QuoteDocument { get; set; } = [];
+    
+    public byte[] InvoiceDocument { get; set; } = [];
 }

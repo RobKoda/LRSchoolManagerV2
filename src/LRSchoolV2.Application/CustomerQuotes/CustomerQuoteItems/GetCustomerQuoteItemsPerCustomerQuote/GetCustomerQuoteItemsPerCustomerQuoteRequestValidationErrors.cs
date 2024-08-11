@@ -2,5 +2,5 @@
 
 public static class GetCustomerQuoteItemsPerCustomerQuoteRequestValidationErrors
 {
-    public const string CustomerQuoteNotFound = "Le devis n'a pas été trouvée";
+    public const string CustomerQuoteNotFound = "Le devis n'a pas été trouvé";
 }
