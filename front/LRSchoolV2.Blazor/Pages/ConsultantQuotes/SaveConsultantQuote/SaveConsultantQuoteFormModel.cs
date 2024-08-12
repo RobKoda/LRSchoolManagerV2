@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using LRSchoolV2.Domain.ConsultantQuotes;
 using LRSchoolV2.Domain.Consultants;
-using LRSchoolV2.Domain.Persons;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global - Implicit use
 // ReSharper disable UnusedMember.Global - Implicit use

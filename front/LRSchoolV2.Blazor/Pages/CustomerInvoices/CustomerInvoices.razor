@@ -220,15 +220,6 @@
         var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inCustomerInvoice.Id);
         await document.IfSomeAsync(async inSome =>
         {
-#if DEBUG
-            await EmailSender.SendEmailAsync("robin.kebaili@gmail.com", new CustomerInvoiceEmail(inCustomerInvoice.Number),
-                new EmailAttachment
-                {
-                    Filename = inSome.FileName,
-                    Content = inSome.FileContent,
-                    Type = EmailAttachmentType.Pdf
-                });
-#else
             await EmailSender.SendEmailAsync(inCustomerInvoice.Customer.Email, new CustomerInvoiceEmail(inCustomerInvoice.Number),
                 new EmailAttachment
                 {
@@ -236,7 +227,6 @@
                     Content = inSome.FileContent,
                     Type = EmailAttachmentType.Pdf
                 });
-#endif
 
             if (!inCustomerInvoice.EmailSent)
             {

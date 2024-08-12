@@ -120,7 +120,7 @@
         }
     }
     
-    private async Task GeneratePdf(ConsultantQuote inConsultantQuote) =>
+    private async Task<Unit> GeneratePdf(ConsultantQuote inConsultantQuote) =>
         await (await ConsultantsService.GetConsultantQuoteDocumentAsync(inConsultantQuote.Consultant.Id))
             .MatchAsync(async inQuoteDocument =>
                     await (await ConsultantQuoteItemsService.GetConsultantQuoteItemsPerConsultantQuoteAsync(inConsultantQuote.Id))
@@ -222,15 +222,6 @@
         var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inConsultantQuote.Id);
         await document.IfSomeAsync(async inSome =>
         {
-#if DEBUG
-            await EmailSender.SendEmailAsync("robin.kebaili@gmail.com", new ConsultantQuoteEmail(inConsultantQuote.Number),
-                new EmailAttachment
-                {
-                    Filename = inSome.FileName,
-                    Content = inSome.FileContent,
-                    Type = EmailAttachmentType.Pdf
-                });
-#else
             await EmailSender.SendEmailAsync(inConsultantQuote.Consultant.Email, new ConsultantQuoteEmail(inConsultantQuote.Number),
                 new EmailAttachment
                 {
@@ -238,7 +229,6 @@
                     Content = inSome.FileContent,
                     Type = EmailAttachmentType.Pdf
                 });
-#endif
 
             if (!inConsultantQuote.EmailSent)
             {

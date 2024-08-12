@@ -1,6 +1,5 @@
 ﻿using LRSchoolV2.Domain.ConsultantQuotes;
 using LRSchoolV2.Domain.Consultants;
-using LRSchoolV2.Domain.Persons;
 using LRSchoolV2.Infrastructure.ConsultantQuotes.ConsultantQuoteItems;
 using LRSchoolV2.Infrastructure.Persons.Persons;
 using Mapster;

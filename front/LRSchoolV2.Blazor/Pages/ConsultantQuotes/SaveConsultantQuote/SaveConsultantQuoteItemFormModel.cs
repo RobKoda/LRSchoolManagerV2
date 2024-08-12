@@ -1,5 +1,6 @@
 ﻿using LRSchoolV2.Domain.ConsultantQuotes;
 
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global - Implicit use
 // ReSharper disable UnusedAutoPropertyAccessor.Global - Implicit use
 // ReSharper disable UnusedMember.Global - Implicit use
 namespace LRSchoolV2.Blazor.Pages.ConsultantQuotes.SaveConsultantQuote;
