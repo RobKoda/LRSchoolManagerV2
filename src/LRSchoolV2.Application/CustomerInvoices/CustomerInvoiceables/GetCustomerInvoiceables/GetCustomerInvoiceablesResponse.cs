@@ -1,0 +1,5 @@
+﻿using LRSchoolV2.Domain.CustomerInvoices;
+
+namespace LRSchoolV2.Application.CustomerInvoices.CustomerInvoiceables.GetCustomerInvoiceables;
+
+public record GetCustomerInvoiceablesResponse(IEnumerable<CustomerInvoiceable> CustomerInvoiceables);

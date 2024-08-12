@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using LRSchoolV2.Domain.ConsultantQuotes;
+using LRSchoolV2.Domain.ConsultantInvoices;
 using LRSchoolV2.Domain.Consultants;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global - Implicit use
 // ReSharper disable UnusedMember.Global - Implicit use
-namespace LRSchoolV2.Blazor.Pages.ConsultantQuotes.SaveConsultantQuote;
+namespace LRSchoolV2.Blazor.Pages.ConsultantInvoices.SaveConsultantInvoice;
 
-public class SaveConsultantQuoteFormModel
+public class SaveConsultantInvoiceFormModel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     
@@ -27,19 +27,19 @@ public class SaveConsultantQuoteFormModel
     [Required(ErrorMessage = "L'intervenant est requise")]
     public Consultant? Consultant { get; set; }
     
-    public IList<SaveConsultantQuoteItemFormModel> Items { get; set; } = [];
+    public IList<SaveConsultantInvoiceItemFormModel> Items { get; set; } = [];
     
-    public IEnumerable<ConsultantQuote> ConsultantQuotes { get; set; }
+    public IEnumerable<ConsultantInvoice> ConsultantInvoices { get; set; }
 
-    public SaveConsultantQuoteFormModel(IEnumerable<ConsultantQuote> inConsultantQuotes)
+    public SaveConsultantInvoiceFormModel(IEnumerable<ConsultantInvoice> inConsultantInvoices)
     {
-        ConsultantQuotes = inConsultantQuotes;
+        ConsultantInvoices = inConsultantInvoices;
         Date = DateTime.Today;
     }
     
     private string GetNumber()
     {
-        return Date.HasValue && Consultant != null ? ConsultantQuote.GetQuoteNumber(Date.Value, ConsultantQuotes, Consultant.Id) : string.Empty;
+        return Date.HasValue && Consultant != null ? ConsultantInvoice.GetInvoiceNumber(Date.Value, ConsultantInvoices, Consultant.Id) : string.Empty;
     }
     
     public int GetNextOrder() => Items.Count > 0 ? Items.Max(inItem => inItem.Order) + 1 : 1;

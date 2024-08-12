@@ -30,17 +30,17 @@ public class GenerateCustomerInvoicesHandler(
 
     public async Task<GenerateCustomerInvoicesResponse> Handle(GenerateCustomerInvoicesQuery inRequest, CancellationToken inCancellationToken)
     {
-        var payables = inRequest.Payables.ToList();
+        var customerInvoiceables = inRequest.CustomerInvoiceables.ToList();
 
-        await GenerateAndIterateOnCustomerInvoicesAsync(payables, SimulateGeneration);
+        await GenerateAndIterateOnCustomerInvoicesAsync(customerInvoiceables, SimulateGeneration);
         if (_saveCustomerInvoiceValidationErrors.Any() || _saveCustomerInvoiceItemValidationErrors.Any())
         {
             return new GenerateCustomerInvoicesResponse(Validation<string, Unit>.Fail(_saveCustomerInvoiceValidationErrors.Concat(_saveCustomerInvoiceItemValidationErrors)));
         }
         
-        await GenerateAndIterateOnCustomerInvoicesAsync(payables, Generate);
+        await GenerateAndIterateOnCustomerInvoicesAsync(customerInvoiceables, Generate);
 
-        await SetFullyBilledAsync(payables);
+        await SetFullyBilledAsync(customerInvoiceables);
         
         return new GenerateCustomerInvoicesResponse(Validation<string, Unit>.Success(Unit.Default));
     }
@@ -48,9 +48,9 @@ public class GenerateCustomerInvoicesHandler(
     private async Task<IEnumerable<CustomerInvoice>> GetInvoicesAsync() =>
         (await inMediator.Send(new GetCustomerInvoicesQuery())).CustomerInvoices;
 
-    private async Task GenerateAndIterateOnCustomerInvoicesAsync(IList<Payable> inPayables, Func<CustomerInvoice, IList<CustomerInvoiceItem>, Task> inFunction)
+    private async Task GenerateAndIterateOnCustomerInvoicesAsync(IList<CustomerInvoiceable> inCustomerInvoiceables, Func<CustomerInvoice, IList<CustomerInvoiceItem>, Task> inFunction)
     {
-        var customers = inPayables.Select(inPayable => inPayable.Person)
+        var customers = inCustomerInvoiceables.Select(inCustomerInvoiceable => inCustomerInvoiceable.Person)
             .OrderBy(inPerson => inPerson.GetFullName())
             .Distinct();
         var nonBilledPersonServiceVariations = (await inPersonAnnualServiceVariationsRepository.GetNonBilledPersonAnnualServiceVariations()).ToList();
@@ -71,15 +71,15 @@ public class GenerateCustomerInvoicesHandler(
             );
             
             var items = new List<CustomerInvoiceItem>();
-            foreach (var payable in inPayables)
+            foreach (var customerInvoiceable in inCustomerInvoiceables)
             {
                 items.Add(new CustomerInvoiceItem(
                     Guid.NewGuid(),
                     customerInvoice,
-                    payable.ReferenceId,
+                    customerInvoiceable.ReferenceId,
                     1,
-                    payable.Denomination,
-                    GetCustomerInvoiceItemPrice(payable, nonBilledPersonServiceVariations, unpaidPersonServiceVariationBilledItems),
+                    customerInvoiceable.Denomination,
+                    GetCustomerInvoiceItemPrice(customerInvoiceable, nonBilledPersonServiceVariations, unpaidPersonServiceVariationBilledItems),
                     items.Count + 1
                 ));
             }
@@ -88,20 +88,20 @@ public class GenerateCustomerInvoicesHandler(
         }
     }
 
-    private static decimal GetCustomerInvoiceItemPrice(Payable inPayable, IEnumerable<PersonAnnualServiceVariation> inNonBilledPersonServiceVariations, IEnumerable<CustomerInvoiceItem> inUnpaidPersonServiceVariationBilledItems)
+    private static decimal GetCustomerInvoiceItemPrice(CustomerInvoiceable inCustomerInvoiceable, IEnumerable<PersonAnnualServiceVariation> inNonBilledPersonServiceVariations, IEnumerable<CustomerInvoiceItem> inUnpaidPersonServiceVariationBilledItems)
     {
-        if (inPayable.PayableReferenceType == PayableReferenceType.PersonRegistration)
+        if (inCustomerInvoiceable.CustomerInvoiceableReferenceType == CustomerInvoiceableReferenceType.PersonRegistration)
         {
-            return inPayable.Price;
+            return inCustomerInvoiceable.Price;
         }
 
         // ReSharper disable once InvertIf - Nope.
-        if (inPayable.PayableReferenceType == PayableReferenceType.PersonServiceVariation)
+        if (inCustomerInvoiceable.CustomerInvoiceableReferenceType == CustomerInvoiceableReferenceType.PersonAnnualServiceVariation)
         {
-            var personServiceVariation = inNonBilledPersonServiceVariations.Single(inVariation => inVariation.Id == inPayable.ReferenceId);
-            return inPayable.CompletePayment ? 
-                inPayable.Price - PersonAnnualServiceVariation.GetAlreadyBilled(inUnpaidPersonServiceVariationBilledItems, personServiceVariation) : 
-                Math.Round(inPayable.Price / inPayable.PaymentsCount, 2);
+            var personServiceVariation = inNonBilledPersonServiceVariations.Single(inVariation => inVariation.Id == inCustomerInvoiceable.ReferenceId);
+            return inCustomerInvoiceable.CompletePayment ? 
+                inCustomerInvoiceable.Price - PersonAnnualServiceVariation.GetAlreadyBilled(inUnpaidPersonServiceVariationBilledItems, personServiceVariation) : 
+                Math.Round(inCustomerInvoiceable.Price / inCustomerInvoiceable.PaymentsCount, 2);
         }
 
         throw new InvalidOperationException("Reference type not found!");
@@ -157,19 +157,19 @@ public class GenerateCustomerInvoicesHandler(
         await inMediator.Send(new SaveDocumentCommand(document));
     }
 
-    private async Task SetFullyBilledAsync(IEnumerable<Payable> inPayables)
+    private async Task SetFullyBilledAsync(IEnumerable<CustomerInvoiceable> inCustomerInvoiceables)
     {
-        var fullyBilledPayables = inPayables.Where(inPayable => inPayable.CompletePayment).ToList();
-        var fullyBilledPersonRegistrations = fullyBilledPayables.Where(inPayable => inPayable.PayableReferenceType == PayableReferenceType.PersonRegistration);
-        var fullyBilledPersonServiceVariations = fullyBilledPayables.Where(inPayable => inPayable.PayableReferenceType == PayableReferenceType.PersonServiceVariation);
+        var fullyBilledCustomerInvoiceables = inCustomerInvoiceables.Where(inCustomerInvoiceable => inCustomerInvoiceable.CompletePayment).ToList();
+        var fullyBilledPersonRegistrations = fullyBilledCustomerInvoiceables.Where(inCustomerInvoiceable => inCustomerInvoiceable.CustomerInvoiceableReferenceType == CustomerInvoiceableReferenceType.PersonRegistration);
+        var fullyBilledPersonServiceVariations = fullyBilledCustomerInvoiceables.Where(inCustomerInvoiceable => inCustomerInvoiceable.CustomerInvoiceableReferenceType == CustomerInvoiceableReferenceType.PersonAnnualServiceVariation);
 
         await SetPersonRegistrationsFullyBilled(fullyBilledPersonRegistrations);
         await SetPersonServiceVariationsFullyBilled(fullyBilledPersonServiceVariations);
     }
 
-    private Task SetPersonRegistrationsFullyBilled(IEnumerable<Payable> inFullyBilledPersonRegistrations) => 
-        inPersonRegistrationsRepository.SetFullyBilledAsync(inFullyBilledPersonRegistrations.Select(inPayable => inPayable.ReferenceId));
+    private Task SetPersonRegistrationsFullyBilled(IEnumerable<CustomerInvoiceable> inFullyBilledPersonRegistrations) => 
+        inPersonRegistrationsRepository.SetFullyBilledAsync(inFullyBilledPersonRegistrations.Select(inCustomerInvoiceable => inCustomerInvoiceable.ReferenceId));
 
-    private Task SetPersonServiceVariationsFullyBilled(IEnumerable<Payable> inFullyBilledPersonServiceVariations) => 
-        inPersonAnnualServiceVariationsRepository.SetFullyBilledAsync(inFullyBilledPersonServiceVariations.Select(inPayable => inPayable.ReferenceId));
+    private Task SetPersonServiceVariationsFullyBilled(IEnumerable<CustomerInvoiceable> inFullyBilledPersonServiceVariations) => 
+        inPersonAnnualServiceVariationsRepository.SetFullyBilledAsync(inFullyBilledPersonServiceVariations.Select(inCustomerInvoiceable => inCustomerInvoiceable.ReferenceId));
 }

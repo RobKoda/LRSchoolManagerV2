@@ -1,0 +1,47 @@
+﻿@using LRSchoolV2.Domain.ConsultantInvoices
+
+@inject ConsultantInvoiceItemsService ConsultantInvoiceItemsService
+@inject ISnackbar Snackbar
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="ConsultantInvoiceItem" Items="DisplayedConsultantInvoiceItems" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true">
+            <Columns>
+                <PropertyColumn T="ConsultantInvoiceItem" TProperty="string" Property="inConsultantInvoiceItem => inConsultantInvoiceItem.Denomination" Title="Désignation"/>
+                <PropertyColumn T="ConsultantInvoiceItem" TProperty="int" Property="inConsultantInvoiceItem => inConsultantInvoiceItem.Quantity" Title="Quantité"/>
+                <PropertyColumn T="ConsultantInvoiceItem" TProperty="decimal" Property="inConsultantInvoiceItem => inConsultantInvoiceItem.UnitPrice" Title="Prix unitaire"/>
+                <PropertyColumn T="ConsultantInvoiceItem" TProperty="decimal" Property="inConsultantInvoiceItem => inConsultantInvoiceItem.GetTotal()" Title="Total HT"/>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public ConsultantInvoice ConsultantInvoice { get; set; } = null!;
+    
+    private ObservableCollection<ConsultantInvoiceItem> DisplayedConsultantInvoiceItems { get; set; } = null!;
+
+    private bool _isLoading;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadDataAsync();
+    }
+    
+    private async Task ReloadDataAsync()
+    {
+        if (!_isLoading)
+        {
+            _isLoading = true;
+            var result = await ConsultantInvoiceItemsService.GetConsultantInvoiceItemsPerConsultantInvoiceAsync(ConsultantInvoice.Id);
+            result.Match(
+                inSuccess => DisplayedConsultantInvoiceItems = new ObservableCollection<ConsultantInvoiceItem>(inSuccess
+                    .OrderBy(inConsultantInvoiceItem => inConsultantInvoiceItem.Order)),
+                inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+            _isLoading = false;
+        }
+    }
+}

@@ -1,30 +1,32 @@
 ﻿@page "/CustomerInvoices/Generation"
+
 @using LRSchoolV2.Domain.CustomerInvoices
-@inject PayablesService PayablesService
+
+@inject CustomerInvoiceablesService CustomerInvoiceablesService
 @inject CustomerInvoicesService CustomerInvoicesService
 @inject ISnackbar Snackbar 
 @inject NavigationManager NavigationManager 
 
-@if (Payables != null)
+@if (CustomerInvoiceables != null)
 {
     <MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
         <MudButton StartIcon="@Icons.Material.Filled.NoteAdd" OnClick="@OnInvoicesGenerate" Variant="Variant.Filled" Color="Color.Primary">Générer</MudButton>
 
         <MudPaper Class="mt-4">
-            <MudDataGrid T="EditablePayable" Items="Payables" Hover="true" Style="user-select: none;" SortMode="SortMode.Single" MultiSelection="true" SelectOnRowClick="false" @bind-SelectedItems="SelectedPayables" Dense="true" Bordered="true">
+            <MudDataGrid T="CustomerInvoiceableFormModel" Items="CustomerInvoiceables" Hover="true" Style="user-select: none;" SortMode="SortMode.Single" MultiSelection="true" SelectOnRowClick="false" @bind-SelectedItems="SelectedCustomerInvoiceables" Dense="true" Bordered="true">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">À générer</MudText>
             </ToolBarContent>
                 <Columns>
-                    <SelectColumn T="EditablePayable" ShowInFooter="false" Size="Size.Small"/>
-                    <PropertyColumn T="EditablePayable" TProperty="string" Property="inPayable => inPayable.Person.GetFullName()" Title="Facturé à"/>
-                    <PropertyColumn T="EditablePayable" TProperty="string" Property="inPayable => inPayable.Denomination" Title="Description"/>
-                    <PropertyColumn T="EditablePayable" TProperty="decimal" Property="inPayable => inPayable.Price" Title="Prix" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
-                    <PropertyColumn T="EditablePayable" TProperty="decimal" Property="inPayable => inPayable.AlreadyBilled" Title="Déjà facturé" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
-                    <PropertyColumn T="EditablePayable" TProperty="decimal" Property="inPayable => inPayable.GetLeftToBill()" Title="Reste à facturer" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
-                    <PropertyColumn T="EditablePayable" TProperty="int" Property="inPayable => inPayable.BilledPaymentsCount" Title="Paiements effectués" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
-                    <PropertyColumn T="EditablePayable" TProperty="int" Property="inPayable => inPayable.PaymentsCount" Title="Nombre total paiements" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
-                    <TemplateColumn T="EditablePayable" Title="Compléter le paiement total">
+                    <SelectColumn T="CustomerInvoiceableFormModel" ShowInFooter="false" Size="Size.Small"/>
+                    <PropertyColumn T="CustomerInvoiceableFormModel" TProperty="string" Property="inCustomerInvoiceable => inCustomerInvoiceable.Person.GetFullName()" Title="Facturé à"/>
+                    <PropertyColumn T="CustomerInvoiceableFormModel" TProperty="string" Property="inCustomerInvoiceable => inCustomerInvoiceable.Denomination" Title="Description"/>
+                    <PropertyColumn T="CustomerInvoiceableFormModel" TProperty="decimal" Property="inCustomerInvoiceable => inCustomerInvoiceable.Price" Title="Prix" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                    <PropertyColumn T="CustomerInvoiceableFormModel" TProperty="decimal" Property="inCustomerInvoiceable => inCustomerInvoiceable.AlreadyBilled" Title="Déjà facturé" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                    <PropertyColumn T="CustomerInvoiceableFormModel" TProperty="decimal" Property="inCustomerInvoiceable => inCustomerInvoiceable.GetLeftToBill()" Title="Reste à facturer" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                    <PropertyColumn T="CustomerInvoiceableFormModel" TProperty="int" Property="inCustomerInvoiceable => inCustomerInvoiceable.BilledPaymentsCount" Title="Paiements effectués" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                    <PropertyColumn T="CustomerInvoiceableFormModel" TProperty="int" Property="inCustomerInvoiceable => inCustomerInvoiceable.PaymentsCount" Title="Nombre total paiements" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                    <TemplateColumn T="CustomerInvoiceableFormModel" Title="Compléter le paiement total">
                         <CellTemplate>
                             @if (context.Item.PaymentsCount > 1)
                             {
@@ -43,9 +45,9 @@
 }
 
 @code {
-    private ObservableCollection<EditablePayable>? Payables { get; set; }
+    private ObservableCollection<CustomerInvoiceableFormModel>? CustomerInvoiceables { get; set; }
 
-    private HashSet<EditablePayable> SelectedPayables { get; set; } = [];
+    private HashSet<CustomerInvoiceableFormModel> SelectedCustomerInvoiceables { get; set; } = [];
 
     private bool _isLoading;
 
@@ -57,18 +59,18 @@
 
     private async Task ReloadDataAsync()
     {
-        Payables = new ObservableCollection<EditablePayable>(
-            (await PayablesService.GetPayablesAsync())
-                .OrderBy(inPayable => inPayable.Person.GetFullName())
-                .ThenBy(inPayable => inPayable.Denomination)
-                .Adapt<IEnumerable<EditablePayable>>()
+        CustomerInvoiceables = new ObservableCollection<CustomerInvoiceableFormModel>(
+            (await CustomerInvoiceablesService.GetCustomerInvoiceablesAsync())
+                .OrderBy(inCustomerInvoiceable => inCustomerInvoiceable.Person.GetFullName())
+                .ThenBy(inCustomerInvoiceable => inCustomerInvoiceable.Denomination)
+                .Adapt<IEnumerable<CustomerInvoiceableFormModel>>()
             );
     }
 
     private async Task OnInvoicesGenerate()
     {
         _isLoading = true;
-        var result = await CustomerInvoicesService.GenerateCustomerInvoicesAsync(SelectedPayables.Adapt<IEnumerable<Payable>>());
+        var result = await CustomerInvoicesService.GenerateCustomerInvoicesAsync(SelectedCustomerInvoiceables.Adapt<IEnumerable<CustomerInvoiceable>>());
         result.Match(_ => { NavigationManager.NavigateTo("/CustomerInvoices"); },
             inFailure => { Snackbar.Add(string.Join("<br/>", inFailure), Severity.Error); });
         _isLoading = false;

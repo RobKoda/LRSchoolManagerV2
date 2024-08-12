@@ -23,8 +23,8 @@ public class CustomerInvoicesService(
     public Task<GetCustomerInvoicesResponse> GetCustomerInvoicesAsync() => 
         inMediator.Send(new GetCustomerInvoicesQuery());
 
-    public async Task<Validation<string, Unit>> GenerateCustomerInvoicesAsync(IEnumerable<Payable> inPayables) =>
-        (await inMediator.Send(new GenerateCustomerInvoicesQuery(inPayables))).Validation;
+    public async Task<Validation<string, Unit>> GenerateCustomerInvoicesAsync(IEnumerable<CustomerInvoiceable> inCustomerInvoiceables) =>
+        (await inMediator.Send(new GenerateCustomerInvoicesQuery(inCustomerInvoiceables))).Validation;
 
     public Task<Validation<string, Unit>> SetCustomerInvoiceEmailSentAsync(CustomerInvoice inCustomerInvoice) => 
         inMediator.SendRequestWithValidation<SetCustomerInvoiceEmailSentRequest, SetCustomerInvoiceEmailSentCommand>(new SetCustomerInvoiceEmailSentRequest(inCustomerInvoice.Id), inSetCustomerInvoiceEmailSentRequestValidator);

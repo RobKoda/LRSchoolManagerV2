@@ -19,6 +19,6 @@ public record ConsultantQuote(
             .Where(inItem => inItem.ConsultantQuote.Id == Id)
             .Sum(inItem => inItem.GetTotal());
     
-    public static string GetQuoteNumber(DateTime inDate, IEnumerable<ConsultantQuote> inAllQuotes) =>
-        $"LR{inDate.Year}-{inAllQuotes.Count(inQuote => inQuote.Date.Year == inDate.Year) + 1:D3}";
+    public static string GetQuoteNumber(DateTime inDate, IEnumerable<ConsultantQuote> inAllQuotes, Guid inConsultantId) =>
+        $"LRS{inDate.Year}-{inAllQuotes.Count(inQuote => inQuote.Date.Year == inDate.Year && inQuote.Consultant.Id == inConsultantId) + 1:D3}";
 }

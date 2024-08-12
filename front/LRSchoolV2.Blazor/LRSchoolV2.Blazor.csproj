@@ -37,6 +37,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <AdditionalFiles Include="Pages\ConsultantInvoices\ConsultantInvoiceItems\ConsultantInvoiceItems.razor" />
+      <AdditionalFiles Include="Pages\ConsultantInvoices\ConsultantInvoices.razor" />
       <AdditionalFiles Include="Pages\CustomerQuotes\CustomerQuoteItems\CustomerQuoteItems.razor" />
       <AdditionalFiles Include="Pages\CustomerQuotes\CustomerQuotes.razor" />
     </ItemGroup>

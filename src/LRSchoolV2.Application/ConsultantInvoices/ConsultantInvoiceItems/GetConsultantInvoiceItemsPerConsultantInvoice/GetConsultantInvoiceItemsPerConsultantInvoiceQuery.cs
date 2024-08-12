@@ -1,0 +1,6 @@
+﻿using MediatR;
+
+// ReSharper disable ClassNeverInstantiated.Global - Implicit use
+namespace LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoiceItems.GetConsultantInvoiceItemsPerConsultantInvoice;
+
+public record GetConsultantInvoiceItemsPerConsultantInvoiceQuery(Guid ConsultantInvoiceId) : IRequest<GetConsultantInvoiceItemsPerConsultantInvoiceResponse>;

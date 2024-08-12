@@ -9,6 +9,8 @@ using LRSchoolV2.Infrastructure.CheckDeposits.CheckDeposits;
 using LRSchoolV2.Infrastructure.Common.Addresses;
 using LRSchoolV2.Infrastructure.Common.Documents;
 using LRSchoolV2.Infrastructure.Common.SchoolYears;
+using LRSchoolV2.Infrastructure.ConsultantInvoices.ConsultantInvoiceItems;
+using LRSchoolV2.Infrastructure.ConsultantInvoices.ConsultantInvoices;
 using LRSchoolV2.Infrastructure.ConsultantQuotes.ConsultantQuoteItems;
 using LRSchoolV2.Infrastructure.ConsultantQuotes.ConsultantQuotes;
 using LRSchoolV2.Infrastructure.Consultants.Consultants;
@@ -37,6 +39,8 @@ public class ApplicationContext(DbContextOptions inOptions) : DbContext(inOption
     public DbSet<CheckDepositDataModel> CheckDeposits => Set<CheckDepositDataModel>();
     public DbSet<CheckDepositPaymentDataModel> CheckDepositPayments => Set<CheckDepositPaymentDataModel>();
     public DbSet<ConsultantDataModel> Consultants => Set<ConsultantDataModel>();
+    public DbSet<ConsultantInvoiceDataModel> ConsultantInvoices => Set<ConsultantInvoiceDataModel>();
+    public DbSet<ConsultantInvoiceItemDataModel> ConsultantInvoiceItems => Set<ConsultantInvoiceItemDataModel>();
     public DbSet<ConsultantQuoteDataModel> ConsultantQuotes => Set<ConsultantQuoteDataModel>();
     public DbSet<ConsultantQuoteItemDataModel> ConsultantQuoteItems => Set<ConsultantQuoteItemDataModel>();
     public DbSet<CustomerInvoiceDataModel> CustomerInvoices => Set<CustomerInvoiceDataModel>();

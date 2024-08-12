@@ -5,4 +5,4 @@ using MediatR;
 
 namespace LRSchoolV2.Application.CustomerInvoices.CustomerInvoices.GenerateCustomerInvoices;
 
-public record GenerateCustomerInvoicesQuery(IEnumerable<Payable> Payables) : IRequest<GenerateCustomerInvoicesResponse>;
+public record GenerateCustomerInvoicesQuery(IEnumerable<CustomerInvoiceable> CustomerInvoiceables) : IRequest<GenerateCustomerInvoicesResponse>;

@@ -4,8 +4,8 @@ using LRSchoolV2.Domain.Persons;
 
 namespace LRSchoolV2.Domain.CustomerInvoices;
 
-public record Payable(
-    PayableReferenceType PayableReferenceType, 
+public record CustomerInvoiceable(
+    CustomerInvoiceableReferenceType CustomerInvoiceableReferenceType, 
     Guid ReferenceId, 
     Person Person, 
     string Denomination, 

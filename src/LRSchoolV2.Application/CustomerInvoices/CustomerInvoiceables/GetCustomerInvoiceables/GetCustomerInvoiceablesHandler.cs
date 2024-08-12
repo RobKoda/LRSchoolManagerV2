@@ -7,29 +7,30 @@ using MediatR;
 
 // ReSharper disable UnusedType.Global - Implicit use
 
-namespace LRSchoolV2.Application.CustomerInvoices.Payables.GetPayables;
+namespace LRSchoolV2.Application.CustomerInvoices.CustomerInvoiceables.GetCustomerInvoiceables;
 
-public class GetPayablesHandler(
+public class GetCustomerInvoiceablesHandler(
     IPersonRegistrationsRepository inPersonRegistrationsRepository,
     IPersonAnnualServiceVariationsRepository inPersonAnnualServiceVariationsRepository,
     IAnnualServiceVariationYearlyPricesRepository inAnnualServiceVariationYearlyPricesRepository
-    ) : IRequestHandler<GetPayablesQuery, GetPayablesResponse>
+    ) : IRequestHandler<GetCustomerInvoiceablesQuery, GetCustomerInvoiceablesResponse>
 {
-    public async Task<GetPayablesResponse> Handle(GetPayablesQuery inRequest, CancellationToken inCancellationToken)
+    public async Task<GetCustomerInvoiceablesResponse> Handle(GetCustomerInvoiceablesQuery inRequest, CancellationToken inCancellationToken)
     {
-        var result = new List<Payable>();
+        var result = new List<CustomerInvoiceable>();
 
-        await GetPersonRegistrationsPayables(result);
-        await GetPersonServiceVariationsPayables(result);
+        await GetPersonRegistrationsCustomerInvoiceables(result);
+        await GetPersonServiceVariationsCustomerInvoiceables(result);
 
-        return new GetPayablesResponse(result);
+        return new GetCustomerInvoiceablesResponse(result);
     }
 
-    private async Task GetPersonRegistrationsPayables(List<Payable> inResult)
+    private async Task GetPersonRegistrationsCustomerInvoiceables(List<CustomerInvoiceable> inResult)
     {
         var personRegistrations = await inPersonRegistrationsRepository.GetNonBilledPersonRegistrations();
         inResult.AddRange(personRegistrations.Select(inPersonRegistration =>
-            new Payable(PayableReferenceType.PersonRegistration,
+            new CustomerInvoiceable(
+                CustomerInvoiceableReferenceType.PersonRegistration,
                 inPersonRegistration.Id,
                 GetPersonRegistrationBilledPerson(inPersonRegistration),
                 $"Cotisation annuelle - {inPersonRegistration.SchoolYear.GetPeriodDisplay()} - {inPersonRegistration.Person.GetFullName()} ",
@@ -44,14 +45,15 @@ public class GetPayablesHandler(
         inPersonRegistration.BilledPerson ??
         (inPersonRegistration.Person.BillingToContactPerson1 ? inPersonRegistration.Person.ContactPerson1! : inPersonRegistration.Person);
 
-    private async Task GetPersonServiceVariationsPayables(List<Payable> inResult)
+    private async Task GetPersonServiceVariationsCustomerInvoiceables(List<CustomerInvoiceable> inResult)
     {
         var serviceVariationYearlyPrices = await inAnnualServiceVariationYearlyPricesRepository.GetAnnualServiceVariationYearlyPricesAsync();
         var nonBilledPersonServiceVariations = await inPersonAnnualServiceVariationsRepository.GetNonBilledPersonAnnualServiceVariations();
         var nonBilledPersonServiceVariationPayments = (await inPersonAnnualServiceVariationsRepository.GetNonBilledPersonAnnualServiceVariationBilledItems()).ToList();
 
         inResult.AddRange(nonBilledPersonServiceVariations.Select(inPersonServiceVariation =>
-            new Payable(PayableReferenceType.PersonServiceVariation,
+            new CustomerInvoiceable(
+                CustomerInvoiceableReferenceType.PersonAnnualServiceVariation,
                 inPersonServiceVariation.Id,
                 GetPersonServiceVariationBilledPerson(inPersonServiceVariation),
                 GetPersonServiceVariationDenomination(nonBilledPersonServiceVariationPayments, inPersonServiceVariation),

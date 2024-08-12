@@ -1,0 +1,248 @@
+﻿@page "/ConsultantInvoices"
+
+@* ReSharper disable once RedundantUsingDirective Needed for ConsultantInvoiceItems component*@
+@using BlazorDownloadFile
+@using LRSchoolV2.Blazor.Pages.ConsultantInvoices.ConsultantInvoiceItems
+@using LRSchoolV2.Blazor.Pages.ConsultantInvoices.SaveConsultantInvoice
+@using LRSchoolV2.Blazor.Pages.Consultants
+@using LRSchoolV2.Blazor.Pages.Documents
+@using LRSchoolV2.Domain.Common
+@using LRSchoolV2.Domain.ConsultantInvoices
+@using LRSchoolV2.Email.Abstractions
+@using LRSchoolV2.Email.Emails.ConsultantInvoice
+@using LRSchoolV2.Email.Models.Attachments
+@using LRSchoolV2.Reporting.Consultants.ConsultantInvoices
+@using Unit = LanguageExt.Unit
+
+@inject IDialogService DialogService
+@inject IEmailSender EmailSender
+@inject ConsultantsService ConsultantsService
+@inject ConsultantInvoicesService ConsultantInvoicesService
+@inject ConsultantInvoiceItemsService ConsultantInvoiceItemsService 
+@inject IBlazorDownloadFileService DownloadFileService
+@inject DocumentsService DocumentsService
+@inject ISnackbar Snackbar
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnConsultantInvoiceAddClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter une facture</MudButton>
+    <MudButton StartIcon="@Icons.Material.Filled.Email" OnClick="@OnConsultantInvoicesBulkSendEmailClick" Variant="Variant.Filled" Color="Color.Primary">Envoi d'emails</MudButton>
+    @if (_showAdvancedFunctions)
+    {
+        <MudButton Class="ml-8" StartIcon="@Icons.Material.Filled.Remove" OnClick="@OnCancelLastInvoiceClick" Variant="Variant.Filled" Color="Color.Error">Annuler la dernière facture</MudButton>
+    }
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="ConsultantInvoice" Items="DisplayedConsultantInvoices" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true"
+                     @bind-SelectedItems="@SelectedItems" MultiSelection="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Factures Clients</MudText>
+                <MudSpacer/>
+                <MudSwitch @bind-Value="_showAdvancedFunctions" Label="Fonctions avancées (et dangereuses)" Color="Color.Primary"/>
+            </ToolBarContent>
+            <Columns>
+                <HierarchyColumn T="ConsultantInvoice"/>
+                <SelectColumn T="ConsultantInvoice"  ShowInHeader="false"  ShowInFooter="false"/>
+                <PropertyColumn T="ConsultantInvoice" TProperty="string" Property="inConsultantInvoice => inConsultantInvoice.Number" Title="Numéro"/>
+                <PropertyColumn T="ConsultantInvoice" TProperty="DateTime" Property="inConsultantInvoice => inConsultantInvoice.Date" Title="Date" Format="dd/MM/yyyy"/>
+                <PropertyColumn T="ConsultantInvoice" TProperty="string" Property="inConsultantInvoice => inConsultantInvoice.InvoiceConsultantName" Title="Nom du client"/>
+                <PropertyColumn T="ConsultantInvoice" TProperty="decimal" Property="inConsultantInvoice => inConsultantInvoice.TotalToPay" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px" Title="Total"/>
+                <TemplateColumn T="ConsultantInvoice" Title="Email envoyé">
+                    <CellTemplate>
+                        <MudCheckBox Value="context.Item.EmailSent" ReadOnly="true" Color="Color.Primary"/>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudTooltip Text="Télécharger PDF">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(() => OnConsultantInvoicePDFClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Envoyer PDF par email">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Email" OnClick="@(() => OnConsultantInvoiceSendByEmailClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            @if (_showAdvancedFunctions)
+                            {
+                            <MudTooltip Text="Regénérer PDF">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Error" Icon="@Icons.Material.Filled.RestartAlt" OnClick="@(() => OnConsultantInvoicePDFRegenerationClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            }
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <ChildRowContent>
+                <ConsultantInvoiceItems ConsultantInvoice="@context.Item"/>
+            </ChildRowContent>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+@if (_isLoading)
+{
+    <LoadingSpinner/>
+}
+
+@code {
+    private ObservableCollection<ConsultantInvoice> DisplayedConsultantInvoices { get; set; } = null!;
+
+    private bool _showAdvancedFunctions;
+    private bool _isLoading;
+
+    private HashSet<ConsultantInvoice> SelectedItems { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        var getInvoicesResponse = await ConsultantInvoicesService.GetConsultantInvoicesAsync();
+        DisplayedConsultantInvoices = [];
+        DisplayedConsultantInvoices = new ObservableCollection<ConsultantInvoice>(getInvoicesResponse.ConsultantInvoices.OrderByDescending(inInvoice => inInvoice.Number)); 
+    }
+
+    private async Task OnConsultantInvoicePDFClick(ConsultantInvoice inConsultantInvoice)
+    {
+        var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inConsultantInvoice.Id);
+        await document.IfSomeAsync(async inSome => await DownloadFileService.DownloadFile(inSome.FileName, inSome.FileContent, inSome.ContentType));
+        document.IfNone(() => Snackbar.Add("La facture n'a pas été trouvée", Severity.Error));
+    }
+
+    private async Task OnConsultantInvoicePDFRegenerationClick(ConsultantInvoice inConsultantInvoice)
+    {
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir regénérer la facture ?", "Regénérer une facture", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            _isLoading = true;
+            StateHasChanged();
+            await GeneratePdf(inConsultantInvoice);
+        }
+    }
+    
+    private async Task<Unit> GeneratePdf(ConsultantInvoice inConsultantInvoice) =>
+        await (await ConsultantsService.GetConsultantInvoiceDocumentAsync(inConsultantInvoice.Consultant.Id))
+            .MatchAsync(async inInvoiceDocument =>
+                    await (await ConsultantInvoiceItemsService.GetConsultantInvoiceItemsPerConsultantInvoiceAsync(inConsultantInvoice.Id))
+                        .MatchAsync(async inSuccess =>
+                            {
+                                var report = new ConsultantInvoiceReport(inConsultantInvoice, inSuccess, inInvoiceDocument);
+                                var reportContent = (await report.GetReportMemoryStreamAsync()).ToArray();
+                                var saveResult = await DocumentsService.SaveDocumentAsync(new Document(Guid.NewGuid(), inConsultantInvoice.Id, report.ExportFileName, ConsultantInvoiceReport.ContentType, reportContent));
+                                
+                                saveResult.IfSuccess(_ => Snackbar.Add("Facture générée", Severity.Success));
+                                saveResult.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+                                
+                                _isLoading = false;
+                                return Unit.Default;
+                            },
+                            inFailure =>
+                            {
+                                Snackbar.Add(inFailure.First(), Severity.Error);
+                                _isLoading = false;
+                                return Unit.Default;
+                            }),
+                () =>
+                {
+                    Snackbar.Add("Pas de document de facture uploadée pour le consultant", Severity.Error);
+                    _isLoading = false;
+                    return Unit.Default;
+                });
+    
+    private async Task OnConsultantInvoicesBulkSendEmailClick()
+    {
+        _isLoading = true;
+
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir envoyer les emails pour la facture sélectionnée ?", "Envoi des factures", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            foreach (var invoice in SelectedItems)
+            {
+                await SendEmail(invoice);
+            }
+            await ReloadDataAsync();
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task OnCancelLastInvoiceClick()
+    {
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir annuler la dernière la facture ?", "Annuler la dernière facture", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            var cancelResult = await ConsultantInvoicesService.CancelConsultantInvoiceAsync(DisplayedConsultantInvoices.MaxBy(inInvoice => inInvoice.Date)!.Adapt<ConsultantInvoice>());
+            cancelResult.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task OnConsultantInvoiceSendByEmailClick(ConsultantInvoice inConsultantInvoice)
+    {
+        _isLoading = true;
+
+        var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir envoyer la facture par email ?", "Envoyer la facture par email", "Annuler", "Confirmer");
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await SendEmail(inConsultantInvoice);
+        }
+        _isLoading = false;
+    }
+    
+    private async Task OnConsultantInvoiceAddClick()
+    {
+        var dialogParameters = new DialogParameters
+        {
+            {
+#pragma warning disable CS8974 // Converting method group to non-delegate type
+                nameof(SaveConsultantInvoiceDialog.GeneratePdfMethod), GeneratePdf
+#pragma warning restore CS8974 // Converting method group to non-delegate type
+            }
+        };
+        var dialog = await DialogService.ShowAsync<SaveConsultantInvoiceDialog>("Ajout d'une facture client", dialogParameters,
+        new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Large
+        });
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            await ReloadDataAsync();
+        }
+    }
+
+    private async Task SendEmail(ConsultantInvoice inConsultantInvoice)
+    {
+        var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inConsultantInvoice.Id);
+        await document.IfSomeAsync(async inSome =>
+        {
+            await EmailSender.SendEmailAsync(inConsultantInvoice.Consultant.Email, new ConsultantInvoiceEmail(inConsultantInvoice.Number),
+                new EmailAttachment
+                {
+                    Filename = inSome.FileName,
+                    Content = inSome.FileContent,
+                    Type = EmailAttachmentType.Pdf
+                });
+
+            if (!inConsultantInvoice.EmailSent)
+            {
+                inConsultantInvoice = inConsultantInvoice with
+                {
+                    EmailSent = true
+                };
+                var result = await ConsultantInvoicesService.SetConsultantInvoiceEmailSentAsync(inConsultantInvoice);
+                result.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
+                await ReloadDataAsync();
+            }
+
+            Snackbar.Add($"La facture a été envoyée à {inConsultantInvoice.Consultant.Email}", Severity.Success);
+        });
+        document.IfNone(() => { Snackbar.Add("La facture n'a pas été trouvé", Severity.Error); });
+    }
+}

@@ -7,9 +7,9 @@ using LRSchoolV2.Domain.Persons;
 
 namespace LRSchoolV2.Blazor.Pages.CustomerInvoices.CustomerInvoicesGeneration;
     
-public class EditablePayable
+public class CustomerInvoiceableFormModel
 {
-    public PayableReferenceType PayableReferenceType { get; set; } = null!;
+    public CustomerInvoiceableReferenceType CustomerInvoiceableReferenceType { get; set; } = null!;
     
     public Guid ReferenceId { get; set; }
 

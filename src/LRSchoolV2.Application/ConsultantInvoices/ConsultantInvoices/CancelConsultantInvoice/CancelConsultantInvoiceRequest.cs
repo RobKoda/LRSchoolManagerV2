@@ -1,0 +1,5 @@
+﻿using LRSchoolV2.Domain.ConsultantInvoices;
+
+namespace LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoices.CancelConsultantInvoice;
+
+public record CancelConsultantInvoiceRequest(ConsultantInvoice ConsultantInvoice);

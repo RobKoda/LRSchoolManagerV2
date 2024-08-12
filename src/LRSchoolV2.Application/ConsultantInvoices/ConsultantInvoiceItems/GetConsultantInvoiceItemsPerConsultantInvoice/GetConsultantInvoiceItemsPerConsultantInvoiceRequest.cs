@@ -1,0 +1,3 @@
+﻿namespace LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoiceItems.GetConsultantInvoiceItemsPerConsultantInvoice;
+
+public record GetConsultantInvoiceItemsPerConsultantInvoiceRequest(Guid ConsultantInvoiceId);
