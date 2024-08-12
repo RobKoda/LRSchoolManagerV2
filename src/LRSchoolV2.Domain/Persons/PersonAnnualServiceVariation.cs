@@ -12,7 +12,8 @@ public record PersonAnnualServiceVariation(
     SchoolYear SchoolYear,
     AnnualServiceVariation AnnualServiceVariation,
     int PaymentsCount,
-    Person? BilledPerson
+    Person? BilledPerson,
+    int ConsultantPaymentsCount
 )
 {
     public static decimal GetAlreadyBilled(IEnumerable<CustomerInvoiceItem> inNonBilledPersonServiceVariationPayments, PersonAnnualServiceVariation inPersonAnnualServiceVariation) => 

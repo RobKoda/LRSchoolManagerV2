@@ -11,4 +11,5 @@ public record CustomerPayment(
     DateTime Date,
     int CustomerPaymentTypeValue,
     decimal Amount,
-    string Reference);
+    string Reference,
+    string Comment);

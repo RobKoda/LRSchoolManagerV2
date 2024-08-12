@@ -1,0 +1,5 @@
+﻿using LRSchoolV2.Domain.ConsultantInvoices;
+
+namespace LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoiceables.GetConsultantInvoiceables;
+
+public record GetConsultantInvoiceablesResponse(IEnumerable<ConsultantInvoiceable> ConsultantInvoiceables);

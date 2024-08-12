@@ -63,7 +63,6 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        Model ??= new SaveAnnualServiceConsultantWorkFormModel();
         SchoolYears = (await SchoolYearsService.GetSchoolYearsAsync()).OrderByDescending(inSchoolYear => inSchoolYear.StartDate);
         Consultants = (await ConsultantsService.GetConsultantsAsync()).OrderBy(inSchoolYear => inSchoolYear.LastName);
         StateHasChanged();

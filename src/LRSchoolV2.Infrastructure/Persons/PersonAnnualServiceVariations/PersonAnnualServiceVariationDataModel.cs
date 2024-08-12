@@ -36,4 +36,8 @@ public class PersonAnnualServiceVariationDataModel : IGuidEntity
     [ForeignKey(nameof(BilledPerson))]
     public Guid? BilledPersonId { get; set; }
     public PersonDataModel? BilledPerson { get; set; }
+    
+    public int ConsultantPaymentsCount { get; set; }
+    
+    public bool ConsultantIsFullyBilled { get; set; }
 }

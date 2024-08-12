@@ -6,7 +6,14 @@ GO
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 
-
+DELETE FROM [LRSchoolV2_Dev].[dbo].[ConsultantQuoteItem]
+GO
+DELETE FROM [LRSchoolV2_Dev].[dbo].[ConsultantQuote]
+GO
+DELETE FROM [LRSchoolV2_Dev].[dbo].[ConsultantInvoiceItem]
+GO
+DELETE FROM [LRSchoolV2_Dev].[dbo].[ConsultantInvoice]
+GO
 DELETE FROM [LRSchoolV2_Dev].[dbo].[CustomerQuoteItem]
 GO
 DELETE FROM [LRSchoolV2_Dev].[dbo].[CustomerQuote]
@@ -139,8 +146,8 @@ FROM [LRSchool].[dbo].[PersonRegistration]
 
 PRINT 'PERSON ANNUAL SERVICE REGISTRATION'
 
-INSERT INTO [LRSchoolV2_Dev].[dbo].[PersonAnnualServiceVariation] ([Id], [PersonId], [SchoolYearId], [AnnualServiceVariationId], [PaymentsCount], [IsFullyBilled], [BilledPersonId])
-SELECT [Id], [PersonId], [SchoolYearId], [AnnualServiceVariationId], [PaymentsCount], [IsFullyBilled], [BilledPersonId]
+INSERT INTO [LRSchoolV2_Dev].[dbo].[PersonAnnualServiceVariation] ([Id], [PersonId], [SchoolYearId], [AnnualServiceVariationId], [PaymentsCount], [IsFullyBilled], [BilledPersonId], [ConsultantPaymentsCount], [ConsultantIsFullyBilled])
+SELECT [Id], [PersonId], [SchoolYearId], [AnnualServiceVariationId], [PaymentsCount], [IsFullyBilled], [BilledPersonId], 12, 0
 FROM [LRSchool].[dbo].[PersonAnnualServiceVariation]
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -150,6 +157,10 @@ PRINT 'CUSTOMER PAYMENT'
 INSERT INTO [LRSchoolV2_Dev].[dbo].[CustomerPayment] ([Id], [PersonId], [Date], [CustomerPaymentTypeValue], [Amount], [Reference])
 SELECT [Id], [PersonId], [Date], [CustomerPaymentTypeValue], [Amount], [Reference]
 FROM [LRSchool].[dbo].[CustomerPayment]
+
+UPDATE [LRSchoolV2_Dev].[dbo].[CustomerPayment]
+SET [PersonId] = '56CF5DB3-2ECC-4643-997F-2945E66C450B', [Comment] = 'Payé par ASS FNAS'
+WHERE [PersonId] = '0B7EDD49-21F6-482C-AC15-014E01193CC3'
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 

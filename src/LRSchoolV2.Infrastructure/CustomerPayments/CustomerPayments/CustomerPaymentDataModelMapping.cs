@@ -23,7 +23,8 @@ public class CustomerPaymentDataModelMapping : IRegister
                 inDataModel.Date,
                 inDataModel.CustomerPaymentTypeValue,
                 inDataModel.Amount,
-                inDataModel.Reference)
+                inDataModel.Reference,
+                inDataModel.Comment)
             );
     }
 }

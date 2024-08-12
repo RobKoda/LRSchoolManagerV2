@@ -41,6 +41,9 @@
                         <MudNumericField HideSpinButtons="true" Label="Nombre de paiements" @bind-Value="Model.PaymentsCount" For="@(() => Model.PaymentsCount)" Culture="CultureInfo.InvariantCulture"/>
                     </MudItem>
                     <MudItem xs="12">
+                        <MudNumericField HideSpinButtons="true" Label="Nombre de paiements consultants" @bind-Value="Model.ConsultantPaymentsCount" For="@(() => Model.ConsultantPaymentsCount)" Culture="CultureInfo.InvariantCulture"/>
+                    </MudItem>
+                    <MudItem xs="12">
                         <MudSwitch Label="Facturer à : (à cocher uniquement si l'adhérent ou sa personne de contact 1 ne doit pas être le destinataire de la facture)" @bind-Value="BilledPersonShow" Color="Color.Primary"/>
                         @if (BilledPersonShow)
                         {

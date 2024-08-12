@@ -24,7 +24,10 @@ public class SavePersonServiceVariationFormModel
     public AnnualServiceVariation? AnnualServiceVariation { get; set; }
     
     [Range(0, int.MaxValue, ErrorMessage = "Le nombre de paiement doit être positif")]
-    public int PaymentsCount { get; set; }
+    public int PaymentsCount { get; set; } = 10;
     
     public Person? BilledPerson { get; set; }
+    
+    [Range(0, int.MaxValue, ErrorMessage = "Le nombre de paiement de l'intervenant doit être positif")]
+    public int ConsultantPaymentsCount { get; set; } = 12;
 }

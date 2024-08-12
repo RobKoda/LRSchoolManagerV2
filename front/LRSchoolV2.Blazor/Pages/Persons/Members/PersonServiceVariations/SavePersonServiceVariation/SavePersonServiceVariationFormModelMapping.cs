@@ -17,7 +17,8 @@ public class SavePersonServiceVariationFormModelMapping : IRegister
                 inFormModel.SchoolYear!,
                 inFormModel.AnnualServiceVariation!,
                 inFormModel.PaymentsCount,
-                inFormModel.BilledPerson
+                inFormModel.BilledPerson,
+                inFormModel.ConsultantPaymentsCount
             ));
     }
 }

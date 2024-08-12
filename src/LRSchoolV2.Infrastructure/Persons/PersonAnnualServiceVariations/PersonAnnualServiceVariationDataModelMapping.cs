@@ -29,7 +29,8 @@ public class PersonAnnualServiceVariationDataModelMapping : IRegister
                 inDataModel.SchoolYear.Adapt<SchoolYear>(),
                 inDataModel.AnnualServiceVariation.Adapt<AnnualServiceVariation>(),
                 inDataModel.PaymentsCount,
-                inDataModel.BilledPerson.Adapt<Person>()
+                inDataModel.BilledPerson.Adapt<Person>(),
+                inDataModel.ConsultantPaymentsCount
                 ));
     }
 }

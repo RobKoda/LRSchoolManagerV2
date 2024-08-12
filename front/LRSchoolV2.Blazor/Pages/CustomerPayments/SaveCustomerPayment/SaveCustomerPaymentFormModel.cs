@@ -24,4 +24,7 @@ public class SaveCustomerPaymentFormModel
     
     [MaxLength(64, ErrorMessage = "La référence est trop long")]
     public string Reference { get; set; } = string.Empty;
+    
+    [MaxLength(1024, ErrorMessage = "Le commentaire est trop long")]
+    public string Comment { get; set; } = string.Empty;
 }

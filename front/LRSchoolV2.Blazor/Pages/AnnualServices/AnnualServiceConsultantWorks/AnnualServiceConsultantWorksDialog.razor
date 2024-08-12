@@ -88,10 +88,7 @@
         var theParameters = new DialogParameters
         {
             {
-                nameof(SaveAnnualServiceConsultantWorkDialog.Model), new SaveAnnualServiceConsultantWorkFormModel
-                {
-                    AnnualServiceId = AnnualService!.Id
-                }
+                nameof(SaveAnnualServiceConsultantWorkDialog.Model), new SaveAnnualServiceConsultantWorkFormModel(AnnualService!)
             }
         };
         var dialog = await DialogService.ShowAsync<SaveAnnualServiceConsultantWorkDialog>("Ajout d'un horaire d'intervenant", theParameters, new DialogOptions

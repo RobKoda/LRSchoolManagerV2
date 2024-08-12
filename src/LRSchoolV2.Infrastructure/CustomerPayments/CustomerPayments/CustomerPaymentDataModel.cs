@@ -28,4 +28,7 @@ public class CustomerPaymentDataModel : IGuidEntity
 
     [MaxLength(64)]
     public string Reference { get; set; } = string.Empty;
+    
+    [MaxLength(1024)]
+    public string Comment { get; set; } = string.Empty;
 }

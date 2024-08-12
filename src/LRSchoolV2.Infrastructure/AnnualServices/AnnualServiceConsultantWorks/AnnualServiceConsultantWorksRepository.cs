@@ -11,7 +11,12 @@ public class AnnualServiceConsultantWorksRepository(IDbContextFactory<Applicatio
         inContext.GetAllAsync<AnnualServiceConsultantWorkDataModel, AnnualServiceConsultantWork>(inQueryable => inQueryable
             .Where(inConsultantWork => inConsultantWork.AnnualServiceId == inAnnualServiceId)
         );
-
+    
+    public Task<IEnumerable<AnnualServiceConsultantWork>> GetAnnualServiceConsultantWorksPerSchoolYearAsync(Guid inSchoolYearId) =>
+        inContext.GetAllAsync<AnnualServiceConsultantWorkDataModel, AnnualServiceConsultantWork>(inQueryable => inQueryable
+            .Where(inConsultantWork => inConsultantWork.SchoolYearId == inSchoolYearId)
+        );
+    
     public Task<bool> AnyAnnualServiceConsultantWorkAsync(Guid inAnnualServiceConsultantWorkId) =>
         inContext.AnyAsync<AnnualServiceConsultantWorkDataModel>(inAnnualServiceConsultantWorkId);
 
@@ -25,7 +30,7 @@ public class AnnualServiceConsultantWorksRepository(IDbContextFactory<Applicatio
         await (await inContext.GetQueryableAsNoTrackingAsync<AnnualServiceConsultantWorkDataModel>())
             .Where(inAnnualServiceConsultantWork => inAnnualServiceConsultantWork.Id != inReferenceAnnualServiceConsultantWork.Id)
             .AllAsync(inAnnualServiceConsultantWork =>
-                inAnnualServiceConsultantWork.AnnualServiceId != inReferenceAnnualServiceConsultantWork.AnnualServiceId ||
+                inAnnualServiceConsultantWork.AnnualServiceId != inReferenceAnnualServiceConsultantWork.AnnualService.Id ||
                 inAnnualServiceConsultantWork.ConsultantId != inReferenceAnnualServiceConsultantWork.Consultant.Id ||
                 inAnnualServiceConsultantWork.SchoolYearId != inReferenceAnnualServiceConsultantWork.SchoolYear.Id);
 

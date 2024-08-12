@@ -40,6 +40,9 @@
                         <MudTextField Label="Référence" @bind-Value="Model.Reference" For="@(() => Model.Reference)"/>
                     </MudItem>
                 </MudGrid>
+                <MudItem xs="12">
+                    <MudTextField Lines="5" Label="Commentaire" @bind-Value="Model.Comment" For="@(() => Model.Comment)"/>
+                </MudItem>
             </DialogContent>
             <DialogActions>
                 <MudButton OnClick="@Cancel">Annuler</MudButton>

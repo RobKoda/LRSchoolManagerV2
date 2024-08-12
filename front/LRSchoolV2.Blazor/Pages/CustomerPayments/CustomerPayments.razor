@@ -21,6 +21,7 @@
                 <PropertyColumn T="CustomerPayment" TProperty="string" Property="inCustomerPayment => inCustomerPayment.Person.GetFullName()" Title="Client"/>
                 <PropertyColumn T="CustomerPayment" TProperty="decimal" Property="inCustomerPayment => inCustomerPayment.Amount" Title="Montant" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
                 <PropertyColumn T="CustomerPayment" TProperty="string" Property="inCustomerPayment => inCustomerPayment.Reference" Title="Référence"/>
+                <PropertyColumn T="CustomerPayment" TProperty="string" Property="inPersonServiceVariation => inPersonServiceVariation.Comment" Title="Commentaire"/>
                 <TemplateColumn>
                     <CellTemplate>
                         <MudStack Row>

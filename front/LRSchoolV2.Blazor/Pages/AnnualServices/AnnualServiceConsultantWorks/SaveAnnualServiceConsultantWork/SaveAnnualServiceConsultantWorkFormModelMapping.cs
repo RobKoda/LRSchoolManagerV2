@@ -13,7 +13,7 @@ public class SaveAnnualServiceConsultantWorkFormModelMapping : IRegister
             .NewConfig()
             .MapWith(inFormModel => new AnnualServiceConsultantWork(
                 inFormModel.Id,
-                inFormModel.AnnualServiceId,
+                inFormModel.AnnualService,
                 inFormModel.SchoolYear!,
                 inFormModel.Consultant!,
                 inFormModel.CommonWorkHours,
