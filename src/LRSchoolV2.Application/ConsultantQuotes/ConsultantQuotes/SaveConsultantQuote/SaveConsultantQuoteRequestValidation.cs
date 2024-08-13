@@ -31,7 +31,7 @@ public partial class SaveConsultantQuoteRequestValidation : AbstractValidator<Sa
             .Must(inNumber => ConsultantQuoteNumberRegex().Match(inNumber).Success)
             .WithMessage(inRequest => SaveConsultantQuoteRequestValidationErrors.NumberInvalidFormat.Replace("{number}", inRequest.ConsultantQuote.Number));
     
-    [GeneratedRegex(@"^\d{4}-\d{3}$")]
+    [GeneratedRegex(@"^LRS\d{4}-\d{3}$")]
     private static partial Regex ConsultantQuoteNumberRegex();
     
     private void ValidateConsultant() =>

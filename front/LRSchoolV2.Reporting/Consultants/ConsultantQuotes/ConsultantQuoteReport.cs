@@ -87,7 +87,7 @@ public class ConsultantQuoteReport(ConsultantQuote inConsultantQuote, IEnumerabl
         var rows = table.Elements<TableRow>().ToList();
         for (var i = 0 ; i < inConsultantQuoteItems.Count() ; i++)
         {
-            var item = inConsultantQuoteItems.OrderBy(inItem => inItem.Denomination).ElementAt(i);
+            var item = inConsultantQuoteItems.OrderBy(inItem => inItem.Order).ElementAt(i);
             var row = rows.ElementAt(i + 1);
             var cells = row.Elements<TableCell>().ToList();
             

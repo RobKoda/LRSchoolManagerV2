@@ -24,8 +24,17 @@ public class SaveConsultantQuoteFormModel
         }
     }
     
-    [Required(ErrorMessage = "L'intervenant est requise")]
-    public Consultant? Consultant { get; set; }
+    private Consultant? _consultant;
+    [Required(ErrorMessage = "L'intervenant est requis")]
+    public Consultant? Consultant
+    {
+        get => _consultant;
+        set
+        {
+            _consultant = value;
+            Number = GetNumber();
+        }
+    }
     
     public IList<SaveConsultantQuoteItemFormModel> Items { get; set; } = [];
     

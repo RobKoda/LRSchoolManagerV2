@@ -87,7 +87,7 @@ public class ConsultantInvoiceReport(ConsultantInvoice inConsultantInvoice, IEnu
         var rows = table.Elements<TableRow>().ToList();
         for (var i = 0 ; i < inConsultantInvoiceItems.Count() ; i++)
         {
-            var item = inConsultantInvoiceItems.OrderBy(inItem => inItem.Denomination).ElementAt(i);
+            var item = inConsultantInvoiceItems.OrderBy(inItem => inItem.Order).ElementAt(i);
             var row = rows.ElementAt(i + 1);
             var cells = row.Elements<TableCell>().ToList();
             
