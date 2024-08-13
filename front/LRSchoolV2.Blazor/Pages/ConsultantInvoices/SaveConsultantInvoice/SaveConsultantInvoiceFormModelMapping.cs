@@ -10,7 +10,7 @@ public class SaveConsultantInvoiceFormModelMapping : IRegister
     {
         TypeAdapterConfig<SaveConsultantInvoiceFormModel, ConsultantInvoice>
             .NewConfig()
-            .Map(inConsultantInvoice => inConsultantInvoice.InvoiceConsultantName, inFormModel => inFormModel.Consultant!.GetFullName())
-            .Map(inConsultantInvoice => inConsultantInvoice.InvoiceConsultantAddress, inFormModel => inFormModel.Consultant!.Address.GetFormattedAddress());
+            .Map(inConsultantInvoice => inConsultantInvoice.InvoiceConsultantName, inFormModel => inFormModel.Consultant.GetFullName())
+            .Map(inConsultantInvoice => inConsultantInvoice.InvoiceConsultantAddress, inFormModel => inFormModel.Consultant.Address.GetFormattedAddress());
     }
 }

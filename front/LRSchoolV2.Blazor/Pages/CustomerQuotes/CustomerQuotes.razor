@@ -24,7 +24,7 @@
 <MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
     <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnCustomerQuoteAddClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter un devis</MudButton>
     <MudButton StartIcon="@Icons.Material.Filled.Email" OnClick="@OnCustomerQuotesBulkSendEmailClick" Variant="Variant.Filled" Color="Color.Primary">Envoi d'emails</MudButton>
-    @if (_showAdvancedFunctions)
+    @if (_showAdvancedFunctions && DisplayedCustomerQuotes.Count > 0)
     {
         <MudButton Class="ml-8" StartIcon="@Icons.Material.Filled.Remove" OnClick="@OnCancelLastQuoteClick" Variant="Variant.Filled" Color="Color.Error">Annuler le dernier devis</MudButton>
     }

@@ -13,9 +13,10 @@ public class ConsultantInvoicesRepository(IDbContextFactory<ApplicationContext> 
     public Task<Option<ConsultantInvoice>> GetConsultantInvoiceAsync(Guid inConsultantInvoiceId) =>
         inContext.GetSingleAsync<ConsultantInvoiceDataModel, ConsultantInvoice>(inConsultantInvoiceId, GetConsultantInvoiceQueryableAsync);
     
-    public async Task<Option<ConsultantInvoice>> GetLastConsultantInvoiceAsync() =>
+    public async Task<Option<ConsultantInvoice>> GetLastConsultantInvoiceAsync(Guid inConsultantId) =>
         Optional(
             (await (await inContext.GetQueryableAsNoTrackingAsync<ConsultantInvoiceDataModel>())
+                .Where(inConsultantInvoiceDataModel => inConsultantInvoiceDataModel.ConsultantId == inConsultantId)
                 .OrderByDescending(inInvoice => inInvoice.Date)
                 .FirstOrDefaultAsync())
             .Adapt<ConsultantInvoice>());

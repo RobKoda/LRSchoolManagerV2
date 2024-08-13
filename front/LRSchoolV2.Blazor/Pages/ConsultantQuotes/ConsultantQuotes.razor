@@ -8,6 +8,7 @@
 @using LRSchoolV2.Blazor.Pages.Documents
 @using LRSchoolV2.Domain.Common
 @using LRSchoolV2.Domain.ConsultantQuotes
+@using LRSchoolV2.Domain.Consultants
 @using LRSchoolV2.Email.Abstractions
 @using LRSchoolV2.Email.Emails.ConsultantQuote
 @using LRSchoolV2.Email.Models.Attachments
@@ -23,57 +24,69 @@
 @inject DocumentsService DocumentsService
 @inject ISnackbar Snackbar
 
+
 <MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
-    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnConsultantQuoteAddClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter un devis</MudButton>
-    <MudButton StartIcon="@Icons.Material.Filled.Email" OnClick="@OnConsultantQuotesBulkSendEmailClick" Variant="Variant.Filled" Color="Color.Primary">Envoi d'emails</MudButton>
-    @if (_showAdvancedFunctions)
+    <MudSelect Label="Intervenant" @bind-Value="SelectedConsultant" Class="mb-3">
+        @foreach (var consultant in Consultants)
+        {
+            <MudSelectItem Value="consultant">@consultant.LastName - @consultant.FirstName</MudSelectItem>
+        }
+    </MudSelect>
+    
+    @if (SelectedConsultant != null)
     {
-        <MudButton Class="ml-8" StartIcon="@Icons.Material.Filled.Remove" OnClick="@OnCancelLastQuoteClick" Variant="Variant.Filled" Color="Color.Error">Annuler le dernier devis</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnConsultantQuoteAddClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter un devis</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Email" OnClick="@OnConsultantQuotesBulkSendEmailClick" Variant="Variant.Filled" Color="Color.Primary">Envoi d'emails</MudButton>
+        @if (_showAdvancedFunctions && DisplayedConsultantQuotes.Count > 0)
+        {
+            <MudButton Class="ml-8" StartIcon="@Icons.Material.Filled.Remove" OnClick="@OnCancelLastQuoteClick" Variant="Variant.Filled" Color="Color.Error">Annuler le dernier devis</MudButton>
+        }
+        
+        <MudPaper Class="mt-4">
+            <MudDataGrid T="ConsultantQuote" Items="DisplayedConsultantQuotes" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true"
+                         @bind-SelectedItems="@SelectedItems" MultiSelection="true">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Devis Clients</MudText>
+                    <MudSpacer/>
+                    <MudSwitch @bind-Value="_showAdvancedFunctions" Label="Fonctions avancées (et dangereuses)" Color="Color.Primary"/>
+                </ToolBarContent>
+                <Columns>
+                    <HierarchyColumn T="ConsultantQuote"/>
+                    <SelectColumn T="ConsultantQuote" ShowInHeader="false" ShowInFooter="false"/>
+                    <PropertyColumn T="ConsultantQuote" TProperty="string" Property="inConsultantQuote => inConsultantQuote.Number" Title="Numéro"/>
+                    <PropertyColumn T="ConsultantQuote" TProperty="DateTime" Property="inConsultantQuote => inConsultantQuote.Date" Title="Date" Format="dd/MM/yyyy"/>
+                    <PropertyColumn T="ConsultantQuote" TProperty="string" Property="inConsultantQuote => inConsultantQuote.QuoteConsultantName" Title="Nom du client"/>
+                    <PropertyColumn T="ConsultantQuote" TProperty="decimal" Property="inConsultantQuote => inConsultantQuote.TotalToPay" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px" Title="Total"/>
+                    <TemplateColumn T="ConsultantQuote" Title="Email envoyé">
+                        <CellTemplate>
+                            <MudCheckBox Value="context.Item.EmailSent" ReadOnly="true" Color="Color.Primary"/>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <TemplateColumn>
+                        <CellTemplate>
+                            <MudStack Row>
+                                <MudTooltip Text="Télécharger PDF">
+                                    <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(() => OnConsultantQuotePDFClick(context.Item!))" Size="Size.Small"/>
+                                </MudTooltip>
+                                <MudTooltip Text="Envoyer PDF par email">
+                                    <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Email" OnClick="@(() => OnConsultantQuoteSendByEmailClick(context.Item!))" Size="Size.Small"/>
+                                </MudTooltip>
+                                @if (_showAdvancedFunctions)
+                                {
+                                    <MudTooltip Text="Regénérer PDF">
+                                        <MudIconButton Variant="Variant.Filled" Color="Color.Error" Icon="@Icons.Material.Filled.RestartAlt" OnClick="@(() => OnConsultantQuotePDFRegenerationClick(context.Item!))" Size="Size.Small"/>
+                                    </MudTooltip>
+                                }
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <ChildRowContent>
+                    <ConsultantQuoteItems ConsultantQuote="@context.Item"/>
+                </ChildRowContent>
+            </MudDataGrid>
+        </MudPaper>
     }
-    <MudPaper Class="mt-4">
-        <MudDataGrid T="ConsultantQuote" Items="DisplayedConsultantQuotes" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true"
-                     @bind-SelectedItems="@SelectedItems" MultiSelection="true">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">Devis Clients</MudText>
-                <MudSpacer/>
-                <MudSwitch @bind-Value="_showAdvancedFunctions" Label="Fonctions avancées (et dangereuses)" Color="Color.Primary"/>
-            </ToolBarContent>
-            <Columns>
-                <HierarchyColumn T="ConsultantQuote"/>
-                <SelectColumn T="ConsultantQuote"  ShowInHeader="false"  ShowInFooter="false"/>
-                <PropertyColumn T="ConsultantQuote" TProperty="string" Property="inConsultantQuote => inConsultantQuote.Number" Title="Numéro"/>
-                <PropertyColumn T="ConsultantQuote" TProperty="DateTime" Property="inConsultantQuote => inConsultantQuote.Date" Title="Date" Format="dd/MM/yyyy"/>
-                <PropertyColumn T="ConsultantQuote" TProperty="string" Property="inConsultantQuote => inConsultantQuote.QuoteConsultantName" Title="Nom du client"/>
-                <PropertyColumn T="ConsultantQuote" TProperty="decimal" Property="inConsultantQuote => inConsultantQuote.TotalToPay" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px" Title="Total"/>
-                <TemplateColumn T="ConsultantQuote" Title="Email envoyé">
-                    <CellTemplate>
-                        <MudCheckBox Value="context.Item.EmailSent" ReadOnly="true" Color="Color.Primary"/>
-                    </CellTemplate>
-                </TemplateColumn>
-                <TemplateColumn>
-                    <CellTemplate>
-                        <MudStack Row>
-                            <MudTooltip Text="Télécharger PDF">
-                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(() => OnConsultantQuotePDFClick(context.Item!))" Size="Size.Small"/>
-                            </MudTooltip>
-                            <MudTooltip Text="Envoyer PDF par email">
-                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Email" OnClick="@(() => OnConsultantQuoteSendByEmailClick(context.Item!))" Size="Size.Small"/>
-                            </MudTooltip>
-                            @if (_showAdvancedFunctions)
-                            {
-                            <MudTooltip Text="Regénérer PDF">
-                                <MudIconButton Variant="Variant.Filled" Color="Color.Error" Icon="@Icons.Material.Filled.RestartAlt" OnClick="@(() => OnConsultantQuotePDFRegenerationClick(context.Item!))" Size="Size.Small"/>
-                            </MudTooltip>
-                            }
-                        </MudStack>
-                    </CellTemplate>
-                </TemplateColumn>
-            </Columns>
-            <ChildRowContent>
-                <ConsultantQuoteItems ConsultantQuote="@context.Item"/>
-            </ChildRowContent>
-        </MudDataGrid>
-    </MudPaper>
 </MudContainer>
 @if (_isLoading)
 {
@@ -81,33 +94,58 @@
 }
 
 @code {
-    private ObservableCollection<ConsultantQuote> DisplayedConsultantQuotes { get; set; } = null!;
-
+    private ObservableCollection<ConsultantQuote> DisplayedConsultantQuotes { get; set; } = [];
+    private IEnumerable<ConsultantQuote> AllConsultantQuotes { get; set; } = [];
+    private HashSet<ConsultantQuote> SelectedItems { get; set; } = [];
+    private ObservableCollection<Consultant> Consultants { get; set; } = [];
+    
+    private Consultant? _selectedConsultant;
+    private Consultant? SelectedConsultant
+    {
+        get => _selectedConsultant;
+        set
+        {
+            _selectedConsultant = value;
+            RefreshQuotes();
+        }
+    }
+    
     private bool _showAdvancedFunctions;
     private bool _isLoading;
-
-    private HashSet<ConsultantQuote> SelectedItems { get; set; } = [];
-
+    
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         await ReloadDataAsync();
     }
-
+    
     private async Task ReloadDataAsync()
     {
-        var getQuotesResponse = await ConsultantQuotesService.GetConsultantQuotesAsync();
-        DisplayedConsultantQuotes = [];
-        DisplayedConsultantQuotes = new ObservableCollection<ConsultantQuote>(getQuotesResponse.ConsultantQuotes.OrderByDescending(inQuote => inQuote.Number)); 
+        AllConsultantQuotes = (await ConsultantQuotesService.GetConsultantQuotesAsync()).ConsultantQuotes;
+        Consultants = new ObservableCollection<Consultant>(
+            (await ConsultantsService.GetConsultantsAsync())
+            .OrderBy(inConsultant => inConsultant.LastName)
+            .ThenBy(inConsultant => inConsultant.FirstName));
+        RefreshQuotes();
     }
-
+    
+    private void RefreshQuotes()
+    {
+        if (SelectedConsultant == null) return;
+        
+        DisplayedConsultantQuotes = new ObservableCollection<ConsultantQuote>(
+            AllConsultantQuotes
+                .Where(inQuote => inQuote.Consultant.Id == SelectedConsultant!.Id)
+                .OrderByDescending(inQuote => inQuote.Number));
+    }
+    
     private async Task OnConsultantQuotePDFClick(ConsultantQuote inConsultantQuote)
     {
         var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inConsultantQuote.Id);
         await document.IfSomeAsync(async inSome => await DownloadFileService.DownloadFile(inSome.FileName, inSome.FileContent, inSome.ContentType));
         document.IfNone(() => Snackbar.Add("Le devis n'a pas été trouvé", Severity.Error));
     }
-
+    
     private async Task OnConsultantQuotePDFRegenerationClick(ConsultantQuote inConsultantQuote)
     {
         var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir regénérer le devis ?", "Regénérer un devis", "Annuler", "Confirmer");
@@ -152,7 +190,7 @@
     private async Task OnConsultantQuotesBulkSendEmailClick()
     {
         _isLoading = true;
-
+        
         var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir envoyer les emails pour le devis sélectionnées ?", "Envoi des devis", "Annuler", "Confirmer");
         var dialogResult = await dialog.Result;
         if (dialogResult is { Canceled: false })
@@ -161,12 +199,13 @@
             {
                 await SendEmail(quote);
             }
+            
             await ReloadDataAsync();
         }
-
+        
         _isLoading = false;
     }
-
+    
     private async Task OnCancelLastQuoteClick()
     {
         var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir annuler le dernier le devis ?", "Annuler le dernier devis", "Annuler", "Confirmer");
@@ -178,17 +217,18 @@
             await ReloadDataAsync();
         }
     }
-
+    
     private async Task OnConsultantQuoteSendByEmailClick(ConsultantQuote inConsultantQuote)
     {
         _isLoading = true;
-
+        
         var dialog = await DialogService.Confirm("Êtes-vous sur de vouloir envoyer le devis par email ?", "Envoyer le devis par email", "Annuler", "Confirmer");
         var dialogResult = await dialog.Result;
         if (dialogResult is { Canceled: false })
         {
             await SendEmail(inConsultantQuote);
         }
+        
         _isLoading = false;
     }
     
@@ -196,27 +236,26 @@
     {
         var dialogParameters = new DialogParameters
         {
-            {
+            { nameof(SaveConsultantQuoteDialog.Consultant), SelectedConsultant },
 #pragma warning disable CS8974 // Converting method group to non-delegate type
-                nameof(SaveConsultantQuoteDialog.GeneratePdfMethod), GeneratePdf
+            { nameof(SaveConsultantQuoteDialog.GeneratePdfMethod), GeneratePdf }
 #pragma warning restore CS8974 // Converting method group to non-delegate type
-            }
         };
         var dialog = await DialogService.ShowAsync<SaveConsultantQuoteDialog>("Ajout d'un devis client", dialogParameters,
-        new DialogOptions
-        {
-            CloseOnEscapeKey = true,
-            BackdropClick = false,
-            FullWidth = true,
-            MaxWidth = MaxWidth.Large
-        });
+            new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                BackdropClick = false,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Large
+            });
         var dialogResult = await dialog.Result;
         if (dialogResult is { Canceled: false })
         {
             await ReloadDataAsync();
         }
     }
-
+    
     private async Task SendEmail(ConsultantQuote inConsultantQuote)
     {
         var document = await DocumentsService.GetDocumentPerReferenceIdAsync(inConsultantQuote.Id);
@@ -229,7 +268,7 @@
                     Content = inSome.FileContent,
                     Type = EmailAttachmentType.Pdf
                 });
-
+            
             if (!inConsultantQuote.EmailSent)
             {
                 inConsultantQuote = inConsultantQuote with
@@ -240,9 +279,10 @@
                 result.IfFail(inFailure => Snackbar.Add(inFailure.First(), Severity.Error));
                 await ReloadDataAsync();
             }
-
+            
             Snackbar.Add($"Le devis a été envoyée à {inConsultantQuote.Consultant.Email}", Severity.Success);
         });
         document.IfNone(() => { Snackbar.Add("Le devis n'a pas été trouvé", Severity.Error); });
     }
+    
 }

@@ -24,31 +24,22 @@ public class SaveConsultantQuoteFormModel
         }
     }
     
-    private Consultant? _consultant;
-    [Required(ErrorMessage = "L'intervenant est requis")]
-    public Consultant? Consultant
-    {
-        get => _consultant;
-        set
-        {
-            _consultant = value;
-            Number = GetNumber();
-        }
-    }
+    public Consultant Consultant { get; set; }
     
     public IList<SaveConsultantQuoteItemFormModel> Items { get; set; } = [];
     
     public IEnumerable<ConsultantQuote> ConsultantQuotes { get; set; }
 
-    public SaveConsultantQuoteFormModel(IEnumerable<ConsultantQuote> inConsultantQuotes)
+    public SaveConsultantQuoteFormModel(IEnumerable<ConsultantQuote> inConsultantQuotes, Consultant inConsultant)
     {
         ConsultantQuotes = inConsultantQuotes;
+        Consultant = inConsultant;
         Date = DateTime.Today;
     }
     
     private string GetNumber()
     {
-        return Date.HasValue && Consultant != null ? ConsultantQuote.GetQuoteNumber(Date.Value, ConsultantQuotes, Consultant.Id) : string.Empty;
+        return Date.HasValue ? ConsultantQuote.GetQuoteNumber(Date.Value, ConsultantQuotes, Consultant.Id) : string.Empty;
     }
     
     public int GetNextOrder() => Items.Count > 0 ? Items.Max(inItem => inItem.Order) + 1 : 1;

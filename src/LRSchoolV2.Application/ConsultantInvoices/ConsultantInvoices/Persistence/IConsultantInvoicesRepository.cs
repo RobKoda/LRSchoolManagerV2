@@ -7,7 +7,7 @@ namespace LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoices.Persisten
 public interface IConsultantInvoicesRepository : IRepository
 {
     Task<Option<ConsultantInvoice>> GetConsultantInvoiceAsync(Guid inConsultantInvoiceId);
-    Task<Option<ConsultantInvoice>> GetLastConsultantInvoiceAsync();
+    Task<Option<ConsultantInvoice>> GetLastConsultantInvoiceAsync(Guid inConsultantId);
     Task<IEnumerable<ConsultantInvoice>> GetConsultantInvoicesAsync();
     Task SaveConsultantInvoiceAsync(ConsultantInvoice inConsultantInvoice);
     Task<bool> AnyConsultantInvoiceAsync(Guid inContactConsultantInvoiceId);

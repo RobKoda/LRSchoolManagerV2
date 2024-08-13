@@ -7,7 +7,7 @@ namespace LRSchoolV2.Application.ConsultantQuotes.ConsultantQuotes.Persistence;
 public interface IConsultantQuotesRepository : IRepository
 {
     Task<Option<ConsultantQuote>> GetConsultantQuoteAsync(Guid inConsultantQuoteId);
-    Task<Option<ConsultantQuote>> GetLastConsultantQuoteAsync();
+    Task<Option<ConsultantQuote>> GetLastConsultantQuoteAsync(Guid inConsultantId);
     Task<IEnumerable<ConsultantQuote>> GetConsultantQuotesAsync();
     Task SaveConsultantQuoteAsync(ConsultantQuote inConsultantQuote);
     Task<bool> AnyConsultantQuoteAsync(Guid inContactConsultantQuoteId);

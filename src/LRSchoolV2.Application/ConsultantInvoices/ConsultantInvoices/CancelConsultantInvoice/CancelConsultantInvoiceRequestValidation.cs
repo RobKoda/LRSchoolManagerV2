@@ -21,7 +21,7 @@ public class CancelConsultantInvoiceRequestValidation(
     private void ValidateIsLastConsultantInvoice() =>
         RuleFor(inRequest => inRequest.ConsultantInvoice)
             .MustAsync(async (inInvoice, _) =>
-                (await inConsultantInvoicesRepository.GetLastConsultantInvoiceAsync())
+                (await inConsultantInvoicesRepository.GetLastConsultantInvoiceAsync(inInvoice.Consultant.Id))
                 .Match(inSome => inInvoice.Id == inSome.Id, () => false)
             )
             .WithMessage(CancelConsultantInvoiceRequestValidationErrors.NotTheLastConsultantInvoice);

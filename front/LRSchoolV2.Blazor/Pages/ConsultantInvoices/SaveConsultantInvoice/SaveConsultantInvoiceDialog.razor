@@ -27,10 +27,6 @@
                     <MudItem xs="6">
                         <MudDatePicker Label="Date de la facture" @bind-Date="Model.Date" For="@(() => Model.Date)" Editable="true"/>
                     </MudItem>
-                    <MudItem xs="12">
-                        <MudAutocomplete T="Consultant?" Label="Intervenant" @bind-Value="Model.Consultant" For="@(() => Model.Consultant)" ResetValueOnEmptyText="true" Clearable="true"
-                                         ToStringFunc="@(inConsultant => inConsultant?.GetDropdownText() ?? string.Empty)" SearchFunc="SearchConsultant"/>
-                    </MudItem>
                     <MudItem xs="12" Class="pl-8 mt-4 mb-2">
                         <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="@(() => { Model.Items.Add(new SaveConsultantInvoiceItemFormModel(Model.GetNextOrder())); })" Color="Color.Primary" Variant="Variant.Filled"/>
                     </MudItem>
@@ -85,27 +81,24 @@
     public SaveConsultantInvoiceFormModel? Model { get; set; }
     
     [Parameter]
-    public Func<ConsultantInvoice, Task> GeneratePdfMethod { get; set; } = null!;
+    public Consultant Consultant { get; set; } = null!;
     
-    private IOrderedEnumerable<Consultant> Consultants { get; set; } = null!;
+    [Parameter]
+    public Func<ConsultantInvoice, Task> GeneratePdfMethod { get; set; } = null!;
     
     private bool _isLoading;
     
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        await ReloadPersons();
         var consultantInvoices = (await ConsultantInvoicesService.GetConsultantInvoicesAsync()).ConsultantInvoices;
-        Model ??= new SaveConsultantInvoiceFormModel(consultantInvoices);
+        Model ??= new SaveConsultantInvoiceFormModel(consultantInvoices, Consultant);
     }
-    
-    private async Task ReloadPersons() => Consultants = (await ConsultantsService.GetConsultantsAsync())
-        .OrderBy(inPerson => inPerson.LastName).ThenBy(inPerson => inPerson.FirstName);
     
     private async Task Submit()
     {
         _isLoading = true;
-        var document = await ConsultantsService.GetConsultantInvoiceDocumentAsync(Model!.Consultant!.Id);
+        var document = await ConsultantsService.GetConsultantInvoiceDocumentAsync(Model!.Consultant.Id);
         if (document.IsNone)
         {
             Snackbar.Add("Pas de document de facture uploadée pour le consultant", Severity.Error);
@@ -162,9 +155,4 @@
     }
     
     private void Cancel() => MudDialog.Cancel();
-    
-    private Task<IEnumerable<Consultant>> SearchConsultant(string inValue, CancellationToken inCancellationToken) => Task.FromResult(
-        string.IsNullOrWhiteSpace(inValue) ? Consultants : Consultants.Where(inPerson => inPerson.GetFullName().Contains(inValue, StringComparison.InvariantCultureIgnoreCase))
-    );
-    
 }

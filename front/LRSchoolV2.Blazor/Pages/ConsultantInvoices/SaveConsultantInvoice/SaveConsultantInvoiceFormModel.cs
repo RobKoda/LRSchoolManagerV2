@@ -24,31 +24,22 @@ public class SaveConsultantInvoiceFormModel
         }
     }
     
-    private Consultant? _consultant;
-    [Required(ErrorMessage = "L'intervenant est requis")]
-    public Consultant? Consultant
-    {
-        get => _consultant;
-        set
-        {
-            _consultant = value;
-            Number = GetNumber();
-        }
-    }
+    public Consultant Consultant { get; set; }
     
     public IList<SaveConsultantInvoiceItemFormModel> Items { get; set; } = [];
     
     public IEnumerable<ConsultantInvoice> ConsultantInvoices { get; set; }
 
-    public SaveConsultantInvoiceFormModel(IEnumerable<ConsultantInvoice> inConsultantInvoices)
+    public SaveConsultantInvoiceFormModel(IEnumerable<ConsultantInvoice> inConsultantInvoices, Consultant inConsultant)
     {
         ConsultantInvoices = inConsultantInvoices;
+        Consultant = inConsultant;
         Date = DateTime.Today;
     }
     
     private string GetNumber()
     {
-        return Date.HasValue && Consultant != null ? ConsultantInvoice.GetInvoiceNumber(Date.Value, ConsultantInvoices, Consultant.Id) : string.Empty;
+        return Date.HasValue ? ConsultantInvoice.GetInvoiceNumber(Date.Value, ConsultantInvoices, Consultant.Id) : string.Empty;
     }
     
     public int GetNextOrder() => Items.Count > 0 ? Items.Max(inItem => inItem.Order) + 1 : 1;

@@ -25,7 +25,7 @@
     <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@OnCustomerInvoiceAddClick" Variant="Variant.Filled" Color="Color.Primary">Ajouter une facture</MudButton>
     <MudButton StartIcon="@Icons.Material.Filled.NoteAdd" OnClick="@OnCustomerInvoicesGenerationClick" Variant="Variant.Filled" Color="Color.Primary">Génération des factures</MudButton>
     <MudButton StartIcon="@Icons.Material.Filled.Email" OnClick="@OnCustomerInvoicesBulkSendEmailClick" Variant="Variant.Filled" Color="Color.Primary">Envoi d'emails</MudButton>
-    @if (_showAdvancedFunctions)
+    @if (_showAdvancedFunctions && DisplayedCustomerInvoices.Count > 0)
     {
         <MudButton Class="ml-8" StartIcon="@Icons.Material.Filled.Remove" OnClick="@OnCancelLastInvoiceClick" Variant="Variant.Filled" Color="Color.Error">Annuler la dernière facture</MudButton>
     }

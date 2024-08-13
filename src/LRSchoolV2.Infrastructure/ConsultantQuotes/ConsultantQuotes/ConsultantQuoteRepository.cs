@@ -13,9 +13,10 @@ public class ConsultantQuotesRepository(IDbContextFactory<ApplicationContext> in
     public Task<Option<ConsultantQuote>> GetConsultantQuoteAsync(Guid inConsultantQuoteId) =>
         inContext.GetSingleAsync<ConsultantQuoteDataModel, ConsultantQuote>(inConsultantQuoteId, GetConsultantQuoteQueryableAsync);
     
-    public async Task<Option<ConsultantQuote>> GetLastConsultantQuoteAsync() =>
+    public async Task<Option<ConsultantQuote>> GetLastConsultantQuoteAsync(Guid inConsultantId) =>
         Optional(
             (await (await inContext.GetQueryableAsNoTrackingAsync<ConsultantQuoteDataModel>())
+                .Where(inQuote => inQuote.ConsultantId == inConsultantId)
                 .OrderByDescending(inQuote => inQuote.Date)
                 .FirstOrDefaultAsync())
             .Adapt<ConsultantQuote>());

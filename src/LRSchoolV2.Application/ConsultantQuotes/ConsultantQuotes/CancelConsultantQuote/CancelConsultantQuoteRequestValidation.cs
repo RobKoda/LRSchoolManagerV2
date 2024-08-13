@@ -21,7 +21,7 @@ public class CancelConsultantQuoteRequestValidation(
     private void ValidateIsLastConsultantQuote() =>
         RuleFor(inRequest => inRequest.ConsultantQuote)
             .MustAsync(async (inQuote, _) =>
-                (await inConsultantQuotesRepository.GetLastConsultantQuoteAsync())
+                (await inConsultantQuotesRepository.GetLastConsultantQuoteAsync(inQuote.Consultant.Id))
                 .Match(inSome => inQuote.Id == inSome.Id, () => false)
             )
             .WithMessage(CancelConsultantQuoteRequestValidationErrors.NotTheLastConsultantQuote);
