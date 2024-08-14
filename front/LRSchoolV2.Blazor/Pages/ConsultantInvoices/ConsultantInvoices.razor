@@ -15,16 +15,19 @@
 @using LRSchoolV2.Reporting.Consultants.ConsultantInvoices
 @using Unit = LanguageExt.Unit
 
-@inject IDialogService DialogService
-@inject IEmailSender EmailSender
 @inject ConsultantsService ConsultantsService
 @inject ConsultantInvoicesService ConsultantInvoicesService
-@inject ConsultantInvoiceItemsService ConsultantInvoiceItemsService 
-@inject IBlazorDownloadFileService DownloadFileService
+@inject ConsultantInvoiceItemsService ConsultantInvoiceItemsService
+@inject IDialogService DialogService
 @inject DocumentsService DocumentsService
+@inject IBlazorDownloadFileService DownloadFileService
+@inject IEmailSender EmailSender 
+@inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
 <MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+
+    <MudButton StartIcon="@Icons.Material.Filled.NoteAdd" OnClick="@OnConsultantInvoicesGenerationClick" Variant="Variant.Filled" Color="Color.Primary">Génération des factures</MudButton>
     <MudSelect Label="Intervenant" @bind-Value="SelectedConsultant" Class="mb-3">
         @foreach (var consultant in Consultants)
         {
@@ -284,6 +287,11 @@
             Snackbar.Add($"La facture a été envoyée à {inConsultantInvoice.Consultant.Email}", Severity.Success);
         });
         document.IfNone(() => { Snackbar.Add("La facture n'a pas été trouvé", Severity.Error); });
+    }
+    
+    private void OnConsultantInvoicesGenerationClick()
+    {
+        NavigationManager.NavigateTo("/ConsultantInvoices/Generation");
     }
     
 }

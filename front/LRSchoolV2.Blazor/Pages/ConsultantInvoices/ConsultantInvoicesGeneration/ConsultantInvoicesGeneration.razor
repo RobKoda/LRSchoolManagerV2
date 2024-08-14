@@ -1,0 +1,115 @@
+﻿@page "/ConsultantInvoices/Generation"
+
+@using LRSchoolV2.Blazor.Pages.SchoolYears
+@using LRSchoolV2.Domain.Common
+@using LRSchoolV2.Domain.ConsultantInvoices
+
+@inject ConsultantInvoiceablesService ConsultantInvoiceablesService
+@inject ConsultantInvoicesService ConsultantInvoicesService
+@inject NavigationManager NavigationManager 
+@inject SchoolYearsService SchoolYearsService
+@inject ISnackbar Snackbar
+
+<MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
+    <MudSelect Label="Année scolaire" @bind-Value="SelectedSchoolYear" Class="mb-3">
+        @foreach (var schoolYear in SchoolYears)
+        {
+            <MudSelectItem Value="schoolYear">@schoolYear.GetPeriodDisplay()</MudSelectItem>
+        }
+    </MudSelect>
+    
+    <MudButton StartIcon="@Icons.Material.Filled.NoteAdd" OnClick="@OnInvoicesGenerate" Variant="Variant.Filled" Color="Color.Primary">Générer</MudButton>
+    
+    <MudPaper Class="mt-4">
+        <MudDataGrid T="ConsultantInvoiceableFormModel" Items="DisplayedConsultantInvoiceables" Hover="true" Style="user-select: none;" SortMode="SortMode.Single" MultiSelection="true" SelectOnRowClick="false" @bind-SelectedItems="SelectedConsultantInvoiceables" Dense="true" Bordered="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">À générer</MudText>
+            </ToolBarContent>
+            <Columns>
+                <SelectColumn T="ConsultantInvoiceableFormModel" ShowInFooter="false" Size="Size.Small"/>
+                <PropertyColumn T="ConsultantInvoiceableFormModel" TProperty="string" Property="inConsultantInvoiceable => inConsultantInvoiceable.Consultant.GetFullName()" Title="Intervenant"/>
+                <PropertyColumn T="ConsultantInvoiceableFormModel" TProperty="string" Property="inConsultantInvoiceable => inConsultantInvoiceable.Denomination" Title="Description"/>
+                <PropertyColumn T="ConsultantInvoiceableFormModel" TProperty="decimal" Property="inConsultantInvoiceable => inConsultantInvoiceable.Price" Title="Prix" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                <PropertyColumn T="ConsultantInvoiceableFormModel" TProperty="decimal" Property="inConsultantInvoiceable => inConsultantInvoiceable.AlreadyBilled" Title="Déjà facturé" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                <PropertyColumn T="ConsultantInvoiceableFormModel" TProperty="decimal" Property="inConsultantInvoiceable => inConsultantInvoiceable.GetLeftToBill()" Title="Reste à facturer" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                <PropertyColumn T="ConsultantInvoiceableFormModel" TProperty="int" Property="inConsultantInvoiceable => inConsultantInvoiceable.BilledPaymentsCount" Title="Paiements effectués" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                <PropertyColumn T="ConsultantInvoiceableFormModel" TProperty="int" Property="inConsultantInvoiceable => inConsultantInvoiceable.PaymentsCount" Title="Nombre total paiements" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px"/>
+                <TemplateColumn T="ConsultantInvoiceableFormModel" Title="Compléter le paiement total">
+                    <CellTemplate>
+                        @if (context.Item.PaymentsCount > 1)
+                        {
+                            <MudCheckBox @bind-Value="@context.Item.CompletePayment"/>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@if (_isLoading)
+{
+    <LoadingSpinner/>
+}
+
+@code {
+    private ObservableCollection<ConsultantInvoiceableFormModel> DisplayedConsultantInvoiceables { get; set; } = [];
+    private HashSet<ConsultantInvoiceableFormModel> SelectedConsultantInvoiceables { get; set; } = [];
+    private IEnumerable<ConsultantInvoiceableFormModel> AllConsultantInvoiceables { get; set; } = [];
+    
+    private ObservableCollection<SchoolYear> SchoolYears { get; set; } = [];
+    
+    private SchoolYear? _selectedSchoolYear;
+    private SchoolYear? SelectedSchoolYear
+    {
+        get => _selectedSchoolYear;
+        set
+        {
+            _selectedSchoolYear = value;
+            RefreshInvoiceables();
+        }
+    }
+    
+    private bool _isLoading;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ReloadDataAsync();
+    }
+
+    private async Task ReloadDataAsync()
+    {
+        SchoolYears = new ObservableCollection<SchoolYear>(
+            (await SchoolYearsService.GetSchoolYearsAsync())
+            .OrderBy(inSchoolYear => inSchoolYear.StartDate));
+        
+        AllConsultantInvoiceables = 
+            (await ConsultantInvoiceablesService.GetConsultantInvoiceablesAsync())
+                .OrderBy(inConsultantInvoiceable => inConsultantInvoiceable.Denomination)
+                .Adapt<IEnumerable<ConsultantInvoiceableFormModel>>();
+    }
+
+    private async Task OnInvoicesGenerate()
+    {
+        _isLoading = true;
+        
+        var result = await ConsultantInvoicesService.GenerateConsultantInvoicesAsync(SelectedConsultantInvoiceables.Adapt<IEnumerable<ConsultantInvoiceable>>());
+        result.Match(_ => { NavigationManager.NavigateTo("/ConsultantInvoices"); },
+            inFailure => { Snackbar.Add(string.Join("<br/>", inFailure), Severity.Error); });
+        
+        _isLoading = false;
+    }
+    
+    private void RefreshInvoiceables()
+    {
+        if (SelectedSchoolYear == null) return;
+        
+        DisplayedConsultantInvoiceables = new ObservableCollection<ConsultantInvoiceableFormModel>(
+            AllConsultantInvoiceables
+                .Where(inInvoiceable => inInvoiceable.SchoolYear.Id == SelectedSchoolYear.Id)
+                .OrderBy(inInvoiceable => inInvoiceable.Denomination)
+                .ThenBy(inInvoiceable => inInvoiceable.Consultant.LastName));
+    }
+    
+}

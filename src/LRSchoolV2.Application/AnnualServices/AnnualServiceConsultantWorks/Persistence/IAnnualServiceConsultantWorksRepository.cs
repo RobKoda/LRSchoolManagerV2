@@ -6,6 +6,7 @@ namespace LRSchoolV2.Application.AnnualServices.AnnualServiceConsultantWorks.Per
 
 public interface IAnnualServiceConsultantWorksRepository : IRepository
 {
+    Task<IEnumerable<AnnualServiceConsultantWork>> GetAnnualServiceConsultantWorksAsync();
     Task<IEnumerable<AnnualServiceConsultantWork>> GetAnnualServiceConsultantWorksPerAnnualServiceAsync(Guid inAnnualServiceId);
     Task<bool> AnyAnnualServiceConsultantWorkAsync(Guid inAnnualServiceConsultantWorkId);
     Task DeleteAnnualServiceConsultantWorkAsync(Guid inAnnualServiceConsultantWorkId);

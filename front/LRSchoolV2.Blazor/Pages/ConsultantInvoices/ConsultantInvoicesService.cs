@@ -2,6 +2,7 @@
 using LanguageExt;
 using LRSchoolV2.Application.Core;
 using LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoices.CancelConsultantInvoice;
+using LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoices.GenerateConsultantInvoices;
 using LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoices.GetConsultantInvoices;
 using LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoices.SaveConsultantInvoice;
 using LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoices.SetConsultantInvoiceEmailSent;
@@ -38,4 +39,7 @@ public class ConsultantInvoicesService(
             Validation<string, Unit>.Fail(new Seq<string>(validationResult.Errors.Select(inValidationFailure => inValidationFailure.ErrorMessage))) : 
             Validation<string, Unit>.Success(default!);
     }
+    
+    public async Task<Validation<string, Unit>> GenerateConsultantInvoicesAsync(IEnumerable<ConsultantInvoiceable> inConsultantInvoiceables) =>
+        (await inMediator.Send(new GenerateConsultantInvoicesQuery(inConsultantInvoiceables))).Validation;
 }

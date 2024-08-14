@@ -1,4 +1,5 @@
 ﻿using LRSchoolV2.Application.Persons.PersonAnnualServiceVariations.Persistence;
+using LRSchoolV2.Domain.ConsultantInvoices;
 using LRSchoolV2.Domain.CustomerInvoices;
 using LRSchoolV2.Domain.Persons;
 using LRSchoolV2.Infrastructure.CustomerInvoices.CustomerInvoiceItems;
@@ -57,7 +58,6 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
     public Task SavePersonAnnualServiceVariationAsync(PersonAnnualServiceVariation inPersonAnnual) =>
         inContext.SaveAsync<PersonAnnualServiceVariationDataModel, PersonAnnualServiceVariation>(inPersonAnnual);
     
-    
     public Task<IEnumerable<PersonAnnualServiceVariation>> GetNonBilledPersonAnnualServiceVariations() =>
         inContext.GetAllAsync<PersonAnnualServiceVariationDataModel, PersonAnnualServiceVariation>(inQueryable =>
             GetPersonServiceVariationQueryableAsync(inQueryable)
@@ -69,6 +69,12 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
             .ExecuteUpdateAsync(inUpdate => inUpdate.SetProperty(
                 inPersonAnnualServiceVariation => inPersonAnnualServiceVariation.IsFullyBilled, inIsFullyBilled));
     
+    public async Task SetConsultantFullyBilledAsync(IEnumerable<Guid> inIds, bool inIsFullyBilled) =>
+        await (await inContext.GetQueryableAsNoTrackingAsync<PersonAnnualServiceVariationDataModel>())
+            .Where(inPersonRegistration => inIds.Contains(inPersonRegistration.Id))
+            .ExecuteUpdateAsync(inUpdate => inUpdate.SetProperty(
+                inPersonAnnualServiceVariation => inPersonAnnualServiceVariation.ConsultantIsFullyBilled, inIsFullyBilled));
+    
     public async Task<IEnumerable<CustomerInvoiceItem>> GetNonBilledPersonAnnualServiceVariationBilledItems()
     {
         var context = await inContext.GetContextAsync();
@@ -79,6 +85,24 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
         return await context.CustomerInvoiceItems.AsNoTracking()
             .Where(inCustomerInvoiceItem => inCustomerInvoiceItem.ReferenceId.HasValue && nonBilledVariationsQueryable.Contains(inCustomerInvoiceItem.ReferenceId.Value))
             .ProjectToType<CustomerInvoiceItem>()
+            .ToListAsync();
+    }
+    
+    public Task<IEnumerable<PersonAnnualServiceVariation>> GetConsultantNonBilledPersonAnnualServiceVariations() =>
+        inContext.GetAllAsync<PersonAnnualServiceVariationDataModel, PersonAnnualServiceVariation>(inQueryable =>
+            GetPersonServiceVariationQueryableAsync(inQueryable)
+                .Where(inPersonAnnualServiceVariation => !inPersonAnnualServiceVariation.ConsultantIsFullyBilled));
+    
+    public async Task<IEnumerable<ConsultantInvoiceItem>> GetConsultantNonBilledPersonAnnualServiceVariationBilledItems()
+    {
+        var context = await inContext.GetContextAsync();
+        var nonBilledVariationsQueryable = context.PersonAnnualServiceVariations.AsNoTracking()
+            .Where(inPersonAnnualServiceVariation => !inPersonAnnualServiceVariation.ConsultantIsFullyBilled)
+            .Select(inPersonAnnualServiceVariation => inPersonAnnualServiceVariation.Id);
+        
+        return await context.ConsultantInvoiceItems.AsNoTracking()
+            .Where(inCustomerInvoiceItem => inCustomerInvoiceItem.ReferenceId.HasValue && nonBilledVariationsQueryable.Contains(inCustomerInvoiceItem.ReferenceId.Value))
+            .ProjectToType<ConsultantInvoiceItem>()
             .ToListAsync();
     }
 

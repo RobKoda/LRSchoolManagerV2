@@ -7,14 +7,12 @@ namespace LRSchoolV2.Infrastructure.AnnualServices.AnnualServiceConsultantWorks;
 
 public class AnnualServiceConsultantWorksRepository(IDbContextFactory<ApplicationContext> inContext) : IAnnualServiceConsultantWorksRepository
 {
+    public Task<IEnumerable<AnnualServiceConsultantWork>> GetAnnualServiceConsultantWorksAsync() =>
+        inContext.GetAllAsync<AnnualServiceConsultantWorkDataModel, AnnualServiceConsultantWork>();
+    
     public Task<IEnumerable<AnnualServiceConsultantWork>> GetAnnualServiceConsultantWorksPerAnnualServiceAsync(Guid inAnnualServiceId) =>
         inContext.GetAllAsync<AnnualServiceConsultantWorkDataModel, AnnualServiceConsultantWork>(inQueryable => inQueryable
             .Where(inConsultantWork => inConsultantWork.AnnualServiceId == inAnnualServiceId)
-        );
-    
-    public Task<IEnumerable<AnnualServiceConsultantWork>> GetAnnualServiceConsultantWorksPerSchoolYearAsync(Guid inSchoolYearId) =>
-        inContext.GetAllAsync<AnnualServiceConsultantWorkDataModel, AnnualServiceConsultantWork>(inQueryable => inQueryable
-            .Where(inConsultantWork => inConsultantWork.SchoolYearId == inSchoolYearId)
         );
     
     public Task<bool> AnyAnnualServiceConsultantWorkAsync(Guid inAnnualServiceConsultantWorkId) =>

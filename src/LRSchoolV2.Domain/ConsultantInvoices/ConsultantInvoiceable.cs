@@ -1,12 +1,15 @@
-﻿using LRSchoolV2.Domain.Consultants;
+﻿// ReSharper disable NotAccessedPositionalProperty.Global - Implicit use
 
-// ReSharper disable NotAccessedPositionalProperty.Global - Implicit use
+using LRSchoolV2.Domain.Common;
+using LRSchoolV2.Domain.Consultants;
+
 namespace LRSchoolV2.Domain.ConsultantInvoices;
 
 public record ConsultantInvoiceable(
     ConsultantInvoiceableReferenceType ConsultantInvoiceableReferenceType, 
+    SchoolYear SchoolYear,
+    Consultant Consultant,
     Guid ReferenceId, 
-    Consultant Consultant, 
     string Denomination, 
     decimal Price, 
     decimal AlreadyBilled,

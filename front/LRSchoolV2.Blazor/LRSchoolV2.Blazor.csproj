@@ -34,6 +34,7 @@
       <_ContentIncludedByDefault Remove="Pages\CustomerPayments\CustomerInvoicePayments\CustomerInvoicePayments.razor" />
       <_ContentIncludedByDefault Remove="Pages\CustomerPayments\CustomerInvoicePayments\SaveCustomerInvoicePayment\SaveCustomerInvoicePaymentDialog.razor" />
       <_ContentIncludedByDefault Remove="Pages\Persons\Unbalanced\SaveNonMember\SaveNonMemberDialog.razor" />
+      <_ContentIncludedByDefault Remove="Pages\ConsultantQuotes\ConsultantInvoicesGeneration\CustomerInvoicesGeneration.razor" />
     </ItemGroup>
 
     <ItemGroup>
