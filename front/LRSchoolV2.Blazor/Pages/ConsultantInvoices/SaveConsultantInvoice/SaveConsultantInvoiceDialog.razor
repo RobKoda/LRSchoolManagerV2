@@ -2,12 +2,15 @@
 @using LanguageExt
 @using LRSchoolV2.Blazor.Pages.ConsultantInvoices.ConsultantInvoiceItems
 @using LRSchoolV2.Blazor.Pages.Consultants
+@using LRSchoolV2.Blazor.Pages.SchoolYears
+@using LRSchoolV2.Domain.Common
 @using LRSchoolV2.Domain.ConsultantInvoices
 @using LRSchoolV2.Domain.Consultants
 
 @inject ConsultantsService ConsultantsService
 @inject ConsultantInvoicesService ConsultantInvoicesService
 @inject ConsultantInvoiceItemsService ConsultantInvoiceItemsService
+@inject SchoolYearsService SchoolYearsService
 @inject ISnackbar Snackbar
 
 @{
@@ -21,10 +24,18 @@
         <MudDialog>
             <DialogContent>
                 <MudGrid>
-                    <MudItem xs="6">
+                    <MudItem xs="4">
                         <MudTextField Label="Numéro" Value="Model.Number" For="@(() => Model.Number)" ReadOnly="true"/>
                     </MudItem>
-                    <MudItem xs="6">
+                    <MudItem xs="4">
+                        <MudSelect T="SchoolYear?" Label="Année scolaire" @bind-Value="Model.SchoolYear" For="@(() => Model.SchoolYear)">
+                            @foreach (var schoolYear in SchoolYears)
+                            {
+                            <MudSelectItem Value="schoolYear">@schoolYear.StartDate.ToShortDateString() - @schoolYear.EndDate.ToShortDateString()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="4">
                         <MudDatePicker Label="Date de la facture" @bind-Date="Model.Date" For="@(() => Model.Date)" Editable="true"/>
                     </MudItem>
                     <MudItem xs="12" Class="pl-8 mt-4 mb-2">
@@ -86,11 +97,14 @@
     [Parameter]
     public Func<ConsultantInvoice, Task> GeneratePdfMethod { get; set; } = null!;
     
+    private ObservableCollection<SchoolYear> SchoolYears { get; set; } = [];
+    
     private bool _isLoading;
     
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        SchoolYears = new ObservableCollection<SchoolYear>((await SchoolYearsService.GetSchoolYearsAsync()).OrderByDescending(inSchoolYear => inSchoolYear.StartDate));
         var consultantInvoices = (await ConsultantInvoicesService.GetConsultantInvoicesAsync()).ConsultantInvoices;
         Model ??= new SaveConsultantInvoiceFormModel(consultantInvoices, Consultant);
     }
@@ -108,6 +122,11 @@
         
         var consultantInvoices = (await ConsultantInvoicesService.GetConsultantInvoicesAsync()).ConsultantInvoices;
         Model.ConsultantInvoices = consultantInvoices;
+        foreach (var saveConsultantInvoiceItemFormModel in Model.Items)
+        {
+            saveConsultantInvoiceItemFormModel.SchoolYear = Model.SchoolYear!;
+        }
+        
         var consultantInvoice = Model.Adapt<ConsultantInvoice>();
         
         var simulationResult = (await ConsultantInvoicesService.SimulateSaveConsultantInvoiceAsync(Model.Adapt<ConsultantInvoice>()))

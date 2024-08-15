@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using LRSchoolV2.Domain.Common;
 using LRSchoolV2.Domain.ConsultantInvoices;
+using LRSchoolV2.Infrastructure.Common.SchoolYears;
 using LRSchoolV2.Infrastructure.ConsultantInvoices.ConsultantInvoiceItems;
 using LRSchoolV2.Infrastructure.Consultants.Consultants;
 

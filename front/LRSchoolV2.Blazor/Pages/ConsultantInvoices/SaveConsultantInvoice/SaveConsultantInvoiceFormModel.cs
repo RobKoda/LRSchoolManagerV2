@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using LRSchoolV2.Domain.Common;
 using LRSchoolV2.Domain.ConsultantInvoices;
 using LRSchoolV2.Domain.Consultants;
 
@@ -26,6 +27,8 @@ public class SaveConsultantInvoiceFormModel
     
     public Consultant Consultant { get; set; }
     
+    [Required(ErrorMessage = "L'année scolaire est requise")]
+    public SchoolYear? SchoolYear { get; set; }
     public IList<SaveConsultantInvoiceItemFormModel> Items { get; set; } = [];
     
     public IEnumerable<ConsultantInvoice> ConsultantInvoices { get; set; }

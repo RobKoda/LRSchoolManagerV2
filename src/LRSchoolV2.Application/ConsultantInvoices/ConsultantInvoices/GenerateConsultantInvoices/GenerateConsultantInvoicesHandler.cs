@@ -6,6 +6,7 @@ using LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoices.GetConsultant
 using LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoices.SaveConsultantInvoice;
 using LRSchoolV2.Application.Consultants.Persistence;
 using LRSchoolV2.Application.Persons.PersonAnnualServiceVariations.Persistence;
+using LRSchoolV2.Domain.AnnualServices;
 using LRSchoolV2.Domain.Common;
 using LRSchoolV2.Domain.ConsultantInvoices;
 using LRSchoolV2.Domain.Persons;
@@ -75,6 +76,7 @@ public class GenerateConsultantInvoicesHandler(
                 items.Add(new ConsultantInvoiceItem(
                     Guid.NewGuid(),
                     consultantInvoice,
+                    consultantInvoiceable.SchoolYear,
                     consultantInvoiceable.ReferenceId,
                     1, // TODO
                     consultantInvoiceable.Denomination,
@@ -89,16 +91,20 @@ public class GenerateConsultantInvoicesHandler(
 
     private static decimal GetConsultantInvoiceItemPrice(ConsultantInvoiceable inConsultantInvoiceable, IEnumerable<PersonAnnualServiceVariation> inNonBilledPersonServiceVariations, IEnumerable<ConsultantInvoiceItem> inUnpaidPersonServiceVariationBilledItems)
     {
+        // TODO
+        return 0m;
+        /*
         // ReSharper disable once InvertIf - Nope.
         if (inConsultantInvoiceable.ConsultantInvoiceableReferenceType == ConsultantInvoiceableReferenceType.PersonAnnualServiceVariation)
         {
             var personServiceVariation = inNonBilledPersonServiceVariations.Single(inVariation => inVariation.Id == inConsultantInvoiceable.ReferenceId);
             return inConsultantInvoiceable.CompletePayment ? 
-                inConsultantInvoiceable.Price - PersonAnnualServiceVariation.GetConsultantAlreadyBilled(inUnpaidPersonServiceVariationBilledItems, personServiceVariation) : 
+                inConsultantInvoiceable.Price - AnnualServiceVariation.GetConsultantAlreadyBilled(inUnpaidPersonServiceVariationBilledItems, personServiceVariation) : 
                 Math.Round(inConsultantInvoiceable.Price / inConsultantInvoiceable.PaymentsCount, 2);
         }
 
         throw new InvalidOperationException("Reference type not found!");
+        */
     }
 
     private async Task SimulateGeneration(ConsultantInvoice inConsultantInvoice, IEnumerable<ConsultantInvoiceItem> inItems)

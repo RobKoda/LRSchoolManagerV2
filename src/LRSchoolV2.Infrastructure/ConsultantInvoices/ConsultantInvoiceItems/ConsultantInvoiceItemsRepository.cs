@@ -7,6 +7,9 @@ namespace LRSchoolV2.Infrastructure.ConsultantInvoices.ConsultantInvoiceItems;
 
 public class ConsultantInvoiceItemsRepository(IDbContextFactory<ApplicationContext> inContext) : IConsultantInvoiceItemsRepository
 {
+    public Task<IEnumerable<ConsultantInvoiceItem>> GetConsultantInvoiceItemsAsync() =>
+        inContext.GetAllAsync<ConsultantInvoiceItemDataModel, ConsultantInvoiceItem>();
+    
     public Task<IEnumerable<ConsultantInvoiceItem>> GetConsultantInvoiceItemsPerConsultantInvoiceAsync(Guid inConsultantInvoiceId) =>
         inContext.GetAllAsync<ConsultantInvoiceItemDataModel, ConsultantInvoiceItem>(inQueryable => GetConsultantInvoiceItemQueryableAsync(inQueryable)
             .Where(inInvoiceItem => inInvoiceItem.ConsultantInvoiceId == inConsultantInvoiceId)

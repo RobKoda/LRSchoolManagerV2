@@ -1,5 +1,6 @@
 ﻿using static LanguageExt.Prelude;
 using LRSchoolV2.Domain.ConsultantInvoices;
+using LRSchoolV2.Infrastructure.Common.SchoolYears;
 using LRSchoolV2.Infrastructure.ConsultantInvoices.ConsultantInvoices;
 using Mapster;
 
@@ -13,6 +14,7 @@ public class ConsultantInvoiceItemDataModelMapping : IRegister
         TypeAdapterConfig<ConsultantInvoiceItem, ConsultantInvoiceItemDataModel>
             .NewConfig()
             .Map(inDataModel => inDataModel.ConsultantInvoice, _ => (ConsultantInvoiceDataModel?) null)
+            .Map(inDataModel => inDataModel.SchoolYear, _ => (SchoolYearDataModel?) null)
             .Map(inDataModel => inDataModel.ReferenceId, inItem => inItem.ReferenceId.ToNullable());
         
         TypeAdapterConfig<ConsultantInvoiceItemDataModel, ConsultantInvoiceItem>

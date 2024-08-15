@@ -1,4 +1,5 @@
-﻿using LRSchoolV2.Domain.ConsultantInvoices;
+﻿using LRSchoolV2.Domain.Common;
+using LRSchoolV2.Domain.ConsultantInvoices;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global - Implicit use
 // ReSharper disable UnusedAutoPropertyAccessor.Global - Implicit use
@@ -10,6 +11,8 @@ public class SaveConsultantInvoiceItemFormModel(int inOrder)
     public Guid Id { get; set; } = Guid.NewGuid();
     
     public ConsultantInvoice? ConsultantInvoice { get; set; }
+    
+    public SchoolYear? SchoolYear { get; set; }
     
     public string Denomination { get; set; } = string.Empty;
     

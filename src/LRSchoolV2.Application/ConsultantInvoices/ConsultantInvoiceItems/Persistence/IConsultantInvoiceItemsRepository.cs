@@ -5,6 +5,7 @@ namespace LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoiceItems.Persi
 
 public interface IConsultantInvoiceItemsRepository : IRepository
 {
+    Task<IEnumerable<ConsultantInvoiceItem>> GetConsultantInvoiceItemsAsync();
     Task<IEnumerable<ConsultantInvoiceItem>> GetConsultantInvoiceItemsPerConsultantInvoiceAsync(Guid inConsultantInvoiceId);
     Task SaveConsultantInvoiceItemAsync(ConsultantInvoiceItem inConsultantInvoiceItem);
     Task DeleteConsultantInvoiceItemAsync(Guid inConsultantInvoiceItemId);

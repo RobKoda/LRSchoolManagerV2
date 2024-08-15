@@ -22,10 +22,4 @@ public record PersonAnnualServiceVariation(
 
     public static int GetBilledPaymentsCount(IEnumerable<CustomerInvoiceItem> inNonBilledPersonServiceVariationPayments, PersonAnnualServiceVariation inPersonAnnualServiceVariation) => 
         inNonBilledPersonServiceVariationPayments.Count(inPayment => inPayment.ReferenceId == inPersonAnnualServiceVariation.Id);
-    
-    public static decimal GetConsultantAlreadyBilled(IEnumerable<ConsultantInvoiceItem> inNonBilledPersonServiceVariationPayments, PersonAnnualServiceVariation inPersonAnnualServiceVariation) =>
-        inNonBilledPersonServiceVariationPayments.Where(inPayment => inPayment.ReferenceId == inPersonAnnualServiceVariation.Id).Sum(inPayment => inPayment.GetTotal());
-    
-    public static int GetConsultantBilledPaymentsCount(IEnumerable<ConsultantInvoiceItem> inNonBilledPersonServiceVariationPayments, PersonAnnualServiceVariation inPersonAnnualServiceVariation) =>
-        inNonBilledPersonServiceVariationPayments.Count(inPayment => inPayment.ReferenceId == inPersonAnnualServiceVariation.Id);
 }

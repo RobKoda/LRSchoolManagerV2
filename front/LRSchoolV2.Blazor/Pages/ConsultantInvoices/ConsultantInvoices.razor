@@ -26,7 +26,7 @@
 @inject ISnackbar Snackbar
 
 <MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
-
+    
     <MudButton StartIcon="@Icons.Material.Filled.NoteAdd" OnClick="@OnConsultantInvoicesGenerationClick" Variant="Variant.Filled" Color="Color.Primary">Génération des factures</MudButton>
     <MudSelect Label="Intervenant" @bind-Value="SelectedConsultant" Class="mb-3">
         @foreach (var consultant in Consultants)
@@ -239,13 +239,14 @@
     {
         var dialogParameters = new DialogParameters
         {
+            { nameof(SaveConsultantInvoiceDialog.Consultant), SelectedConsultant },
             {
 #pragma warning disable CS8974 // Converting method group to non-delegate type
                 nameof(SaveConsultantInvoiceDialog.GeneratePdfMethod), GeneratePdf
 #pragma warning restore CS8974 // Converting method group to non-delegate type
             }
         };
-        var dialog = await DialogService.ShowAsync<SaveConsultantInvoiceDialog>("Ajout d'une facture client", dialogParameters,
+        var dialog = await DialogService.ShowAsync<SaveConsultantInvoiceDialog>("Ajout d'une facture consultant", dialogParameters,
             new DialogOptions
             {
                 CloseOnEscapeKey = true,
