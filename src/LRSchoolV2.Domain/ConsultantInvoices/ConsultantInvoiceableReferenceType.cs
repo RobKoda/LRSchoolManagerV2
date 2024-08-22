@@ -5,7 +5,7 @@ namespace LRSchoolV2.Domain.ConsultantInvoices;
 
 public class ConsultantInvoiceableReferenceType : SmartEnum<ConsultantInvoiceableReferenceType>
 {
-    public static readonly ConsultantInvoiceableReferenceType PersonAnnualServiceVariation = new (nameof(PersonAnnualServiceVariation), 1, "Inscriptions");
+    public static readonly ConsultantInvoiceableReferenceType AnnualService = new (nameof(AnnualService), 1, "Service annuel");
 
     public string DisplayName { get; }
     

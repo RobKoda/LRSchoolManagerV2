@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using LRSchoolV2.Domain.AnnualServices;
 using LRSchoolV2.Domain.Common;
 using LRSchoolV2.Domain.Consultants;
 
@@ -11,7 +12,8 @@ namespace LRSchoolV2.Blazor.Pages.AnnualServices.AnnualServiceVariations.AnnualS
 public class SaveServiceVariationConsultantWorkFormModel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid AnnualServiceVariationId { get; set; } = Guid.NewGuid();
+    
+    public AnnualServiceVariation AnnualServiceVariation { get; set; } = null!;
     
     [Required(ErrorMessage = "L'année scolaire est requise")]
     public SchoolYear? SchoolYear { get; set; }

@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using LanguageExt;
 using LRSchoolV2.Application.Common.Documents.SaveDocument;
+using LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoiceItems.Persistence;
 using LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoiceItems.SaveConsultantInvoiceItem;
 using LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoices.GetConsultantInvoices;
 using LRSchoolV2.Application.ConsultantInvoices.ConsultantInvoices.SaveConsultantInvoice;
@@ -9,7 +10,6 @@ using LRSchoolV2.Application.Persons.PersonAnnualServiceVariations.Persistence;
 using LRSchoolV2.Domain.AnnualServices;
 using LRSchoolV2.Domain.Common;
 using LRSchoolV2.Domain.ConsultantInvoices;
-using LRSchoolV2.Domain.Persons;
 using LRSchoolV2.Reporting.Consultants.ConsultantInvoices;
 using MediatR;
 using Unit = LanguageExt.Unit;
@@ -22,8 +22,9 @@ public class GenerateConsultantInvoicesHandler(
     IValidator<SaveConsultantInvoiceRequest> inSaveConsultantInvoiceRequestValidation,
     IValidator<SaveConsultantInvoiceItemRequest> inSaveConsultantInvoiceItemRequestValidation,
     IConsultantsRepository inConsultantsRepository,
-    IPersonAnnualServiceVariationsRepository inPersonAnnualServiceVariationsRepository)
-    : IRequestHandler<GenerateConsultantInvoicesQuery, GenerateConsultantInvoicesResponse>
+    IPersonAnnualServiceVariationsRepository inPersonAnnualServiceVariationsRepository,
+    IConsultantInvoiceItemsRepository inConsultantInvoiceItemsRepository
+    ) : IRequestHandler<GenerateConsultantInvoicesQuery, GenerateConsultantInvoicesResponse>
 {
     private Seq<string> _saveConsultantInvoiceValidationErrors;
     private Seq<string> _saveConsultantInvoiceItemValidationErrors;
@@ -51,10 +52,9 @@ public class GenerateConsultantInvoicesHandler(
     private async Task GenerateAndIterateOnConsultantInvoicesAsync(IEnumerable<ConsultantInvoiceable> inConsultantInvoiceables, Func<ConsultantInvoice, IList<ConsultantInvoiceItem>, Task> inFunction)
     {
         inConsultantInvoiceables = inConsultantInvoiceables.ToList();
+        var allConsultantInvoiceItems = (await inConsultantInvoiceItemsRepository.GetConsultantInvoiceItemsAsync()).ToList();
         
-        var consultants = inConsultantInvoiceables.Distinct().Select(inInvoiceable => inInvoiceable.Consultant);
-        var nonBilledPersonServiceVariations = (await inPersonAnnualServiceVariationsRepository.GetConsultantNonBilledPersonAnnualServiceVariations()).ToList();
-        var unpaidPersonServiceVariationBilledItems = (await inPersonAnnualServiceVariationsRepository.GetConsultantNonBilledPersonAnnualServiceVariationBilledItems()).ToList();
+        var consultants = inConsultantInvoiceables.Select(inInvoiceable => inInvoiceable.Consultant).Distinct();
         
         foreach (var consultant in consultants)
         {
@@ -71,16 +71,16 @@ public class GenerateConsultantInvoicesHandler(
             );
             
             var items = new List<ConsultantInvoiceItem>();
-            foreach (var consultantInvoiceable in inConsultantInvoiceables)
+            foreach (var consultantInvoiceable in inConsultantInvoiceables.Where(inInvoiceable => inInvoiceable.Consultant.Id == consultant.Id))
             {
                 items.Add(new ConsultantInvoiceItem(
                     Guid.NewGuid(),
                     consultantInvoice,
                     consultantInvoiceable.SchoolYear,
                     consultantInvoiceable.ReferenceId,
-                    1, // TODO
+                    1,
                     consultantInvoiceable.Denomination,
-                    GetConsultantInvoiceItemPrice(consultantInvoiceable, nonBilledPersonServiceVariations, unpaidPersonServiceVariationBilledItems),
+                    GetConsultantInvoiceItemPrice(consultantInvoiceable, allConsultantInvoiceItems),
                     items.Count + 1
                 ));
             }
@@ -88,23 +88,18 @@ public class GenerateConsultantInvoicesHandler(
             await inFunction(consultantInvoice, items);
         }
     }
-
-    private static decimal GetConsultantInvoiceItemPrice(ConsultantInvoiceable inConsultantInvoiceable, IEnumerable<PersonAnnualServiceVariation> inNonBilledPersonServiceVariations, IEnumerable<ConsultantInvoiceItem> inUnpaidPersonServiceVariationBilledItems)
+    
+    private static decimal GetConsultantInvoiceItemPrice(ConsultantInvoiceable inConsultantInvoiceable, IEnumerable<ConsultantInvoiceItem> inBilledInvoiceItems)
     {
-        // TODO
-        return 0m;
-        /*
         // ReSharper disable once InvertIf - Nope.
-        if (inConsultantInvoiceable.ConsultantInvoiceableReferenceType == ConsultantInvoiceableReferenceType.PersonAnnualServiceVariation)
+        if (inConsultantInvoiceable.ConsultantInvoiceableReferenceType == ConsultantInvoiceableReferenceType.AnnualService)
         {
-            var personServiceVariation = inNonBilledPersonServiceVariations.Single(inVariation => inVariation.Id == inConsultantInvoiceable.ReferenceId);
-            return inConsultantInvoiceable.CompletePayment ? 
-                inConsultantInvoiceable.Price - AnnualServiceVariation.GetConsultantAlreadyBilled(inUnpaidPersonServiceVariationBilledItems, personServiceVariation) : 
+            return inConsultantInvoiceable.CompletePayment ?
+                inConsultantInvoiceable.Price - AnnualService.GetConsultantAlreadyBilled(inBilledInvoiceItems, inConsultantInvoiceable.AnnualService, inConsultantInvoiceable.Consultant, inConsultantInvoiceable.SchoolYear) :
                 Math.Round(inConsultantInvoiceable.Price / inConsultantInvoiceable.PaymentsCount, 2);
         }
-
+        
         throw new InvalidOperationException("Reference type not found!");
-        */
     }
 
     private async Task SimulateGeneration(ConsultantInvoice inConsultantInvoice, IEnumerable<ConsultantInvoiceItem> inItems)
@@ -164,7 +159,7 @@ public class GenerateConsultantInvoicesHandler(
     private async Task SetFullyBilledAsync(IEnumerable<ConsultantInvoiceable> inConsultantInvoiceables)
     {
         var fullyBilledConsultantInvoiceables = inConsultantInvoiceables.Where(inConsultantInvoiceable => inConsultantInvoiceable.CompletePayment).ToList();
-        var fullyBilledPersonServiceVariations = fullyBilledConsultantInvoiceables.Where(inConsultantInvoiceable => inConsultantInvoiceable.ConsultantInvoiceableReferenceType == ConsultantInvoiceableReferenceType.PersonAnnualServiceVariation);
+        var fullyBilledPersonServiceVariations = fullyBilledConsultantInvoiceables.Where(inConsultantInvoiceable => inConsultantInvoiceable.ConsultantInvoiceableReferenceType == ConsultantInvoiceableReferenceType.AnnualService);
 
         await SetPersonServiceVariationsFullyBilled(fullyBilledPersonServiceVariations);
     }

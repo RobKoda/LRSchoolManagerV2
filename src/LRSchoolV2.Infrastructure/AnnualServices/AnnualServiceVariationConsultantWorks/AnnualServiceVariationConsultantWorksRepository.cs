@@ -8,11 +8,12 @@ namespace LRSchoolV2.Infrastructure.AnnualServices.AnnualServiceVariationConsult
 public class AnnualServiceVariationConsultantWorksRepository(IDbContextFactory<ApplicationContext> inContext) : IAnnualServiceVariationConsultantWorksRepository
 {
     public Task<IEnumerable<AnnualServiceVariationConsultantWork>> GetAnnualServiceVariationConsultantWorksAsync() =>
-        inContext.GetAllAsync<AnnualServiceVariationConsultantWorkDataModel, AnnualServiceVariationConsultantWork>();
+        inContext.GetAllAsync<AnnualServiceVariationConsultantWorkDataModel, AnnualServiceVariationConsultantWork>(GetAnnualServiceVariationConsultantWorkDataModelQueryable);
     
     public Task<IEnumerable<AnnualServiceVariationConsultantWork>> GetAnnualServiceVariationConsultantWorksPerAnnualServiceVariationAsync(Guid inAnnualServiceVariationId) =>
-        inContext.GetAllAsync<AnnualServiceVariationConsultantWorkDataModel, AnnualServiceVariationConsultantWork>(inQueryable => inQueryable
-            .Where(inConsultantWork => inConsultantWork.AnnualServiceVariationId == inAnnualServiceVariationId)
+        inContext.GetAllAsync<AnnualServiceVariationConsultantWorkDataModel, AnnualServiceVariationConsultantWork>(inQueryable => 
+            GetAnnualServiceVariationConsultantWorkDataModelQueryable(inQueryable)
+                .Where(inConsultantWork => inConsultantWork.AnnualServiceVariationId == inAnnualServiceVariationId)
         );
 
     public Task<bool> AnyAnnualServiceVariationConsultantWorkAsync(Guid inAnnualServiceVariationConsultantWorkId) =>
@@ -28,10 +29,15 @@ public class AnnualServiceVariationConsultantWorksRepository(IDbContextFactory<A
         await (await inContext.GetQueryableAsNoTrackingAsync<AnnualServiceVariationConsultantWorkDataModel>())
             .Where(inAnnualServiceVariationConsultantWork => inAnnualServiceVariationConsultantWork.Id != inReferenceAnnualServiceVariationConsultantWork.Id)
             .AllAsync(inAnnualServiceVariationConsultantWork =>
-                inAnnualServiceVariationConsultantWork.AnnualServiceVariationId != inReferenceAnnualServiceVariationConsultantWork.AnnualServiceVariationId ||
+                inAnnualServiceVariationConsultantWork.AnnualServiceVariationId != inReferenceAnnualServiceVariationConsultantWork.AnnualServiceVariation.Id ||
                 inAnnualServiceVariationConsultantWork.ConsultantId != inReferenceAnnualServiceVariationConsultantWork.Consultant.Id ||
                 inAnnualServiceVariationConsultantWork.SchoolYearId != inReferenceAnnualServiceVariationConsultantWork.SchoolYear.Id);
 
     public Task<bool> CanAnnualServiceVariationConsultantWorkBeDeletedAsync(Guid inServiceVariationConsultantWorkId) =>
         inContext.CanBeDeleted<AnnualServiceVariationConsultantWorkDataModel>(inServiceVariationConsultantWorkId);
+    
+    private static IQueryable<AnnualServiceVariationConsultantWorkDataModel> GetAnnualServiceVariationConsultantWorkDataModelQueryable(IQueryable<AnnualServiceVariationConsultantWorkDataModel> inQueryable) =>
+        inQueryable
+            .Include(inWork => inWork.AnnualServiceVariation)
+            .ThenInclude(inAnnualServiceVariation => inAnnualServiceVariation!.AnnualService);
 }

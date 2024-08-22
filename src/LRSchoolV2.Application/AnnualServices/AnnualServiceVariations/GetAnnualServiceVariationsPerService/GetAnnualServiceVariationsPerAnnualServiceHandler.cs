@@ -23,7 +23,7 @@ public class GetAnnualServiceVariationsPerAnnualServiceHandler(
                 return (await inAnnualServiceVariationsRepository.GetAnnualServiceVariationsPerAnnualServiceAsync(inRequest.AnnualServiceId))
                     .Select(inServiceVariation => inServiceVariation with
                     {
-                        CurrentYearlyPrice = currentYearlyPrices.SingleOrDefault(inYearlyPrice => inYearlyPrice.SchoolYear == inSome && inYearlyPrice.AnnualServiceVariationId == inServiceVariation.Id)
+                        CurrentYearlyPrice = currentYearlyPrices.SingleOrDefault(inYearlyPrice => inYearlyPrice.SchoolYear == inSome && inYearlyPrice.AnnualServiceVariation.Id == inServiceVariation.Id)
                     });
             }));
 }

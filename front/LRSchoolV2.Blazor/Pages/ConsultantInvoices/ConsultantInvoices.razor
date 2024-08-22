@@ -48,7 +48,7 @@
             <MudDataGrid T="ConsultantInvoice" Items="DisplayedConsultantInvoices" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true"
                          @bind-SelectedItems="@SelectedItems" MultiSelection="true">
                 <ToolBarContent>
-                    <MudText Typo="Typo.h6">Factures Clients</MudText>
+                    <MudText Typo="Typo.h6">Factures Intervenants</MudText>
                     <MudSpacer/>
                     <MudSwitch @bind-Value="_showAdvancedFunctions" Label="Fonctions avancées (et dangereuses)" Color="Color.Primary"/>
                 </ToolBarContent>
@@ -57,7 +57,7 @@
                     <SelectColumn T="ConsultantInvoice" ShowInHeader="false" ShowInFooter="false"/>
                     <PropertyColumn T="ConsultantInvoice" TProperty="string" Property="inConsultantInvoice => inConsultantInvoice.Number" Title="Numéro"/>
                     <PropertyColumn T="ConsultantInvoice" TProperty="DateTime" Property="inConsultantInvoice => inConsultantInvoice.Date" Title="Date" Format="dd/MM/yyyy"/>
-                    <PropertyColumn T="ConsultantInvoice" TProperty="string" Property="inConsultantInvoice => inConsultantInvoice.InvoiceConsultantName" Title="Nom du client"/>
+                    <PropertyColumn T="ConsultantInvoice" TProperty="string" Property="inConsultantInvoice => inConsultantInvoice.InvoiceConsultantName" Title="Nom de l'intervenant"/>
                     <PropertyColumn T="ConsultantInvoice" TProperty="decimal" Property="inConsultantInvoice => inConsultantInvoice.TotalToPay" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px" Title="Total"/>
                     <TemplateColumn T="ConsultantInvoice" Title="Email envoyé">
                         <CellTemplate>

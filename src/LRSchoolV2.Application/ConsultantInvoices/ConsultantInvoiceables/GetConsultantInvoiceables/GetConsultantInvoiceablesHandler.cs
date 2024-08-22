@@ -7,6 +7,7 @@ using LRSchoolV2.Domain.AnnualServices;
 using LRSchoolV2.Domain.Common;
 using LRSchoolV2.Domain.ConsultantInvoices;
 using LRSchoolV2.Domain.Consultants;
+using LRSchoolV2.Domain.Persons;
 using MediatR;
 
 // ReSharper disable UnusedType.Global - Implicit use
@@ -41,47 +42,47 @@ public class GetConsultantInvoiceablesHandler(
         
         var consultantInvoiceItems = (await inConsultantInvoiceItemsRepository.GetConsultantInvoiceItemsAsync()).ToList();
         
-        var nonBilledPersonServiceVariations = await inPersonAnnualServiceVariationsRepository.GetConsultantNonBilledPersonAnnualServiceVariations();
+        var nonBilledPersonServiceVariations = (await inPersonAnnualServiceVariationsRepository.GetConsultantNonBilledPersonAnnualServiceVariations()).ToList();
         var variationsGrouping = nonBilledPersonServiceVariations
-            .GroupBy(inVariation => new { inVariation.AnnualServiceVariation, inVariation.SchoolYear });
+            .GroupBy(inVariation => new { inVariation.AnnualServiceVariation.AnnualService, inVariation.SchoolYear });
+        
         foreach (var variationGroup in variationsGrouping)
         {
-            var consultants = GetConsultantsNonBilledVariation(variationGroup.Key.SchoolYear, variationGroup.Key.AnnualServiceVariation);
+            var filteredDonBilledPersonServiceVariations = nonBilledPersonServiceVariations
+                .Where(inNonBilled => inNonBilled.AnnualServiceVariation.AnnualService.Id == variationGroup.Key.AnnualService.Id && 
+                                                              inNonBilled.SchoolYear.Id == variationGroup.Key.SchoolYear.Id)
+                .ToList();
+            
+            var consultants = GetConsultantsNonBilledAnnualService(variationGroup.Key.SchoolYear, variationGroup.Key.AnnualService);
             
             var totalCommonHours = _annualServiceConsultantWorks
                 .Where(inWork => inWork.SchoolYear.Id == variationGroup.Key.SchoolYear.Id &&
-                                 inWork.AnnualService.Id == variationGroup.Key.AnnualServiceVariation.AnnualService.Id)
+                                 inWork.AnnualService.Id == variationGroup.Key.AnnualService.Id)
                 .Sum(inWork => inWork.CommonWorkHours);
-            var totalIndividualWorkHours = _annualServiceVariationConsultantWorks
-                .Where(inWork => inWork.SchoolYear.Id == variationGroup.Key.SchoolYear.Id &&
-                                 inWork.AnnualServiceVariationId == variationGroup.Key.AnnualServiceVariation.Id)
-                .Sum(inWork => inWork.IndividualWorkHours) * variationGroup.Count();
+            var totalIndividualWorkHours = GetTotalIndividualWorkHours(variationGroup.Key.AnnualService, variationGroup.Key.SchoolYear, filteredDonBilledPersonServiceVariations);
             var totalHours = totalCommonHours + totalIndividualWorkHours;
             
             foreach (var consultant in consultants)
             {
                 var consultantCommonHours = _annualServiceConsultantWorks
                     .Where(inWork => inWork.SchoolYear.Id == variationGroup.Key.SchoolYear.Id &&
-                                     inWork.AnnualService.Id == variationGroup.Key.AnnualServiceVariation.AnnualService.Id &&
+                                     inWork.AnnualService.Id == variationGroup.Key.AnnualService.Id &&
                                      inWork.Consultant.Id == consultant.Id)
                     .Sum(inWork => inWork.CommonWorkHours);
-                var consultantIndividualWorkHours = _annualServiceVariationConsultantWorks
-                    .Where(inWork => inWork.SchoolYear.Id == variationGroup.Key.SchoolYear.Id &&
-                                     inWork.AnnualServiceVariationId == variationGroup.Key.AnnualServiceVariation.Id &&
-                                     inWork.Consultant.Id == consultant.Id)
-                    .Sum(inWork => inWork.IndividualWorkHours) * variationGroup.Count();
+                var consultantIndividualWorkHours = GetConsultantIndividualWorkHours(variationGroup.Key.AnnualService, variationGroup.Key.SchoolYear, consultant, filteredDonBilledPersonServiceVariations);
                 var consultantHours = consultantCommonHours + consultantIndividualWorkHours;
                 var consultantRatioTime = consultantHours / totalHours;
                 
                 inResult.Add(new ConsultantInvoiceable(
-                    ConsultantInvoiceableReferenceType.PersonAnnualServiceVariation,
+                    ConsultantInvoiceableReferenceType.AnnualService,
                     variationGroup.Key.SchoolYear,
                     consultant,
-                    variationGroup.Key.AnnualServiceVariation.Id,
-                    variationGroup.Key.AnnualServiceVariation.GetFullName(),
-                    variationGroup.Count() * GetAnnualServiceVariationPrice(variationGroup.Key.AnnualServiceVariation, variationGroup.Key.SchoolYear) * consultantRatioTime,
-                    AnnualServiceVariation.GetConsultantAlreadyBilled(consultantInvoiceItems, variationGroup.Key.AnnualServiceVariation, consultant, variationGroup.Key.SchoolYear),
-                    0, // Already billed count
+                    variationGroup.Key.AnnualService,
+                    variationGroup.Key.AnnualService.Id,
+                    variationGroup.Key.AnnualService.Name,
+                    GetAnnualServiceTotalToPay(variationGroup.Key.AnnualService, variationGroup.Key.SchoolYear, filteredDonBilledPersonServiceVariations) * consultantRatioTime,
+                    AnnualService.GetConsultantAlreadyBilled(consultantInvoiceItems, variationGroup.Key.AnnualService, consultant, variationGroup.Key.SchoolYear),
+                    AnnualService.GetConsultantBilledPaymentsCount(consultantInvoiceItems, variationGroup.Key.AnnualService, consultant, variationGroup.Key.SchoolYear),
                     variationGroup.Max(inGroup => inGroup.ConsultantPaymentsCount),
                     false
                 ));
@@ -89,19 +90,33 @@ public class GetConsultantInvoiceablesHandler(
         }
     }
     
-    private decimal GetAnnualServiceVariationPrice(AnnualServiceVariation inAnnualServiceVariation, SchoolYear inSchoolYear)
-    {
-        var annualServiceVariationYearlyPrice = _annualServiceVariationYearlyPrices
-            .SingleOrDefault(inPrice => inPrice.AnnualServiceVariationId == inAnnualServiceVariation.Id && inPrice.SchoolYear.Id == inSchoolYear.Id);
-        return annualServiceVariationYearlyPrice?.Price ?? 0m;
-    }
+    private decimal GetTotalIndividualWorkHours(AnnualService inAnnualService, SchoolYear inSchoolYear, IEnumerable<PersonAnnualServiceVariation> inPersonAnnualServiceVariations) =>
+        inPersonAnnualServiceVariations.Where(inPersonVariation => inPersonVariation.AnnualServiceVariation.AnnualService.Id == inAnnualService.Id)
+            .GroupBy(inPersonVariation => inPersonVariation.AnnualServiceVariation)
+            .Sum(inVariation => _annualServiceVariationConsultantWorks
+                .Where(inWork => inWork.AnnualServiceVariation.Id == inVariation.Key.Id && inWork.SchoolYear.Id == inSchoolYear.Id)
+                .Sum(inWork => inWork.IndividualWorkHours) * inVariation.Count());
     
-    private IEnumerable<Consultant> GetConsultantsNonBilledVariation(SchoolYear inSchoolYear, AnnualServiceVariation inAnnualServiceVariation) =>
+    private decimal GetConsultantIndividualWorkHours(AnnualService inAnnualService, SchoolYear inSchoolYear, Consultant inConsultant, IEnumerable<PersonAnnualServiceVariation> inPersonAnnualServiceVariations) =>
+        inPersonAnnualServiceVariations.Where(inPersonVariation => inPersonVariation.AnnualServiceVariation.AnnualService.Id == inAnnualService.Id)
+            .GroupBy(inPersonVariation => inPersonVariation.AnnualServiceVariation)
+            .Sum(inVariation => _annualServiceVariationConsultantWorks
+                .Where(inWork => inWork.AnnualServiceVariation.Id == inVariation.Key.Id && inWork.SchoolYear.Id == inSchoolYear.Id && inWork.Consultant.Id == inConsultant.Id)
+                .Sum(inWork => inWork.IndividualWorkHours) * inVariation.Count());
+    
+    private decimal GetAnnualServiceTotalToPay(AnnualService inAnnualService, SchoolYear inSchoolYear, IEnumerable<PersonAnnualServiceVariation> inPersonAnnualServiceVariations) =>
+        inPersonAnnualServiceVariations.Where(inPersonVariation => inPersonVariation.AnnualServiceVariation.AnnualService.Id == inAnnualService.Id)
+            .GroupBy(inPersonVariation => inPersonVariation.AnnualServiceVariation)
+            .Sum(inVariation => _annualServiceVariationYearlyPrices
+                .Where(inPrice => inPrice.AnnualServiceVariation.Id == inVariation.Key.Id && inPrice.SchoolYear.Id == inSchoolYear.Id)
+                .Sum(inPrice => inPrice.Price - inPrice.Margin) * inVariation.Count());
+    
+    private IEnumerable<Consultant> GetConsultantsNonBilledAnnualService(SchoolYear inSchoolYear, AnnualService inAnnualService) =>
         _annualServiceConsultantWorks
-            .Where(inWork => inWork.SchoolYear.Id == inSchoolYear.Id && inWork.AnnualService.Id == inAnnualServiceVariation.AnnualService.Id)
+            .Where(inWork => inWork.SchoolYear.Id == inSchoolYear.Id && inWork.AnnualService.Id == inAnnualService.Id)
             .Select(inWork => inWork.Consultant)
             .Append(_annualServiceVariationConsultantWorks
-                .Where(inWork => inWork.SchoolYear.Id == inSchoolYear.Id && inWork.AnnualServiceVariationId == inAnnualServiceVariation.Id)
+                .Where(inWork => inWork.SchoolYear.Id == inSchoolYear.Id && inWork.AnnualServiceVariation.AnnualService.Id == inAnnualService.Id)
                 .Select(inWork => inWork.Consultant))
             .Distinct();
 }

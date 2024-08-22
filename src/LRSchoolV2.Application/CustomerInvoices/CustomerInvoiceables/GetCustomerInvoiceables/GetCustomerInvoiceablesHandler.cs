@@ -58,7 +58,7 @@ public class GetCustomerInvoiceablesHandler(
                 GetPersonServiceVariationBilledPerson(inPersonServiceVariation),
                 GetPersonServiceVariationDenomination(nonBilledPersonServiceVariationPayments, inPersonServiceVariation),
                 serviceVariationYearlyPrices.Single(inYearlyPrice =>
-                    inYearlyPrice.AnnualServiceVariationId == inPersonServiceVariation.AnnualServiceVariation.Id &&
+                    inYearlyPrice.AnnualServiceVariation.Id == inPersonServiceVariation.AnnualServiceVariation.Id &&
                     inYearlyPrice.SchoolYear.Id == inPersonServiceVariation.SchoolYear.Id).Price,
                 PersonAnnualServiceVariation.GetAlreadyBilled(nonBilledPersonServiceVariationPayments, inPersonServiceVariation),
                 PersonAnnualServiceVariation.GetBilledPaymentsCount(nonBilledPersonServiceVariationPayments, inPersonServiceVariation),

@@ -46,7 +46,7 @@
             <MudDataGrid T="ConsultantQuote" Items="DisplayedConsultantQuotes" SelectOnRowClick="true" Hover="true" Style="user-select: none;" SortMode="SortMode.None" Dense="true"
                          @bind-SelectedItems="@SelectedItems" MultiSelection="true">
                 <ToolBarContent>
-                    <MudText Typo="Typo.h6">Devis Clients</MudText>
+                    <MudText Typo="Typo.h6">Devis Intervenants</MudText>
                     <MudSpacer/>
                     <MudSwitch @bind-Value="_showAdvancedFunctions" Label="Fonctions avancées (et dangereuses)" Color="Color.Primary"/>
                 </ToolBarContent>
@@ -55,7 +55,7 @@
                     <SelectColumn T="ConsultantQuote" ShowInHeader="false" ShowInFooter="false"/>
                     <PropertyColumn T="ConsultantQuote" TProperty="string" Property="inConsultantQuote => inConsultantQuote.Number" Title="Numéro"/>
                     <PropertyColumn T="ConsultantQuote" TProperty="DateTime" Property="inConsultantQuote => inConsultantQuote.Date" Title="Date" Format="dd/MM/yyyy"/>
-                    <PropertyColumn T="ConsultantQuote" TProperty="string" Property="inConsultantQuote => inConsultantQuote.QuoteConsultantName" Title="Nom du client"/>
+                    <PropertyColumn T="ConsultantQuote" TProperty="string" Property="inConsultantQuote => inConsultantQuote.QuoteConsultantName" Title="Nom de l'intervenant"/>
                     <PropertyColumn T="ConsultantQuote" TProperty="decimal" Property="inConsultantQuote => inConsultantQuote.TotalToPay" Format="0.00" CellStyle="text-align: right; max-width: 150px" HeaderStyle="max-width: 150px" Title="Total"/>
                     <TemplateColumn T="ConsultantQuote" Title="Email envoyé">
                         <CellTemplate>
@@ -241,7 +241,7 @@
             { nameof(SaveConsultantQuoteDialog.GeneratePdfMethod), GeneratePdf }
 #pragma warning restore CS8974 // Converting method group to non-delegate type
         };
-        var dialog = await DialogService.ShowAsync<SaveConsultantQuoteDialog>("Ajout d'un devis client", dialogParameters,
+        var dialog = await DialogService.ShowAsync<SaveConsultantQuoteDialog>("Ajout d'un devis intervenant", dialogParameters,
             new DialogOptions
             {
                 CloseOnEscapeKey = true,

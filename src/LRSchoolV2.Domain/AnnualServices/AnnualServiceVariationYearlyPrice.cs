@@ -6,7 +6,7 @@ namespace LRSchoolV2.Domain.AnnualServices;
 
 public record AnnualServiceVariationYearlyPrice(
     Guid Id,
-    Guid AnnualServiceVariationId,
+    AnnualServiceVariation AnnualServiceVariation,
     SchoolYear SchoolYear,
     decimal Price,
     decimal Margin

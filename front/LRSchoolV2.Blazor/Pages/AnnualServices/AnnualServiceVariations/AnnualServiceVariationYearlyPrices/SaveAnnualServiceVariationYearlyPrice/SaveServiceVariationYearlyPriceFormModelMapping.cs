@@ -13,7 +13,7 @@ public class SaveServiceVariationYearlyPriceFormModelMapping : IRegister
             .NewConfig()
             .MapWith(inFormModel => new AnnualServiceVariationYearlyPrice(
                 inFormModel.Id,
-                inFormModel.AnnualServiceVariationId,
+                inFormModel.AnnualServiceVariation,
                 inFormModel.SchoolYear!,
                 inFormModel.Price,
                 inFormModel.Margin

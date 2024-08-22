@@ -7,7 +7,7 @@ namespace LRSchoolV2.Domain.AnnualServices;
 
 public record AnnualServiceVariationConsultantWork(
     Guid Id,
-    Guid AnnualServiceVariationId,
+    AnnualServiceVariation AnnualServiceVariation,
     SchoolYear SchoolYear,
     Consultant Consultant,
     decimal IndividualWorkHours,

@@ -17,7 +17,8 @@ public class ConsultantInvoicesService(
     ISender inMediator, 
     IValidator<CancelConsultantInvoiceRequest> inCancelConsultantInvoiceRequestValidator, 
     IValidator<SetConsultantInvoiceEmailSentRequest> inSetConsultantInvoiceEmailSentRequestValidator,
-    IValidator<SaveConsultantInvoiceRequest> inSaveConsultantInvoiceRequestValidator
+    IValidator<SaveConsultantInvoiceRequest> inSaveConsultantInvoiceRequestValidator,
+    IValidator<GenerateConsultantInvoicesRequest> inGenerateConsultantInvoiceRequestValidator
     ) : IFrontDataService
 {
     public Task<GetConsultantInvoicesResponse> GetConsultantInvoicesAsync() => 
@@ -40,6 +41,6 @@ public class ConsultantInvoicesService(
             Validation<string, Unit>.Success(default!);
     }
     
-    public async Task<Validation<string, Unit>> GenerateConsultantInvoicesAsync(IEnumerable<ConsultantInvoiceable> inConsultantInvoiceables) =>
-        (await inMediator.Send(new GenerateConsultantInvoicesQuery(inConsultantInvoiceables))).Validation;
+    public Task<Validation<string, Unit>> GenerateConsultantInvoicesAsync(IEnumerable<ConsultantInvoiceable> inConsultantInvoiceables) =>
+        inMediator.SendRequestWithValidation<GenerateConsultantInvoicesRequest, GenerateConsultantInvoicesQuery>(new GenerateConsultantInvoicesRequest(inConsultantInvoiceables), inGenerateConsultantInvoiceRequestValidator);
 }

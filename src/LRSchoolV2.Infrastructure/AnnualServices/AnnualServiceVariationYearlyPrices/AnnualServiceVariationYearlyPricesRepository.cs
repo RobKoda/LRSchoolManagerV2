@@ -8,10 +8,11 @@ namespace LRSchoolV2.Infrastructure.AnnualServices.AnnualServiceVariationYearlyP
 public class AnnualServiceVariationYearlyPricesRepository(IDbContextFactory<ApplicationContext> inContext) : IAnnualServiceVariationYearlyPricesRepository
 {
     public Task<IEnumerable<AnnualServiceVariationYearlyPrice>> GetAnnualServiceVariationYearlyPricesAsync() =>
-        inContext.GetAllAsync<AnnualServiceVariationYearlyPriceDataModel, AnnualServiceVariationYearlyPrice>();
+        inContext.GetAllAsync<AnnualServiceVariationYearlyPriceDataModel, AnnualServiceVariationYearlyPrice>(GetAnnualServiceVariationYearlyPriceDataModelQueryable);
 
     public Task<IEnumerable<AnnualServiceVariationYearlyPrice>> GetAnnualServiceVariationYearlyPricesPerAnnualServiceVariationAsync(Guid inAnnualServiceVariationId) =>
-        inContext.GetAllAsync<AnnualServiceVariationYearlyPriceDataModel, AnnualServiceVariationYearlyPrice>(inQueryable => inQueryable
+        inContext.GetAllAsync<AnnualServiceVariationYearlyPriceDataModel, AnnualServiceVariationYearlyPrice>(inQueryable => 
+            GetAnnualServiceVariationYearlyPriceDataModelQueryable(inQueryable)
             .Where(inYearlyPrice => inYearlyPrice.AnnualServiceVariationId == inAnnualServiceVariationId)
         );
 
@@ -35,7 +36,7 @@ public class AnnualServiceVariationYearlyPricesRepository(IDbContextFactory<Appl
             .Where(inAnnualServiceVariationYearlyPrice => inAnnualServiceVariationYearlyPrice.Id != inReferenceAnnualServiceVariationYearlyPrice.Id)
             .AllAsync(inAnnualServiceVariationYearlyPrice =>
                 inAnnualServiceVariationYearlyPrice.SchoolYearId != inReferenceAnnualServiceVariationYearlyPrice.SchoolYear.Id ||
-                inAnnualServiceVariationYearlyPrice.AnnualServiceVariationId != inReferenceAnnualServiceVariationYearlyPrice.AnnualServiceVariationId);
+                inAnnualServiceVariationYearlyPrice.AnnualServiceVariationId != inReferenceAnnualServiceVariationYearlyPrice.AnnualServiceVariation.Id);
 
     public Task<bool> CanAnnualServiceVariationYearlyPriceBeDeletedAsync(Guid inAnnualServiceVariationYearlyPriceId) =>
         inContext.CanBeDeleted<AnnualServiceVariationYearlyPriceDataModel>(inAnnualServiceVariationYearlyPriceId);
@@ -44,4 +45,9 @@ public class AnnualServiceVariationYearlyPricesRepository(IDbContextFactory<Appl
         inContext.GetAllAsync<AnnualServiceVariationYearlyPriceDataModel, AnnualServiceVariationYearlyPrice>(inQueryable => inQueryable
             .Where(inYearlyPrice => inYearlyPrice.SchoolYearId == inSchoolYearId)
         );
+    
+    private static IQueryable<AnnualServiceVariationYearlyPriceDataModel> GetAnnualServiceVariationYearlyPriceDataModelQueryable(IQueryable<AnnualServiceVariationYearlyPriceDataModel> inQueryable) =>
+        inQueryable
+            .Include(inWork => inWork.AnnualServiceVariation)
+            .ThenInclude(inAnnualServiceVariation => inAnnualServiceVariation!.AnnualService);
 }
