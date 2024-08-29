@@ -1,7 +1,13 @@
 ﻿@page "/Unbalanced"
 
+@using BlazorDownloadFile
+@using LRSchoolV2.Blazor.Pages.Persons.Members.PersonServiceVariations
+@using LRSchoolV2.Blazor.Pages.Persons.PersonRegistrations
 @using LRSchoolV2.Domain.Persons
+@using LRSchoolV2.Reporting.Customers.CustomerSummary
 
+@inject IDialogService DialogService
+@inject IBlazorDownloadFileService DownloadFileService
 @inject PersonsService PersonsService
 
 <MudContainer class="pt-2 mx-1" MaxWidth="MaxWidth.False">
@@ -27,6 +33,15 @@
                 <TemplateColumn>
                     <CellTemplate>
                         <MudStack Row>
+                            <MudTooltip Text="Récapitulatif">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Summarize" OnClick="@(() => OnPersonSummaryClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Services">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Piano" OnClick="@(() => OnPersonServiceVariationsClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Adhésions">
+                                <MudIconButton Variant="Variant.Filled" Color="Color.Primary" Icon="@Icons.Material.Filled.Login" OnClick="@(() => OnPersonRegistrationsClick(context.Item!))" Size="Size.Small"/>
+                            </MudTooltip>
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
@@ -62,4 +77,45 @@
             < 0 => "background-color: rgba(255, 0, 0, 0.3)",
             > 0 => "background-color: rgba(0, 255, 0, 0.3)"
         };
+    
+    private async Task OnPersonRegistrationsClick(Person inPerson)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(PersonRegistrationsDialog.Person), inPerson }
+        };
+        var dialog = await DialogService.ShowAsync<PersonRegistrationsDialog>($"{inPerson.GetFullName()} - Adhésions", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true
+        });
+        await dialog.Result;
+        await ReloadDataAsync();
+    }
+    
+    private async Task OnPersonServiceVariationsClick(Person inPerson)
+    {
+        var theParameters = new DialogParameters
+        {
+            { nameof(PersonServiceVariationsDialog.Person), inPerson }
+        };
+        var dialog = await DialogService.ShowAsync<PersonServiceVariationsDialog>($"{inPerson.GetFullName()} - Inscriptions", theParameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = false,
+            CloseButton = true,
+            FullWidth = true
+        });
+        await dialog.Result;
+        await ReloadDataAsync();
+    }
+    
+    private async Task OnPersonSummaryClick(Person inPerson)
+    {
+        var summaryLines = (await PersonsService.GetPersonSummaryAsync(inPerson)).Select(inLine => inLine.GetDisplay());
+        var bytes = CustomerSummaryReport.ConvertToXlsxByteArray(summaryLines);
+        await DownloadFileService.DownloadFile($"{inPerson.GetFullName()} - {DateTime.Now:yyyyMMddHHmm}.xlsx", bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
 }

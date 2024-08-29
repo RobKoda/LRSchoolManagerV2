@@ -1,5 +1,4 @@
 ﻿using LRSchoolV2.Application.Core;
-using LRSchoolV2.Domain.ConsultantInvoices;
 using LRSchoolV2.Domain.CustomerInvoices;
 using LRSchoolV2.Domain.Persons;
 
@@ -20,6 +19,5 @@ public interface IPersonAnnualServiceVariationsRepository : IRepository
     Task<IEnumerable<CustomerInvoiceItem>> GetNonBilledPersonAnnualServiceVariationBilledItems();
     Task<IEnumerable<PersonAnnualServiceVariation>> GetNonBilledPersonAnnualServiceVariations();
     Task<IEnumerable<PersonAnnualServiceVariation>> GetConsultantNonBilledPersonAnnualServiceVariations();
-    Task<IEnumerable<ConsultantInvoiceItem>> GetConsultantNonBilledPersonAnnualServiceVariationBilledItems();
     Task SetConsultantFullyBilledAsync(IEnumerable<Guid> inIds, bool inFullyBilled = true);
 }

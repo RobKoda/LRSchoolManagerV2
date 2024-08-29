@@ -1,5 +1,4 @@
-﻿using LRSchoolV2.Domain.Common;
-using LRSchoolV2.Domain.ConsultantInvoices;
+﻿using LRSchoolV2.Domain.ConsultantInvoices;
 using LRSchoolV2.Domain.Consultants;
 using LRSchoolV2.Infrastructure.ConsultantInvoices.ConsultantInvoiceItems;
 using LRSchoolV2.Infrastructure.Persons.Persons;

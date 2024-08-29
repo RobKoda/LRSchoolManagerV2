@@ -1,10 +1,8 @@
-﻿// ReSharper disable NotAccessedPositionalProperty.Global - Implicit use
-
-using LRSchoolV2.Domain.AnnualServices;
+﻿using LRSchoolV2.Domain.AnnualServices;
 using LRSchoolV2.Domain.Common;
-using LRSchoolV2.Domain.ConsultantInvoices;
 using LRSchoolV2.Domain.CustomerInvoices;
 
+// ReSharper disable NotAccessedPositionalProperty.Global - Implicit use
 namespace LRSchoolV2.Domain.Persons;
 
 public record PersonAnnualServiceVariation(

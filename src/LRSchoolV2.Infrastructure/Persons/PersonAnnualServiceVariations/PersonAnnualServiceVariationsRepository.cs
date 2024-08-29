@@ -1,5 +1,4 @@
 ﻿using LRSchoolV2.Application.Persons.PersonAnnualServiceVariations.Persistence;
-using LRSchoolV2.Domain.ConsultantInvoices;
 using LRSchoolV2.Domain.CustomerInvoices;
 using LRSchoolV2.Domain.Persons;
 using LRSchoolV2.Infrastructure.CustomerInvoices.CustomerInvoiceItems;
@@ -92,19 +91,6 @@ public class PersonAnnualServiceVariationsRepository(IDbContextFactory<Applicati
         inContext.GetAllAsync<PersonAnnualServiceVariationDataModel, PersonAnnualServiceVariation>(inQueryable =>
             GetPersonServiceVariationQueryableAsync(inQueryable)
                 .Where(inPersonAnnualServiceVariation => !inPersonAnnualServiceVariation.ConsultantIsFullyBilled));
-    
-    public async Task<IEnumerable<ConsultantInvoiceItem>> GetConsultantNonBilledPersonAnnualServiceVariationBilledItems()
-    {
-        var context = await inContext.GetContextAsync();
-        var nonBilledVariationsQueryable = context.PersonAnnualServiceVariations.AsNoTracking()
-            .Where(inPersonAnnualServiceVariation => !inPersonAnnualServiceVariation.ConsultantIsFullyBilled)
-            .Select(inPersonAnnualServiceVariation => inPersonAnnualServiceVariation.Id);
-        
-        return await context.ConsultantInvoiceItems.AsNoTracking()
-            .Where(inCustomerInvoiceItem => inCustomerInvoiceItem.ReferenceId.HasValue && nonBilledVariationsQueryable.Contains(inCustomerInvoiceItem.ReferenceId.Value))
-            .ProjectToType<ConsultantInvoiceItem>()
-            .ToListAsync();
-    }
 
     private static IQueryable<PersonAnnualServiceVariationDataModel> GetPersonServiceVariationQueryableAsync(IQueryable<PersonAnnualServiceVariationDataModel> inQueryable) =>
         inQueryable

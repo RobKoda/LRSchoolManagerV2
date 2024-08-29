@@ -21,8 +21,4 @@
       <None Remove="CustomerInvoices\CustomerInvoiceTemplate.docx" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Customers\" />
-    </ItemGroup>
-
 </Project>

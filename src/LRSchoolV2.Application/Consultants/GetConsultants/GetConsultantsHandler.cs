@@ -5,15 +5,8 @@ using MediatR;
 
 namespace LRSchoolV2.Application.Consultants.GetConsultants;
 
-public class GetConsultantsHandler : IRequestHandler<GetConsultantsQuery, GetConsultantsResponse>
+public class GetConsultantsHandler(IConsultantsRepository inConsultantsRepository) : IRequestHandler<GetConsultantsQuery, GetConsultantsResponse>
 {
-    private readonly IConsultantsRepository _consultantsRepository;
-
-    public GetConsultantsHandler(IConsultantsRepository inConsultantsRepository)
-    {
-        _consultantsRepository = inConsultantsRepository;
-    }
-
     public async Task<GetConsultantsResponse> Handle(GetConsultantsQuery inRequest, CancellationToken inCancellationToken) =>
-        new(await _consultantsRepository.GetConsultantsAsync());
+        new(await inConsultantsRepository.GetConsultantsAsync());
 }

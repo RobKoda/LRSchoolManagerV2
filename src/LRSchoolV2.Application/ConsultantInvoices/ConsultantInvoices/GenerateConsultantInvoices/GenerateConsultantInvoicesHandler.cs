@@ -159,11 +159,14 @@ public class GenerateConsultantInvoicesHandler(
     private async Task SetFullyBilledAsync(IEnumerable<ConsultantInvoiceable> inConsultantInvoiceables)
     {
         var fullyBilledConsultantInvoiceables = inConsultantInvoiceables.Where(inConsultantInvoiceable => inConsultantInvoiceable.CompletePayment).ToList();
-        var fullyBilledPersonServiceVariations = fullyBilledConsultantInvoiceables.Where(inConsultantInvoiceable => inConsultantInvoiceable.ConsultantInvoiceableReferenceType == ConsultantInvoiceableReferenceType.AnnualService);
-
-        await SetPersonServiceVariationsFullyBilled(fullyBilledPersonServiceVariations);
+        var annualServiceIds = fullyBilledConsultantInvoiceables.Select(inInvoiceable => inInvoiceable.AnnualService.Id).Distinct();
+        
+        List<Guid> personServiceVariationsIds = [];
+        foreach (var annualServiceId in annualServiceIds)
+        {
+            personServiceVariationsIds.AddRange((await inPersonAnnualServiceVariationsRepository.GetPersonAnnualServiceVariationsPerAnnualServiceAsync(annualServiceId)).Select(inPersonAnnualServiceVariation => inPersonAnnualServiceVariation.Id));    
+        }
+        
+        await inPersonAnnualServiceVariationsRepository.SetConsultantFullyBilledAsync(personServiceVariationsIds);
     }
-
-    private Task SetPersonServiceVariationsFullyBilled(IEnumerable<ConsultantInvoiceable> inFullyBilledPersonServiceVariations) => 
-        inPersonAnnualServiceVariationsRepository.SetConsultantFullyBilledAsync(inFullyBilledPersonServiceVariations.Select(inConsultantInvoiceable => inConsultantInvoiceable.ReferenceId));
 }

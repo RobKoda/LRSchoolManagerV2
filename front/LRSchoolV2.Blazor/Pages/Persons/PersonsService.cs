@@ -7,6 +7,7 @@ using LRSchoolV2.Application.Persons.Persons.GetNonMembers;
 using LRSchoolV2.Application.Persons.Persons.GetPersons;
 using LRSchoolV2.Application.Persons.Persons.GetUnbalancedPersons;
 using LRSchoolV2.Application.Persons.Persons.SavePerson;
+using LRSchoolV2.Application.Persons.PersonSummaries.GetPersonSummary;
 using LRSchoolV2.Blazor.Shared;
 using LRSchoolV2.Domain.Persons;
 using MediatR;
@@ -41,4 +42,7 @@ public class PersonsService(
 
     public Task SavePersonAsync(Person inPerson) => 
         inMediator.Send(new SavePersonCommand(inPerson));
+    
+    public async Task<IEnumerable<PersonSummaryLine>> GetPersonSummaryAsync(Person inPerson) =>
+        (await inMediator.Send(new GetPersonSummaryQuery(inPerson))).SummaryLines;
 }

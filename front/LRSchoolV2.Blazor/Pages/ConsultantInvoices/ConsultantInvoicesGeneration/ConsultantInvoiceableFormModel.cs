@@ -1,4 +1,5 @@
-﻿using LRSchoolV2.Domain.Common;
+﻿using LRSchoolV2.Domain.AnnualServices;
+using LRSchoolV2.Domain.Common;
 using LRSchoolV2.Domain.ConsultantInvoices;
 using LRSchoolV2.Domain.Consultants;
 
@@ -14,6 +15,8 @@ public class ConsultantInvoiceableFormModel
     public SchoolYear SchoolYear { get; set; } = null!;
     
     public Consultant Consultant { get; set; } = null!;
+    
+    public AnnualService AnnualService { get; set; } = null!;
     
     public Guid ReferenceId { get; set; }
 
